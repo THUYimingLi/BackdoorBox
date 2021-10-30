@@ -89,7 +89,7 @@ class BadNets(Base):
             loss=loss,
             schedule=schedule)
         self.poisoned_train_dataset = CreatePoisonedDataset(train_dataset, y_target, poisoned_rate, seed)
-        self.poisoned_test_dataset = CreatePoisonedDataset(test_dataset, y_target, poisoned_rate, seed)
+        self.poisoned_test_dataset = CreatePoisonedDataset(test_dataset, y_target, 1.0, seed)
     
     def get_poisoned_dataset(self):
         return self.poisoned_train_dataset, self.poisoned_test_dataset

@@ -6,6 +6,9 @@ __pycache__/
 # data
 data/
 
+# experiments
+experiments/
+
 # personal test code
 test.sh
 test.py
