@@ -3,21 +3,38 @@ import os.path as osp
 import time
 
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision.datasets import DatasetFolder
-from torchvision.datasets import MNIST
+from torchvision.datasets import DatasetFolder, MNIST, CIFAR10
 
 from ..utils import Log
 
 
 support_list = (
     DatasetFolder,
-    MNIST
+    MNIST,
+    CIFAR10
 )
 
 
 def check(dataset):
     return isinstance(dataset, support_list)
+
+
+def accuracy(output, target, topk=(1,)):
+    """Computes the precision@k for the specified values of k"""
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].contiguous().view(-1).float().sum(0)
+        res.append(correct_k.mul_(100.0 / batch_size))
+    return res
 
 
 class Base(object):
@@ -30,12 +47,22 @@ class Base(object):
         self.model = model
         self.loss = loss
         self.schedule = schedule
-    
+
+    def adjust_learning_rate(self, optimizer, epoch):
+        if epoch in self.schedule['schedule']:
+            self.schedule['lr'] *= self.schedule['gamma']
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = self.schedule['lr']
+
     def train(self, schedule=None):
-        if schedule is None:
+        if schedule is None and self.schedule is None:
+            raise AttributeError("Training schedule is None, please check your schedule setting.")
+        elif schedule is not None and self.schedule is None:
+            self.schedule = schedule
+        elif schedule is None and self.schedule is not None:
             schedule = self.schedule
-            if schedule is None:
-                raise AttributeError("Training schedule is None, please check your schedule setting.")
+        elif schedule is not None and self.schedule is not None:
+            self.schedule = schedule
 
         # Use GPU
         if 'device' in schedule and schedule['device'] == 'GPU':
@@ -48,6 +75,8 @@ class Base(object):
             if schedule['GPU_num'] == 1:
                 device = torch.device("cuda:0")
             else:
+                gpus = list(range(schedule['GPU_num']))
+                self.model = nn.DataParallel(self.model.cuda(), device_ids=gpus, output_device=gpus[0])
                 # TODO: DDP training
                 pass
         # Use CPU
@@ -65,10 +94,7 @@ class Base(object):
         self.model = self.model.to(device)
         self.model.train()
 
-        optimizer = torch.optim.SGD(
-            [{'params': self.model.parameters()}],
-            lr=schedule['lr']
-        )
+        optimizer = torch.optim.SGD(self.model.parameters(), lr=schedule['lr'], momentum=schedule['momentum'], weight_decay=schedule['weight_decay'])
 
         work_dir = osp.join(schedule['save_dir'], schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
         os.makedirs(work_dir, exist_ok=True)
@@ -81,7 +107,12 @@ class Base(object):
 
         iteration = 0
         last_time = time.time()
+
+        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size:{schedule['batch_size']}\niteration every epoch:{len(self.train_dataset) // schedule['batch_size']}\nInitial learning rate:{schedule['lr']}\n"
+        log(msg)
+
         for i in range(schedule['epochs']):
+            self.adjust_learning_rate(optimizer, i)
             for batch_id, batch in enumerate(train_loader):
                 batch_img = batch[0]
                 batch_label = batch[1]
@@ -97,27 +128,39 @@ class Base(object):
 
                 # breakpoint()
                 if iteration % schedule['log_iteration_interval'] == 0:
-                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{schedule['epochs']}, iteration:{batch_id + 1}/{len(self.poisoned_train_dataset)//schedule['batch_size']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
+                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{schedule['epochs']}, iteration:{batch_id + 1}/{len(self.poisoned_train_dataset)//schedule['batch_size']}, lr: {schedule['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
                     last_time = time.time()
                     log(msg)
 
             if (i + 1) % schedule['test_epoch_interval'] == 0:
                 predict_digits, labels = self._test(self.test_dataset, device, schedule['batch_size'], schedule['num_workers'])
-                correct_num = int((predict_digits == labels).sum())
                 total_num = labels.size(0)
-                accuracy = correct_num / total_num
+                prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
                 msg = "==========Test result on benign test dataset==========\n" + \
                       time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                      f"Correct / Total:{correct_num}/{total_num}, Benign accuracy:{accuracy}, time: {time.time()-last_time}\n"
+                      f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
+
+                # correct_num = int((predict_digits == labels).sum())
+                # total_num = labels.size(0)
+                # accuracy = correct_num / total_num
+                # msg = "==========Test result on benign test dataset==========\n" + \
+                #       time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                #       f"Correct / Total:{correct_num}/{total_num}, Benign accuracy:{accuracy}, time: {time.time()-last_time}\n"
                 log(msg)
                 if schedule['model_type'] != 'benign':
                     predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
-                    correct_num = int((predict_digits == labels).sum())
                     total_num = labels.size(0)
-                    accuracy = correct_num / total_num
+                    prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
                     msg = "==========Test result on poisoned test dataset==========\n" + \
                         time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                        f"Correct / Total:{correct_num}/{total_num}, ASR:{accuracy}, time: {time.time()-last_time}\n"
+                        f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
+
+                    # correct_num = int((predict_digits == labels).sum())
+                    # total_num = labels.size(0)
+                    # accuracy = correct_num / total_num
+                    # msg = "==========Test result on poisoned test dataset==========\n" + \
+                    #     time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                    #     f"Correct / Total:{correct_num}/{total_num}, ASR:{accuracy}, time: {time.time()-last_time}\n"
                     log(msg)
                 self.model = self.model.to(device)
                 self.model.train()
@@ -130,33 +173,33 @@ class Base(object):
                 torch.save(self.model.state_dict(), ckpt_model_path)
                 self.model = self.model.to(device)
                 self.model.train()
-    
+
     def _test(self, dataset, device, batch_size=16, num_workers=8):
-        test_loader = DataLoader(
-            dataset,
-            batch_size=batch_size,
-            shuffle=False,
-            num_workers=num_workers,
-            drop_last=False
-        )
+        with torch.no_grad():
+            test_loader = DataLoader(
+                dataset,
+                batch_size=batch_size,
+                shuffle=False,
+                num_workers=num_workers,
+                drop_last=False
+            )
 
-        self.model = self.model.to(device)
-        self.model.eval()
+            self.model = self.model.to(device)
+            self.model.eval()
 
-        predict_digits = []
-        labels = []
-        for batch in test_loader:
-            batch_img = batch[0]
-            batch_label = batch[1]
-            batch_img = batch_img.to(device)
-            batch_label = batch_label.to(device)
-            predict_digits.append(self.model(batch_img).cpu())
-            labels.append(batch_label.cpu())
+            predict_digits = []
+            labels = []
+            for batch in test_loader:
+                batch_img, batch_label = batch
+                batch_img = batch_img.to(device)
+                batch_img = self.model(batch_img)
+                batch_img = batch_img.cpu()
+                predict_digits.append(batch_img)
+                labels.append(batch_label)
 
-        predict_digits = torch.cat(predict_digits, dim=0)
-        predict_digits = torch.argmax(predict_digits, dim=1)
-        labels = torch.cat(labels, dim=0)
-        return predict_digits, labels
+            predict_digits = torch.cat(predict_digits, dim=0)
+            labels = torch.cat(labels, dim=0)
+            return predict_digits, labels
 
 
     def test(self):

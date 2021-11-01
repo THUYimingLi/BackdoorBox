@@ -12,3 +12,4 @@ experiments/
 # personal test code
 test.sh
 test.py
+test*
