@@ -64,6 +64,9 @@ class Base(object):
         elif schedule is not None and self.schedule is not None:
             self.schedule = schedule
 
+        if 'pretrain' in schedule:
+            self.model.load_state_dict(torch.load(schedule['pretrain']), strict=False)
+
         # Use GPU
         if 'device' in schedule and schedule['device'] == 'GPU':
             if 'CUDA_VISIBLE_DEVICES' in schedule:
@@ -202,8 +205,61 @@ class Base(object):
             return predict_digits, labels
 
 
-    def test(self):
-        pass
+    def test(self, schedule):
+        if schedule is None and self.schedule is None:
+            raise AttributeError("Test schedule is None, please check your schedule setting.")
+        elif schedule is not None and self.schedule is None:
+            self.schedule = schedule
+        elif schedule is None and self.schedule is not None:
+            schedule = self.schedule
+        elif schedule is not None and self.schedule is not None:
+            self.schedule = schedule
+
+        if 'test_model' in schedule:
+            self.model.load_state_dict(torch.load(schedule['test_model']), strict=False)
+
+        # Use GPU
+        if 'device' in schedule and schedule['device'] == 'GPU':
+            if 'CUDA_VISIBLE_DEVICES' in schedule:
+                os.environ['CUDA_VISIBLE_DEVICES'] = schedule['CUDA_VISIBLE_DEVICES']
+
+            assert torch.cuda.device_count() > 0, 'This machine has no cuda devices!'
+            assert schedule['GPU_num'] >0, 'GPU_num should be a positive integer'
+            print(f"This machine has {torch.cuda.device_count()} cuda devices, and use {schedule['GPU_num']} of them to train.")
+            if schedule['GPU_num'] == 1:
+                device = torch.device("cuda:0")
+            else:
+                gpus = list(range(schedule['GPU_num']))
+                self.model = nn.DataParallel(self.model.cuda(), device_ids=gpus, output_device=gpus[0])
+                # TODO: DDP training
+                pass
+        # Use CPU
+        else:
+            device = torch.device("cpu")
+
+        work_dir = osp.join(schedule['save_dir'], schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
+        os.makedirs(work_dir, exist_ok=True)
+        log = Log(osp.join(work_dir, 'log.txt'))
+
+        last_time = time.time()
+        predict_digits, labels = self._test(self.test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+        total_num = labels.size(0)
+        prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+        msg = "==========Test result on benign test dataset==========\n" + \
+                time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
+
+        log(msg)
+        if schedule['model_type'] != 'benign':
+            last_time = time.time()
+            predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+            total_num = labels.size(0)
+            prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+            msg = "==========Test result on poisoned test dataset==========\n" + \
+                time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
+
+            log(msg)
 
 
 
