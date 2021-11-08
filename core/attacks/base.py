@@ -86,13 +86,24 @@ class Base(object):
         else:
             device = torch.device("cpu")
 
-        train_loader = DataLoader(
-            self.train_dataset if schedule['model_type'] == 'benign' else self.poisoned_train_dataset,
-            batch_size=schedule['batch_size'],
-            shuffle=True,
-            num_workers=schedule['num_workers'],
-            drop_last=True
-        )
+        if schedule['benign_training'] is True:
+            train_loader = DataLoader(
+                self.train_dataset,
+                batch_size=schedule['batch_size'],
+                shuffle=True,
+                num_workers=schedule['num_workers'],
+                drop_last=True
+            )
+        elif schedule['benign_training'] is False:
+            train_loader = DataLoader(
+                self.poisoned_train_dataset,
+                batch_size=schedule['batch_size'],
+                shuffle=True,
+                num_workers=schedule['num_workers'],
+                drop_last=True
+            )
+        else:
+            raise AttributeError("schedule['benign_training'] should be True or False.")
 
         self.model = self.model.to(device)
         self.model.train()
@@ -150,7 +161,7 @@ class Base(object):
                 #       time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
                 #       f"Correct / Total:{correct_num}/{total_num}, Benign accuracy:{accuracy}, time: {time.time()-last_time}\n"
                 log(msg)
-                if schedule['model_type'] != 'benign':
+                if schedule['benign_training'] is False:
                     predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
                     total_num = labels.size(0)
                     prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
@@ -250,7 +261,7 @@ class Base(object):
                 f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
 
         log(msg)
-        if schedule['model_type'] != 'benign':
+        if schedule['model_type'] is False:
             last_time = time.time()
             predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
             total_num = labels.size(0)
