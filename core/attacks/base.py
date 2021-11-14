@@ -261,7 +261,7 @@ class Base(object):
                 f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
 
         log(msg)
-        if schedule['model_type'] is False:
+        if schedule['benign_training'] is False:
             last_time = time.time()
             predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
             total_num = labels.size(0)
