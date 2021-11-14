@@ -68,7 +68,7 @@ schedule = {
     'CUDA_VISIBLE_DEVICES': '1',
     'GPU_num': 1,
 
-    'model_type': 'benign',
+    'benign_training': False,
     'batch_size': 128,
     'num_workers': 16,
 

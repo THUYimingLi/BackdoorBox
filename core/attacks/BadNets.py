@@ -1,3 +1,4 @@
+import copy
 import random
 
 from PIL import Image
@@ -124,8 +125,20 @@ class PoisonedMNIST(MNIST):
         tmp_list = list(range(total_num))
         random.shuffle(tmp_list)
         self.poisoned_set = frozenset(tmp_list[:poisoned_num])
-        self.poisoned_transform = Compose([AddMNISTTrigger(pattern, weight)])
-        self.poisoned_target_transform = Compose([ModifyTarget(y_target)])
+
+        # Add trigger to images
+        if self.transform is None:
+            self.poisoned_transform = Compose([])
+        else:
+            self.poisoned_transform = copy.deepcopy(self.transform)
+        self.poisoned_transform.transforms.insert(0, AddMNISTTrigger(pattern, weight))
+
+        # Modify labels
+        if self.target_transform is None:
+            self.poisoned_target_transform = Compose([])
+        else:
+            self.poisoned_target_transform = copy.deepcopy(self.target_transform)
+        self.poisoned_target_transform.transforms.insert(0, ModifyTarget(y_target))
 
     def __getitem__(self, index):
         img, target = self.data[index], int(self.targets[index])
@@ -137,12 +150,12 @@ class PoisonedMNIST(MNIST):
         if index in self.poisoned_set:
             img = self.poisoned_transform(img)
             target = self.poisoned_target_transform(target)
+        else:
+            if self.transform is not None:
+                img = self.transform(img)
 
-        if self.transform is not None:
-            img = self.transform(img)
-
-        if self.target_transform is not None:
-            target = self.target_transform(target)
+            if self.target_transform is not None:
+                target = self.target_transform(target)
 
         return img, target
 
@@ -163,8 +176,20 @@ class PoisonedCIFAR10(CIFAR10):
         tmp_list = list(range(total_num))
         random.shuffle(tmp_list)
         self.poisoned_set = frozenset(tmp_list[:poisoned_num])
-        self.poisoned_transform = Compose([AddCIFAR10Trigger(pattern, weight)])
-        self.poisoned_target_transform = Compose([ModifyTarget(y_target)])
+
+        # Add trigger to images
+        if self.transform is None:
+            self.poisoned_transform = Compose([])
+        else:
+            self.poisoned_transform = copy.deepcopy(self.transform)
+        self.poisoned_transform.transforms.insert(0, AddCIFAR10Trigger(pattern, weight))
+
+        # Modify labels
+        if self.target_transform is None:
+            self.poisoned_target_transform = Compose([])
+        else:
+            self.poisoned_target_transform = copy.deepcopy(self.target_transform)
+        self.poisoned_target_transform.transforms.insert(0, ModifyTarget(y_target))
 
     def __getitem__(self, index):
         img, target = self.data[index], int(self.targets[index])
@@ -176,12 +201,12 @@ class PoisonedCIFAR10(CIFAR10):
         if index in self.poisoned_set:
             img = self.poisoned_transform(img)
             target = self.poisoned_target_transform(target)
+        else:
+            if self.transform is not None:
+                img = self.transform(img)
 
-        if self.transform is not None:
-            img = self.transform(img)
-
-        if self.target_transform is not None:
-            target = self.target_transform(target)
+            if self.target_transform is not None:
+                target = self.target_transform(target)
 
         return img, target
 
