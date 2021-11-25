@@ -110,14 +110,21 @@ class ModifyTarget:
 
 
 class PoisonedMNIST(MNIST):
-    def __init__(self, benign_dataset, y_target, poisoned_rate, pattern, weight, seed=0):
+    def __init__(self,
+                 benign_dataset,
+                 y_target,
+                 poisoned_rate,
+                 pattern,
+                 weight,
+                 poisoned_transform_index,
+                 poisoned_target_transform_index,
+                 seed):
         super(PoisonedMNIST, self).__init__(
             benign_dataset.root,
             benign_dataset.train,
             benign_dataset.transform,
             benign_dataset.target_transform,
-            download=True
-        )
+            download=True)
         random.seed(seed)
         total_num = len(benign_dataset)
         poisoned_num = int(total_num * poisoned_rate)
@@ -131,14 +138,14 @@ class PoisonedMNIST(MNIST):
             self.poisoned_transform = Compose([])
         else:
             self.poisoned_transform = copy.deepcopy(self.transform)
-        self.poisoned_transform.transforms.insert(0, AddMNISTTrigger(pattern, weight))
+        self.poisoned_transform.transforms.insert(poisoned_transform_index, AddMNISTTrigger(pattern, weight))
 
         # Modify labels
         if self.target_transform is None:
             self.poisoned_target_transform = Compose([])
         else:
             self.poisoned_target_transform = copy.deepcopy(self.target_transform)
-        self.poisoned_target_transform.transforms.insert(0, ModifyTarget(y_target))
+        self.poisoned_target_transform.transforms.insert(poisoned_target_transform_index, ModifyTarget(y_target))
 
     def __getitem__(self, index):
         img, target = self.data[index], int(self.targets[index])
@@ -161,14 +168,21 @@ class PoisonedMNIST(MNIST):
 
 
 class PoisonedCIFAR10(CIFAR10):
-    def __init__(self, benign_dataset, y_target, poisoned_rate, pattern, weight, seed=0):
+    def __init__(self,
+                 benign_dataset,
+                 y_target,
+                 poisoned_rate,
+                 pattern,
+                 weight,
+                 poisoned_transform_index,
+                 poisoned_target_transform_index,
+                 seed):
         super(PoisonedCIFAR10, self).__init__(
             benign_dataset.root,
             benign_dataset.train,
             benign_dataset.transform,
             benign_dataset.target_transform,
-            download=True
-        )
+            download=True)
         random.seed(seed)
         total_num = len(benign_dataset)
         poisoned_num = int(total_num * poisoned_rate)
@@ -182,14 +196,14 @@ class PoisonedCIFAR10(CIFAR10):
             self.poisoned_transform = Compose([])
         else:
             self.poisoned_transform = copy.deepcopy(self.transform)
-        self.poisoned_transform.transforms.insert(0, AddCIFAR10Trigger(pattern, weight))
+        self.poisoned_transform.transforms.insert(poisoned_transform_index, AddCIFAR10Trigger(pattern, weight))
 
         # Modify labels
         if self.target_transform is None:
             self.poisoned_target_transform = Compose([])
         else:
             self.poisoned_target_transform = copy.deepcopy(self.target_transform)
-        self.poisoned_target_transform.transforms.insert(0, ModifyTarget(y_target))
+        self.poisoned_target_transform.transforms.insert(poisoned_target_transform_index, ModifyTarget(y_target))
 
     def __getitem__(self, index):
         img, target = self.data[index], int(self.targets[index])
@@ -211,12 +225,12 @@ class PoisonedCIFAR10(CIFAR10):
         return img, target
 
 
-def CreatePoisonedDataset(benign_dataset, y_target, poisoned_rate, pattern, weight, seed=0):
+def CreatePoisonedDataset(benign_dataset, y_target, poisoned_rate, pattern, weight, poisoned_transform_index, poisoned_target_transform_index, seed):
     class_name = type(benign_dataset)
     if class_name == MNIST:
-        return PoisonedMNIST(benign_dataset, y_target, poisoned_rate, pattern, weight, seed)
+        return PoisonedMNIST(benign_dataset, y_target, poisoned_rate, pattern, weight, poisoned_transform_index, poisoned_target_transform_index, seed)
     elif class_name == CIFAR10:
-        return PoisonedCIFAR10(benign_dataset, y_target, poisoned_rate, pattern, weight, seed)
+        return PoisonedCIFAR10(benign_dataset, y_target, poisoned_rate, pattern, weight, poisoned_transform_index, poisoned_target_transform_index, seed)
     else:
         raise NotImplementedError
 
@@ -231,6 +245,8 @@ class BadNets(Base):
                  poisoned_rate,
                  pattern=None,
                  weight=None,
+                 poisoned_transform_index=0,
+                 poisoned_target_transform_index=0,
                  schedule=None,
                  seed=0):
         super(BadNets, self).__init__(
@@ -239,9 +255,27 @@ class BadNets(Base):
             model=model,
             loss=loss,
             schedule=schedule)
-        self.poisoned_train_dataset = CreatePoisonedDataset(train_dataset, y_target, poisoned_rate, pattern, weight, seed)
-        self.poisoned_test_dataset = CreatePoisonedDataset(test_dataset, y_target, 1.0, pattern, weight, seed)
-    
+
+        self.poisoned_train_dataset = CreatePoisonedDataset(
+            train_dataset,
+            y_target,
+            poisoned_rate,
+            pattern,
+            weight,
+            poisoned_transform_index,
+            poisoned_target_transform_index,
+            seed)
+
+        self.poisoned_test_dataset = CreatePoisonedDataset(
+            test_dataset,
+            y_target,
+            1.0,
+            pattern,
+            weight,
+            poisoned_transform_index,
+            poisoned_target_transform_index,
+            seed)
+
     def get_poisoned_dataset(self):
         return self.poisoned_train_dataset, self.poisoned_test_dataset
 
