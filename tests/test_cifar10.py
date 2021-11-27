@@ -1,3 +1,9 @@
+'''
+This is the test code of benign training and poisoned training on torchvision.datasets.CIFAR10.
+Attack method is BadNets.
+'''
+
+
 import os
 
 import torch
@@ -13,8 +19,8 @@ dataset = torchvision.datasets.CIFAR10
 
 
 transform_train = Compose([
-    RandomHorizontalFlip(),
-    ToTensor()
+    ToTensor(),
+    RandomHorizontalFlip()
 ])
 trainset = dataset('data', train=True, transform=transform_train, download=True)
 
@@ -63,9 +69,38 @@ for a in x[0]:
         print("%-4.2f" % float(b), end=' ')
     print()
 
+# train benign model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '2',
+    'GPU_num': 1,
+
+    'benign_training': True,
+    'batch_size': 128,
+    'num_workers': 16,
+
+    'lr': 0.1,
+    'momentum': 0.9,
+    'weight_decay': 5e-4,
+    'gamma': 0.1,
+    'schedule': [150, 180],
+
+    'epochs': 200,
+
+    'log_iteration_interval': 100,
+    'test_epoch_interval': 10,
+    'save_epoch_interval': 10,
+
+    'save_dir': 'experiments',
+    'experiment_name': 'train_benign_CIFAR10'
+}
+
+badnets.train(schedule)
+
+# train attacked model
+schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '2',
     'GPU_num': 1,
 
     'benign_training': False,
@@ -85,13 +120,7 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_benign_CIFAR-10'
+    'experiment_name': 'train_poisoned_CIFAR10'
 }
 
 badnets.train(schedule)
-
-
-schedule['test_model'] = "./experiments/train_poisoned_CIFAR-10_2021-11-01_11:31:22/ckpt_epoch_200.pth"
-
-badnets.test(schedule)
-

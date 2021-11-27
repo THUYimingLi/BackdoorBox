@@ -38,6 +38,16 @@ def accuracy(output, target, topk=(1,)):
 
 
 class Base(object):
+    """Base class for backdoor training and testing.
+
+    Args:
+        train_dataset (types in support_list): Benign training dataset.
+        test_dataset (types in support_list): Benign testing dataset.
+        model (torch.nn.Module): Network.
+        loss (torch.nn.Module): Loss.
+        schedule (dict): Training or testing schedule. Default: None.
+    """
+
     def __init__(self, train_dataset, test_dataset, model, loss, schedule=None):
         assert isinstance(train_dataset, support_list), 'train_dataset is an unsupported dataset type, train_dataset should be a subclass of our support list.'
         self.train_dataset = train_dataset
@@ -47,6 +57,9 @@ class Base(object):
         self.model = model
         self.loss = loss
         self.schedule = schedule
+
+    def get_poisoned_dataset(self):
+        return self.poisoned_train_dataset, self.poisoned_test_dataset
 
     def adjust_learning_rate(self, optimizer, epoch):
         if epoch in self.schedule['schedule']:
@@ -214,7 +227,6 @@ class Base(object):
             predict_digits = torch.cat(predict_digits, dim=0)
             labels = torch.cat(labels, dim=0)
             return predict_digits, labels
-
 
     def test(self, schedule):
         if schedule is None and self.schedule is None:
