@@ -1,5 +1,5 @@
 '''
-This is the example code of benign training and poisoned training on torchvision.datasets.DatasetFolder.
+This is the test code of benign training and poisoned training on torchvision.datasets.DatasetFolder.
 Dataset is CIFAR-10.
 Attack method is BadNets.
 '''
@@ -25,7 +25,7 @@ transform_train = Compose([
     RandomHorizontalFlip()
 ])
 trainset = dataset(
-    root='./data/cifar10/train',
+    root='/home/public/yamengxi/data/cifar10/train',
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_train,
@@ -36,7 +36,7 @@ transform_test = Compose([
     ToTensor()
 ])
 testset = dataset(
-    root='./data/cifar10/test',
+    root='/home/public/yamengxi/data/cifar10/test',
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_train,
@@ -93,7 +93,7 @@ for a in x[0]:
 # train benign model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': '1',
     'GPU_num': 1,
 
     'benign_training': True,
@@ -121,7 +121,7 @@ badnets.train(schedule)
 # train attacked model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': '1',
     'GPU_num': 1,
 
     'benign_training': False,
