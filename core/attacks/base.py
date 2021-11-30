@@ -160,35 +160,25 @@ class Base(object):
                     log(msg)
 
             if (i + 1) % schedule['test_epoch_interval'] == 0:
+                # test result on benign test dataset
                 predict_digits, labels = self._test(self.test_dataset, device, schedule['batch_size'], schedule['num_workers'])
                 total_num = labels.size(0)
                 prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
                 msg = "==========Test result on benign test dataset==========\n" + \
                       time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
                       f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
-
-                # correct_num = int((predict_digits == labels).sum())
-                # total_num = labels.size(0)
-                # accuracy = correct_num / total_num
-                # msg = "==========Test result on benign test dataset==========\n" + \
-                #       time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                #       f"Correct / Total:{correct_num}/{total_num}, Benign accuracy:{accuracy}, time: {time.time()-last_time}\n"
                 log(msg)
-                if schedule['benign_training'] is False:
-                    predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
-                    total_num = labels.size(0)
-                    prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-                    msg = "==========Test result on poisoned test dataset==========\n" + \
-                        time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                        f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
 
-                    # correct_num = int((predict_digits == labels).sum())
-                    # total_num = labels.size(0)
-                    # accuracy = correct_num / total_num
-                    # msg = "==========Test result on poisoned test dataset==========\n" + \
-                    #     time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                    #     f"Correct / Total:{correct_num}/{total_num}, ASR:{accuracy}, time: {time.time()-last_time}\n"
-                    log(msg)
+                # test result on poisoned test dataset
+                # if schedule['benign_training'] is False:
+                predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+                total_num = labels.size(0)
+                prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+                msg = "==========Test result on poisoned test dataset==========\n" + \
+                    time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                    f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
+                log(msg)
+
                 self.model = self.model.to(device)
                 self.model.train()
 
@@ -265,26 +255,22 @@ class Base(object):
         log = Log(osp.join(work_dir, 'log.txt'))
 
         last_time = time.time()
+        # test result on benign test dataset
         predict_digits, labels = self._test(self.test_dataset, device, schedule['batch_size'], schedule['num_workers'])
         total_num = labels.size(0)
         prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
         msg = "==========Test result on benign test dataset==========\n" + \
                 time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
                 f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
-
         log(msg)
-        if schedule['benign_training'] is False:
-            last_time = time.time()
-            predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
-            total_num = labels.size(0)
-            prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-            msg = "==========Test result on poisoned test dataset==========\n" + \
-                time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
 
-            log(msg)
-
-
-
-
-
+        # if schedule['benign_training'] is False:
+        last_time = time.time()
+        # test result on poisoned test dataset
+        predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+        total_num = labels.size(0)
+        prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+        msg = "==========Test result on poisoned test dataset==========\n" + \
+            time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+            f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
+        log(msg)

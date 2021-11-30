@@ -387,8 +387,8 @@ def CreatePoisonedDataset(benign_dataset, y_target, poisoned_rate, pattern, weig
         raise NotImplementedError
 
 
-class BadNets(Base):
-    """Construct poisoned datasets with BadNets method.
+class Blended(Base):
+    """Construct poisoned datasets with Blended method.
 
     Args:
         train_dataset (types in support_list): Benign training dataset.
@@ -418,9 +418,7 @@ class BadNets(Base):
                  poisoned_target_transform_index=0,
                  schedule=None,
                  seed=0):
-        assert pattern is None or (isinstance(pattern, torch.Tensor) and ((0 < pattern) & (pattern < 1)).sum() == 0), 'pattern should be None or 0-1 torch.Tensor.'
-
-        super(BadNets, self).__init__(
+        super(Blended, self).__init__(
             train_dataset=train_dataset,
             test_dataset=test_dataset,
             model=model,

@@ -1,3 +1,4 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
 numpy>=1.19.5
 pillow>=8.1.0
 opencv-python>=4.5.1.48
