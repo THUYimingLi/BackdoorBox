@@ -1,8 +1,8 @@
 '''
-This is the implement of blended [1].
+This is the implement of blended attack [1].
 
 Reference:
-[1] blended: Targeted Backdoor Attacks on Deep Learning Systems Using Data Poisoning. arXiv, 2017.
+[1] Targeted Backdoor Attacks on Deep Learning Systems Using Data Poisoning. arXiv, 2017.
 '''
 
 import copy
