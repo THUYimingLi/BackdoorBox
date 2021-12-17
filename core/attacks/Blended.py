@@ -1,3 +1,10 @@
+'''
+This is the implement of blended [1].
+
+Reference:
+[1] blended: Targeted Backdoor Attacks on Deep Learning Systems Using Data Poisoning. arXiv, 2017.
+'''
+
 import copy
 import random
 

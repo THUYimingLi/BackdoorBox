@@ -58,6 +58,9 @@ class Base(object):
         self.loss = loss
         self.schedule = schedule
 
+    def get_model(self):
+        return self.model
+
     def get_poisoned_dataset(self):
         return self.poisoned_train_dataset, self.poisoned_test_dataset
 
@@ -218,7 +221,7 @@ class Base(object):
             labels = torch.cat(labels, dim=0)
             return predict_digits, labels
 
-    def test(self, schedule):
+    def test(self, schedule, model=None, test_dataset=None, poisoned_test_dataset=None):
         if schedule is None and self.schedule is None:
             raise AttributeError("Test schedule is None, please check your schedule setting.")
         elif schedule is not None and self.schedule is None:
@@ -228,8 +231,15 @@ class Base(object):
         elif schedule is not None and self.schedule is not None:
             self.schedule = schedule
 
+        if model is None:
+            model = self.model
+
         if 'test_model' in schedule:
-            self.model.load_state_dict(torch.load(schedule['test_model']), strict=False)
+            model.load_state_dict(torch.load(schedule['test_model']), strict=False)
+
+        if test_dataset is None and poisoned_test_dataset is None:
+            test_dataset = self.test_dataset
+            poisoned_test_dataset = self.poisoned_test_dataset
 
         # Use GPU
         if 'device' in schedule and schedule['device'] == 'GPU':
@@ -243,7 +253,7 @@ class Base(object):
                 device = torch.device("cuda:0")
             else:
                 gpus = list(range(schedule['GPU_num']))
-                self.model = nn.DataParallel(self.model.cuda(), device_ids=gpus, output_device=gpus[0])
+                model = nn.DataParallel(model.cuda(), device_ids=gpus, output_device=gpus[0])
                 # TODO: DDP training
                 pass
         # Use CPU
@@ -254,23 +264,24 @@ class Base(object):
         os.makedirs(work_dir, exist_ok=True)
         log = Log(osp.join(work_dir, 'log.txt'))
 
-        last_time = time.time()
-        # test result on benign test dataset
-        predict_digits, labels = self._test(self.test_dataset, device, schedule['batch_size'], schedule['num_workers'])
-        total_num = labels.size(0)
-        prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-        msg = "==========Test result on benign test dataset==========\n" + \
-                time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
-        log(msg)
+        if test_dataset is not None:
+            last_time = time.time()
+            # test result on benign test dataset
+            predict_digits, labels = self._test(test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+            total_num = labels.size(0)
+            prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+            msg = "==========Test result on benign test dataset==========\n" + \
+                    time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                    f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
+            log(msg)
 
-        # if schedule['benign_training'] is False:
-        last_time = time.time()
-        # test result on poisoned test dataset
-        predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
-        total_num = labels.size(0)
-        prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-        msg = "==========Test result on poisoned test dataset==========\n" + \
-            time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-            f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
-        log(msg)
+        if poisoned_test_dataset is not None:
+            last_time = time.time()
+            # test result on poisoned test dataset
+            predict_digits, labels = self._test(poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+            total_num = labels.size(0)
+            prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+            msg = "==========Test result on poisoned test dataset==========\n" + \
+                time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
+            log(msg)
