@@ -221,7 +221,7 @@ class Base(object):
             labels = torch.cat(labels, dim=0)
             return predict_digits, labels
 
-    def test(self, schedule, model=None, test_dataset=None, poisoned_test_dataset=None):
+    def test(self, schedule=None, model=None, test_dataset=None, poisoned_test_dataset=None):
         if schedule is None and self.schedule is None:
             raise AttributeError("Test schedule is None, please check your schedule setting.")
         elif schedule is not None and self.schedule is None:
