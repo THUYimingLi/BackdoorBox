@@ -14,8 +14,9 @@ import core
 
 
 # Define Benign Training and Testing Dataset
-# dataset = torchvision.datasets.MNIST
 dataset = torchvision.datasets.CIFAR10
+# dataset = torchvision.datasets.MNIST
+
 
 transform_train = Compose([
     ToTensor(),
