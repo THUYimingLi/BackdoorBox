@@ -18,9 +18,10 @@ from torchvision.datasets import DatasetFolder, CIFAR10, MNIST
 import core
 
 
-
+# load reflection images
 reflection_images = []
-reflection_data_dir = "/data/ganguanhao/datasets/VOCdevkit/VOC2012/JPEGImages/"
+reflection_data_dir = "/data/ganguanhao/datasets/VOCdevkit/VOC2012/JPEGImages/" # please replace this with path to your desired reflection set
+
 def read_image(img_path, type=None):
     img = cv2.imread(img_path)
     if type is None:        
@@ -36,7 +37,9 @@ reflection_image_path = os.listdir(reflection_data_dir)
 reflection_images = [read_image(os.path.join(reflection_data_dir,img_path)) for img_path in reflection_image_path[:200]]
 
 
-# Dataset Folder GTSRB
+# ===== Train backdoored model on GTSRB using with DatasetFolder ======
+
+# Prepare datasets
 transform_train = Compose([
     transforms.ToPILImage(),
     transforms.Resize((32,32)),
@@ -54,7 +57,7 @@ transform_test = Compose([
 ])
 
 trainset = DatasetFolder(
-    root='/data/ganguanhao/datasets/GTSRB/train',
+    root='/data/ganguanhao/datasets/GTSRB/train', # please replace this with path to your training set
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_train,
@@ -62,13 +65,14 @@ trainset = DatasetFolder(
     is_valid_file=None)
 
 testset = DatasetFolder(
-    root='/data/ganguanhao/datasets/GTSRB/testset',
+    root='/data/ganguanhao/datasets/GTSRB/testset', # please replace this with path to your test set
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_train,
     target_transform=None,
     is_valid_file=None)
 
+# Configure the attack scheme
 refool= core.Refool(
     train_dataset=trainset,
     test_dataset=testset,
@@ -84,7 +88,6 @@ refool= core.Refool(
 )
 
 
-poisoned_train_dataset, poisoned_test_dataset = refool.get_poisoned_dataset()
 schedule = {
     'device': 'GPU',
     'CUDA_VISIBLE_DEVICES': '1',
@@ -110,9 +113,14 @@ schedule = {
     'experiment_name': 'train_poison_DataFolder_GTSRB'
 }
 
+# Train backdoored model
 refool.train(schedule)
 
-# CIFAR10
+# ===== Train backdoored model on GTSRB using with DatasetFolder (done) ======
+
+# ===== Train backdoored model on CIFAR10 using with CIFAR10 ===== 
+
+# Prepare datasets
 transform_train = Compose([
     transforms.Resize((32,32)),
     RandomHorizontalFlip(),
@@ -127,18 +135,20 @@ transform_test = Compose([
                         (0.229, 0.224, 0.225))
 ])
 trainset = CIFAR10(
-    root='/data/ganguanhao/datasets',
+    root='/data/ganguanhao/datasets', # please replace this with path to your dataset
     transform=transform_train,
     target_transform=None,
     train=True,
     download=True)
 testset = CIFAR10(
-    root='/data/ganguanhao/datasets',
+    root='/data/ganguanhao/datasets', # please replace this with path to your dataset
     transform=transform_test,
     target_transform=None,
     train=False,
     download=True)
 
+
+# Configure the attack scheme
 refool= core.Refool(
     train_dataset=trainset,
     test_dataset=testset,
@@ -154,7 +164,6 @@ refool= core.Refool(
 )
 
 
-poisoned_train_dataset, poisoned_test_dataset = refool.get_poisoned_dataset()
 schedule = {
     'device': 'GPU',
     'CUDA_VISIBLE_DEVICES': '1',
@@ -180,9 +189,14 @@ schedule = {
     'experiment_name': 'train_poison_CIFAR10'
 }
 
+
+# Train backdoored model
 refool.train(schedule)
 
-# MNIST
+# ===== Train backdoored model on CIFAR10 using with CIFAR10 (done)===== 
+
+# ===== Train backdoored model on MNIST using with MNIST ===== 
+# Prepare datasets
 transform_train = Compose([
     transforms.Resize((28,28)),
     RandomHorizontalFlip(),
@@ -193,13 +207,13 @@ transform_test = Compose([
     ToTensor(),
 ])
 trainset = MNIST(
-    root='/data/ganguanhao/datasets',
+    root='/data/ganguanhao/datasets', # please replace this with path to your dataset
     transform=transform_train,
     target_transform=None,
     train=True,
     download=True)
 testset = MNIST(
-    root='/data/ganguanhao/datasets',
+    root='/data/ganguanhao/datasets', # please replace this with path to your dataset
     transform=transform_test,
     target_transform=None,
     train=False,
@@ -207,6 +221,8 @@ testset = MNIST(
 
 loader = DataLoader(trainset,)
 
+
+# Configure the attack scheme
 refool= core.Refool(
     train_dataset=trainset,
     test_dataset=testset,
@@ -221,8 +237,6 @@ refool= core.Refool(
     reflection_candidates = reflection_images,
 )
 
-
-poisoned_train_dataset, poisoned_test_dataset = refool.get_poisoned_dataset()
 schedule = {
     'device': 'GPU',
     'CUDA_VISIBLE_DEVICES': '1',
@@ -247,5 +261,6 @@ schedule = {
     'save_dir': 'experiments',
     'experiment_name': 'train_poison_MNIST'
 }
-
+# Train backdoored model
 refool.train(schedule)
+# ===== Train backdoored model on MNIST using with MNIST (done)===== 
