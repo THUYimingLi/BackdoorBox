@@ -1,5 +1,6 @@
 '''
-This is the implement of Refool attack [1].
+This is the simplified version of Refool attack [1], where the reflection images are (randomly) given instead of by optimization. 
+Note: it is under the poison-label instead of the clean-label mode since it has minor effects under the clean-label settings. 
 
 Reference:
 [1] Reflection Backdoor: A Natural Backdoor Attack on Deep Neural Networks. ECCV 2020.
