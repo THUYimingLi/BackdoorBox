@@ -110,7 +110,7 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poison_DataFolder_GTSRB'
+    'experiment_name': 'train_poison_DataFolder_GTSRB_Refool'
 }
 
 # Train backdoored model
@@ -186,7 +186,7 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poison_CIFAR10'
+    'experiment_name': 'train_poison_CIFAR10_Refool'
 }
 
 
@@ -259,7 +259,7 @@ schedule = {
     'save_epoch_interval': 5,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poison_MNIST'
+    'experiment_name': 'train_poison_MNIST_Refool'
 }
 # Train backdoored model
 refool.train(schedule)
