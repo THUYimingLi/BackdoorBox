@@ -90,12 +90,12 @@ refool= core.Refool(
 
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'benign_training': False,
     'batch_size': 128,
-    'num_workers': 16,
+    'num_workers': 8,
 
     'lr': 0.1,
     'momentum': 0.9,
@@ -166,12 +166,12 @@ refool= core.Refool(
 
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'benign_training': False,
     'batch_size': 128,
-    'num_workers': 16,
+    'num_workers': 8,
 
     'lr': 0.1,
     'momentum': 0.9,
@@ -239,12 +239,12 @@ refool= core.Refool(
 
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'benign_training': False,
     'batch_size': 128,
-    'num_workers': 16,
+    'num_workers': 8,
 
     'lr': 0.1,
     'momentum': 0.9,
