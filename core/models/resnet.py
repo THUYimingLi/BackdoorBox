@@ -1,8 +1,6 @@
 '''
 ResNet in PyTorch.
-
 For Pre-activation ResNet, see 'preact_resnet.py'.
-
 Reference:
 [1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
     Deep Residual Learning for Image Recognition. arXiv:1512.03385
@@ -97,16 +95,16 @@ class _ResNet(nn.Module):
         return out
 
 
-def ResNet(num):
+def ResNet(num, num_classes=10):
     if num == 18:
-        return _ResNet(BasicBlock, [2,2,2,2])
+        return _ResNet(BasicBlock, [2,2,2,2], num_classes)
     elif num == 34:
-        return _ResNet(BasicBlock, [3,4,6,3])
+        return _ResNet(BasicBlock, [3,4,6,3], num_classes)
     elif num == 50:
-        return _ResNet(Bottleneck, [3,4,6,3])
+        return _ResNet(Bottleneck, [3,4,6,3], num_classes)
     elif num == 101:
-        return _ResNet(Bottleneck, [3,4,23,3])
+        return _ResNet(Bottleneck, [3,4,23,3], num_classes)
     elif num == 152:
-        return _ResNet(Bottleneck, [3,8,36,3])
+        return _ResNet(Bottleneck, [3,8,36,3], num_classes)
     else:
         raise NotImplementedError
