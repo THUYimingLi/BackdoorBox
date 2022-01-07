@@ -13,6 +13,9 @@ from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizon
 import core
 
 
+global_seed = 666
+torch.manual_seed(global_seed)
+
 # Define Benign Training and Testing Dataset
 # dataset = torchvision.datasets.CIFAR10
 dataset = torchvision.datasets.MNIST
@@ -64,7 +67,7 @@ blended = core.Blended(
     weight=weight,
     y_target=1,
     poisoned_rate=0.05,
-    seed=666
+    seed=global_seed
 )
 
 poisoned_train_dataset, poisoned_test_dataset = blended.get_poisoned_dataset()

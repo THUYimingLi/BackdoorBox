@@ -432,7 +432,8 @@ class BadNets(Base):
             test_dataset=test_dataset,
             model=model,
             loss=loss,
-            schedule=schedule)
+            schedule=schedule,
+            seed=seed)
 
         self.poisoned_train_dataset = CreatePoisonedDataset(
             train_dataset,

@@ -1,6 +1,7 @@
 import os
 import os.path as osp
 import time
+from copy import deepcopy
 
 import torch
 import torch.nn as nn
@@ -45,10 +46,10 @@ class Base(object):
         test_dataset (types in support_list): Benign testing dataset.
         model (torch.nn.Module): Network.
         loss (torch.nn.Module): Loss.
-        schedule (dict): Training or testing schedule. Default: None.
+        schedule (dict): Training or testing global schedule. Default: None.
     """
 
-    def __init__(self, train_dataset, test_dataset, model, loss, schedule=None):
+    def __init__(self, train_dataset, test_dataset, model, loss, schedule=None, seed=0):
         assert isinstance(train_dataset, support_list), 'train_dataset is an unsupported dataset type, train_dataset should be a subclass of our support list.'
         self.train_dataset = train_dataset
 
@@ -56,7 +57,11 @@ class Base(object):
         self.test_dataset = test_dataset
         self.model = model
         self.loss = loss
-        self.schedule = schedule
+        self.global_schedule = deepcopy(schedule)
+        self.current_schedule = None
+        self.seed = seed
+        # Set the seed for generating random numbers on CPU.
+        torch.manual_seed(self.seed)
 
     def get_model(self):
         return self.model
@@ -65,36 +70,40 @@ class Base(object):
         return self.poisoned_train_dataset, self.poisoned_test_dataset
 
     def adjust_learning_rate(self, optimizer, epoch):
-        if epoch in self.schedule['schedule']:
-            self.schedule['lr'] *= self.schedule['gamma']
+        if epoch in self.current_schedule['schedule']:
+            self.current_schedule['lr'] *= self.current_schedule['gamma']
             for param_group in optimizer.param_groups:
-                param_group['lr'] = self.schedule['lr']
+                param_group['lr'] = self.current_schedule['lr']
 
     def train(self, schedule=None):
-        if schedule is None and self.schedule is None:
+        if schedule is None and self.global_schedule is None:
             raise AttributeError("Training schedule is None, please check your schedule setting.")
-        elif schedule is not None and self.schedule is None:
-            self.schedule = schedule
-        elif schedule is None and self.schedule is not None:
-            schedule = self.schedule
-        elif schedule is not None and self.schedule is not None:
-            self.schedule = schedule
+        elif schedule is not None and self.global_schedule is None:
+            self.current_schedule = deepcopy(schedule)
+        elif schedule is None and self.global_schedule is not None:
+            self.current_schedule = deepcopy(self.global_schedule)
+        elif schedule is not None and self.global_schedule is not None:
+            self.current_schedule = deepcopy(schedule)
 
-        if 'pretrain' in schedule:
-            self.model.load_state_dict(torch.load(schedule['pretrain']), strict=False)
+        if 'pretrain' in self.current_schedule:
+            self.model.load_state_dict(torch.load(self.current_schedule['pretrain']), strict=False)
 
         # Use GPU
-        if 'device' in schedule and schedule['device'] == 'GPU':
-            if 'CUDA_VISIBLE_DEVICES' in schedule:
-                os.environ['CUDA_VISIBLE_DEVICES'] = schedule['CUDA_VISIBLE_DEVICES']
+        if 'device' in self.current_schedule and self.current_schedule['device'] == 'GPU':
+            if 'CUDA_VISIBLE_DEVICES' in self.current_schedule:
+                os.environ['CUDA_VISIBLE_DEVICES'] = self.current_schedule['CUDA_VISIBLE_DEVICES']
 
             assert torch.cuda.device_count() > 0, 'This machine has no cuda devices!'
-            assert schedule['GPU_num'] >0, 'GPU_num should be a positive integer'
-            print(f"This machine has {torch.cuda.device_count()} cuda devices, and use {schedule['GPU_num']} of them to train.")
-            if schedule['GPU_num'] == 1:
+            assert self.current_schedule['GPU_num'] >0, 'GPU_num should be a positive integer'
+            print(f"This machine has {torch.cuda.device_count()} cuda devices, and use {self.current_schedule['GPU_num']} of them to train.")
+
+            # Set the seed for generating random numbers on all GPUs.
+            torch.cuda.manual_seed_all(self.seed)
+
+            if self.current_schedule['GPU_num'] == 1:
                 device = torch.device("cuda:0")
             else:
-                gpus = list(range(schedule['GPU_num']))
+                gpus = list(range(self.current_schedule['GPU_num']))
                 self.model = nn.DataParallel(self.model.cuda(), device_ids=gpus, output_device=gpus[0])
                 # TODO: DDP training
                 pass
@@ -102,31 +111,31 @@ class Base(object):
         else:
             device = torch.device("cpu")
 
-        if schedule['benign_training'] is True:
+        if self.current_schedule['benign_training'] is True:
             train_loader = DataLoader(
                 self.train_dataset,
-                batch_size=schedule['batch_size'],
+                batch_size=self.current_schedule['batch_size'],
                 shuffle=True,
-                num_workers=schedule['num_workers'],
+                num_workers=self.current_schedule['num_workers'],
                 drop_last=True
             )
-        elif schedule['benign_training'] is False:
+        elif self.current_schedule['benign_training'] is False:
             train_loader = DataLoader(
                 self.poisoned_train_dataset,
-                batch_size=schedule['batch_size'],
+                batch_size=self.current_schedule['batch_size'],
                 shuffle=True,
-                num_workers=schedule['num_workers'],
+                num_workers=self.current_schedule['num_workers'],
                 drop_last=True
             )
         else:
-            raise AttributeError("schedule['benign_training'] should be True or False.")
+            raise AttributeError("self.current_schedule['benign_training'] should be True or False.")
 
         self.model = self.model.to(device)
         self.model.train()
 
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=schedule['lr'], momentum=schedule['momentum'], weight_decay=schedule['weight_decay'])
+        optimizer = torch.optim.SGD(self.model.parameters(), lr=self.current_schedule['lr'], momentum=self.current_schedule['momentum'], weight_decay=self.current_schedule['weight_decay'])
 
-        work_dir = osp.join(schedule['save_dir'], schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
+        work_dir = osp.join(self.current_schedule['save_dir'], self.current_schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
         os.makedirs(work_dir, exist_ok=True)
         log = Log(osp.join(work_dir, 'log.txt'))
 
@@ -138,10 +147,10 @@ class Base(object):
         iteration = 0
         last_time = time.time()
 
-        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size:{schedule['batch_size']}\niteration every epoch:{len(self.train_dataset) // schedule['batch_size']}\nInitial learning rate:{schedule['lr']}\n"
+        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size:{self.current_schedule['batch_size']}\niteration every epoch:{len(self.train_dataset) // self.current_schedule['batch_size']}\nInitial learning rate:{self.current_schedule['lr']}\n"
         log(msg)
 
-        for i in range(schedule['epochs']):
+        for i in range(self.current_schedule['epochs']):
             self.adjust_learning_rate(optimizer, i)
             for batch_id, batch in enumerate(train_loader):
                 batch_img = batch[0]
@@ -157,14 +166,14 @@ class Base(object):
                 iteration += 1
 
                 # breakpoint()
-                if iteration % schedule['log_iteration_interval'] == 0:
-                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{schedule['epochs']}, iteration:{batch_id + 1}/{len(self.poisoned_train_dataset)//schedule['batch_size']}, lr: {schedule['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
+                if iteration % self.current_schedule['log_iteration_interval'] == 0:
+                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{self.current_schedule['epochs']}, iteration:{batch_id + 1}/{len(self.poisoned_train_dataset)//self.current_schedule['batch_size']}, lr: {self.current_schedule['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
                     last_time = time.time()
                     log(msg)
 
-            if (i + 1) % schedule['test_epoch_interval'] == 0:
+            if (i + 1) % self.current_schedule['test_epoch_interval'] == 0:
                 # test result on benign test dataset
-                predict_digits, labels = self._test(self.test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+                predict_digits, labels = self._test(self.test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
                 total_num = labels.size(0)
                 prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
                 msg = "==========Test result on benign test dataset==========\n" + \
@@ -173,8 +182,8 @@ class Base(object):
                 log(msg)
 
                 # test result on poisoned test dataset
-                # if schedule['benign_training'] is False:
-                predict_digits, labels = self._test(self.poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+                # if self.current_schedule['benign_training'] is False:
+                predict_digits, labels = self._test(self.poisoned_test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
                 total_num = labels.size(0)
                 prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
                 msg = "==========Test result on poisoned test dataset==========\n" + \
@@ -185,7 +194,7 @@ class Base(object):
                 self.model = self.model.to(device)
                 self.model.train()
 
-            if (i + 1) % schedule['save_epoch_interval'] == 0:
+            if (i + 1) % self.current_schedule['save_epoch_interval'] == 0:
                 self.model.eval()
                 self.model = self.model.cpu()
                 ckpt_model_filename = "ckpt_epoch_" + str(i+1) + ".pth"
@@ -222,37 +231,41 @@ class Base(object):
             return predict_digits, labels
 
     def test(self, schedule=None, model=None, test_dataset=None, poisoned_test_dataset=None):
-        if schedule is None and self.schedule is None:
+        if schedule is None and self.global_schedule is None:
             raise AttributeError("Test schedule is None, please check your schedule setting.")
-        elif schedule is not None and self.schedule is None:
-            self.schedule = schedule
-        elif schedule is None and self.schedule is not None:
-            schedule = self.schedule
+        elif schedule is not None and self.global_schedule is None:
+            self.current_schedule = deepcopy(schedule)
+        elif schedule is None and self.global_schedule is not None:
+            self.current_schedule = deepcopy(self.global_schedule)
         elif schedule is not None and self.schedule is not None:
-            self.schedule = schedule
+            self.current_schedule = deepcopy(schedule)
 
         if model is None:
             model = self.model
 
-        if 'test_model' in schedule:
-            model.load_state_dict(torch.load(schedule['test_model']), strict=False)
+        if 'test_model' in self.current_schedule:
+            model.load_state_dict(torch.load(self.current_schedule['test_model']), strict=False)
 
         if test_dataset is None and poisoned_test_dataset is None:
             test_dataset = self.test_dataset
             poisoned_test_dataset = self.poisoned_test_dataset
 
         # Use GPU
-        if 'device' in schedule and schedule['device'] == 'GPU':
-            if 'CUDA_VISIBLE_DEVICES' in schedule:
-                os.environ['CUDA_VISIBLE_DEVICES'] = schedule['CUDA_VISIBLE_DEVICES']
+        if 'device' in self.current_schedule and self.current_schedule['device'] == 'GPU':
+            if 'CUDA_VISIBLE_DEVICES' in self.current_schedule:
+                os.environ['CUDA_VISIBLE_DEVICES'] = self.current_schedule['CUDA_VISIBLE_DEVICES']
 
             assert torch.cuda.device_count() > 0, 'This machine has no cuda devices!'
-            assert schedule['GPU_num'] >0, 'GPU_num should be a positive integer'
-            print(f"This machine has {torch.cuda.device_count()} cuda devices, and use {schedule['GPU_num']} of them to train.")
-            if schedule['GPU_num'] == 1:
+            assert self.current_schedule['GPU_num'] >0, 'GPU_num should be a positive integer'
+            print(f"This machine has {torch.cuda.device_count()} cuda devices, and use {self.current_schedule['GPU_num']} of them to train.")
+
+            # Set the seed for generating random numbers on all GPUs.
+            torch.cuda.manual_seed_all(self.seed)
+
+            if self.current_schedule['GPU_num'] == 1:
                 device = torch.device("cuda:0")
             else:
-                gpus = list(range(schedule['GPU_num']))
+                gpus = list(range(self.current_schedule['GPU_num']))
                 model = nn.DataParallel(model.cuda(), device_ids=gpus, output_device=gpus[0])
                 # TODO: DDP training
                 pass
@@ -260,14 +273,14 @@ class Base(object):
         else:
             device = torch.device("cpu")
 
-        work_dir = osp.join(schedule['save_dir'], schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
+        work_dir = osp.join(self.current_schedule['save_dir'], self.current_schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
         os.makedirs(work_dir, exist_ok=True)
         log = Log(osp.join(work_dir, 'log.txt'))
 
         if test_dataset is not None:
             last_time = time.time()
             # test result on benign test dataset
-            predict_digits, labels = self._test(test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+            predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
             total_num = labels.size(0)
             prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
             msg = "==========Test result on benign test dataset==========\n" + \
@@ -278,7 +291,7 @@ class Base(object):
         if poisoned_test_dataset is not None:
             last_time = time.time()
             # test result on poisoned test dataset
-            predict_digits, labels = self._test(poisoned_test_dataset, device, schedule['batch_size'], schedule['num_workers'])
+            predict_digits, labels = self._test(poisoned_test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
             total_num = labels.size(0)
             prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
             msg = "==========Test result on poisoned test dataset==========\n" + \

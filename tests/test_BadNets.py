@@ -13,6 +13,9 @@ from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizon
 import core
 
 
+global_seed = 666
+torch.manual_seed(global_seed)
+
 # Define Benign Training and Testing Dataset
 dataset = torchvision.datasets.CIFAR10
 # dataset = torchvision.datasets.MNIST
@@ -49,7 +52,7 @@ badnets = core.BadNets(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
-    seed=666
+    seed=global_seed
 )
 
 poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
@@ -76,10 +79,10 @@ for a in x[0]:
 # Train Benign Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': '2',
     'GPU_num': 1,
 
-    'benign_training': True,
+    'benign_training': True, # Train Benign Model
     'batch_size': 128,
     'num_workers': 4,
 
@@ -104,19 +107,29 @@ badnets.train(schedule)
 benign_model = badnets.get_model()
 
 
-'''
 # Test Benign Model
-badnets.test()
-'''
+test_schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '2',
+    'GPU_num': 1,
+
+    'batch_size': 128,
+    'num_workers': 4,
+
+    'save_dir': 'experiments',
+    'experiment_name': 'test_benign_CIFAR10_BadNets'
+    # 'experiment_name': 'test_benign_MNIST_BadNets'
+}
+badnets.test(test_schedule)
 
 
 # Train Infected Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': '2',
     'GPU_num': 1,
 
-    'benign_training': False,
+    'benign_training': False, # Train Infected Model
     'batch_size': 128,
     'num_workers': 4,
 
@@ -140,7 +153,17 @@ schedule = {
 badnets.train(schedule)
 infected_model = badnets.get_model()
 
-'''
 # Test Infected Model
-badnets.test()
-'''
+test_schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '2',
+    'GPU_num': 1,
+
+    'batch_size': 128,
+    'num_workers': 4,
+
+    'save_dir': 'experiments',
+    'experiment_name': 'test_poisoned_CIFAR10_BadNets'
+    # 'experiment_name': 'test_poisoned_MNIST_BadNets'
+}
+badnets.test(test_schedule)
