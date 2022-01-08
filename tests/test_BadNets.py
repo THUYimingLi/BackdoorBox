@@ -14,6 +14,7 @@ import core
 
 
 global_seed = 666
+deterministic = True
 torch.manual_seed(global_seed)
 
 # Define Benign Training and Testing Dataset
@@ -52,7 +53,8 @@ badnets = core.BadNets(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
-    seed=global_seed
+    seed=global_seed,
+    deterministic=deterministic
 )
 
 poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
@@ -79,7 +81,7 @@ for a in x[0]:
 # Train Benign Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '2',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'benign_training': True, # Train Benign Model
@@ -110,7 +112,7 @@ benign_model = badnets.get_model()
 # Test Benign Model
 test_schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '2',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'batch_size': 128,
@@ -123,10 +125,11 @@ test_schedule = {
 badnets.test(test_schedule)
 
 
+badnets.model = core.models.ResNet(18)
 # Train Infected Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '2',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'benign_training': False, # Train Infected Model
@@ -156,7 +159,7 @@ infected_model = badnets.get_model()
 # Test Infected Model
 test_schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '2',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'batch_size': 128,

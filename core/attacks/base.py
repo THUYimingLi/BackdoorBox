@@ -2,7 +2,9 @@ import os
 import os.path as osp
 import time
 from copy import deepcopy
+import random
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -49,7 +51,7 @@ class Base(object):
         schedule (dict): Training or testing global schedule. Default: None.
     """
 
-    def __init__(self, train_dataset, test_dataset, model, loss, schedule=None, seed=0):
+    def __init__(self, train_dataset, test_dataset, model, loss, schedule=None, seed=0, deterministic=False):
         assert isinstance(train_dataset, support_list), 'train_dataset is an unsupported dataset type, train_dataset should be a subclass of our support list.'
         self.train_dataset = train_dataset
 
@@ -59,9 +61,34 @@ class Base(object):
         self.loss = loss
         self.global_schedule = deepcopy(schedule)
         self.current_schedule = None
-        self.seed = seed
-        # Set the seed for generating random numbers on CPU.
-        torch.manual_seed(self.seed)
+        self._set_seed(seed, deterministic)
+
+    def _set_seed(self, seed, deterministic):
+        # Use torch.manual_seed() to seed the RNG for all devices (both CPU and CUDA).
+        torch.manual_seed(seed)
+
+        # Set python seed
+        random.seed(seed)
+
+        # Set numpy seed (However, some applications and libraries may use NumPy Random Generator objects,
+        # not the global RNG (https://numpy.org/doc/stable/reference/random/generator.html), and those will
+        # need to be seeded consistently as well.)
+        np.random.seed(seed)
+
+        os.environ['PYTHONHASHSEED'] = str(seed)
+
+        if deterministic:
+            torch.backends.cudnn.benchmark = False
+            torch.use_deterministic_algorithms(True)
+            torch.backends.cudnn.deterministic = True
+            os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+            # Hint: In some versions of CUDA, RNNs and LSTM networks may have non-deterministic behavior.
+            # If you want to set them deterministic, see torch.nn.RNN() and torch.nn.LSTM() for details and workarounds.
+
+    def _seed_worker(self, worker_id):
+        worker_seed = torch.initial_seed() % 2**32
+        np.random.seed(worker_seed)
+        random.seed(worker_seed)
 
     def get_model(self):
         return self.model
@@ -97,9 +124,6 @@ class Base(object):
             assert self.current_schedule['GPU_num'] >0, 'GPU_num should be a positive integer'
             print(f"This machine has {torch.cuda.device_count()} cuda devices, and use {self.current_schedule['GPU_num']} of them to train.")
 
-            # Set the seed for generating random numbers on all GPUs.
-            torch.cuda.manual_seed_all(self.seed)
-
             if self.current_schedule['GPU_num'] == 1:
                 device = torch.device("cuda:0")
             else:
@@ -117,7 +141,8 @@ class Base(object):
                 batch_size=self.current_schedule['batch_size'],
                 shuffle=True,
                 num_workers=self.current_schedule['num_workers'],
-                drop_last=True
+                drop_last=True,
+                worker_init_fn=self._seed_worker
             )
         elif self.current_schedule['benign_training'] is False:
             train_loader = DataLoader(
@@ -125,7 +150,8 @@ class Base(object):
                 batch_size=self.current_schedule['batch_size'],
                 shuffle=True,
                 num_workers=self.current_schedule['num_workers'],
-                drop_last=True
+                drop_last=True,
+                worker_init_fn=self._seed_worker
             )
         else:
             raise AttributeError("self.current_schedule['benign_training'] should be True or False.")
@@ -165,7 +191,6 @@ class Base(object):
 
                 iteration += 1
 
-                # breakpoint()
                 if iteration % self.current_schedule['log_iteration_interval'] == 0:
                     msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{self.current_schedule['epochs']}, iteration:{batch_id + 1}/{len(self.poisoned_train_dataset)//self.current_schedule['batch_size']}, lr: {self.current_schedule['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
                     last_time = time.time()
@@ -176,9 +201,11 @@ class Base(object):
                 predict_digits, labels = self._test(self.test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
                 total_num = labels.size(0)
                 prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+                top1_correct = int(round(prec1.item() / 100.0 * total_num))
+                top5_correct = int(round(prec5.item() / 100.0 * total_num))
                 msg = "==========Test result on benign test dataset==========\n" + \
                       time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                      f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
+                      f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num} time: {time.time()-last_time}\n"
                 log(msg)
 
                 # test result on poisoned test dataset
@@ -186,9 +213,11 @@ class Base(object):
                 predict_digits, labels = self._test(self.poisoned_test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
                 total_num = labels.size(0)
                 prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+                top1_correct = int(round(prec1.item() / 100.0 * total_num))
+                top5_correct = int(round(prec5.item() / 100.0 * total_num))
                 msg = "==========Test result on poisoned test dataset==========\n" + \
-                    time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                    f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
+                      time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                      f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num}, time: {time.time()-last_time}\n"
                 log(msg)
 
                 self.model = self.model.to(device)
@@ -210,7 +239,8 @@ class Base(object):
                 batch_size=batch_size,
                 shuffle=False,
                 num_workers=num_workers,
-                drop_last=False
+                drop_last=False,
+                worker_init_fn=self._seed_worker
             )
 
             self.model = self.model.to(device)
@@ -259,9 +289,6 @@ class Base(object):
             assert self.current_schedule['GPU_num'] >0, 'GPU_num should be a positive integer'
             print(f"This machine has {torch.cuda.device_count()} cuda devices, and use {self.current_schedule['GPU_num']} of them to train.")
 
-            # Set the seed for generating random numbers on all GPUs.
-            torch.cuda.manual_seed_all(self.seed)
-
             if self.current_schedule['GPU_num'] == 1:
                 device = torch.device("cuda:0")
             else:
@@ -283,9 +310,11 @@ class Base(object):
             predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
             total_num = labels.size(0)
             prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+            top1_correct = int(round(prec1.item() / 100.0 * total_num))
+            top5_correct = int(round(prec5.item() / 100.0 * total_num))
             msg = "==========Test result on benign test dataset==========\n" + \
-                    time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                    f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()} time: {time.time()-last_time}\n"
+                  time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                  f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num} time: {time.time()-last_time}\n"
             log(msg)
 
         if poisoned_test_dataset is not None:
@@ -294,7 +323,9 @@ class Base(object):
             predict_digits, labels = self._test(poisoned_test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
             total_num = labels.size(0)
             prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
+            top1_correct = int(round(prec1.item() / 100.0 * total_num))
+            top5_correct = int(round(prec5.item() / 100.0 * total_num))
             msg = "==========Test result on poisoned test dataset==========\n" + \
-                time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                f"Top-1 correct / Total:{int(prec1.item() / 100.0 * total_num)}/{total_num}, Top-1 accuracy:{prec1.item()}, Top-5 correct / Total:{int(prec5.item() / 100.0 * total_num)}/{total_num}, Top-5 accuracy:{prec5.item()}, time: {time.time()-last_time}\n"
+                  time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                  f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num}, time: {time.time()-last_time}\n"
             log(msg)
