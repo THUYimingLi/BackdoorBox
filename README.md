@@ -6,3 +6,31 @@
 ![License GPL](https://img.shields.io/badge/license-GPL-DodgerBlue.svg?style=plastic)
 
 BackdoorBox is a Python toolbox for backdoor learning research. Specifically, BackdoorBox contains modules for conducting backdoor attacks and backdoor defenses.  
+
+
+
+# Current Status
+
+## Developed Methods
+
+- BadNets
+- Blended Attack
+- Refool (simplified version)
+
+## Methods Under Development
+
+- Label-consistent Attack
+- WaNet
+- tUAP (basic version)
+- Blind Backdoor
+- Input-aware Dynamic Attack
+- Physical Attack
+
+
+
+# Contributors
+
+| Organization        | Contributors                                                 |
+| ------------------- | ------------------------------------------------------------ |
+| Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN), [Guanhao Gan](), [Kuofeng Gao](), [Xin Yan](), [Jia Xu](), [Linghui Zhu](https://github.com/zlh-thu) |
+
