@@ -13,9 +13,9 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 
 ## Developed Methods
 
-- BadNets
-- Blended Attack
-- Refool (simplified version)
+- [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py)
+- [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py)
+- [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py)
 
 ## Methods Under Development
 
@@ -27,10 +27,8 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 - Physical Attack
 
 
-
 # Contributors
 
 | Organization        | Contributors                                                 |
 | ------------------- | ------------------------------------------------------------ |
 | Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN), [Guanhao Gan](), [Kuofeng Gao](), [Xin Yan](), [Jia Xu](), [Linghui Zhu](https://github.com/zlh-thu) |
-
