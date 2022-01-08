@@ -21,7 +21,7 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 
 - Label-consistent Attack
 - WaNet
-- tUAP (basic version)
+- TUAP (basic version)
 - Blind Backdoor
 - Input-aware Dynamic Attack
 - Physical Attack
