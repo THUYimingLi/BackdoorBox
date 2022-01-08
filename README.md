@@ -31,4 +31,4 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 
 | Organization        | Contributors                                                 |
 | ------------------- | ------------------------------------------------------------ |
-| Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN), [Guanhao Gan](), [Kuofeng Gao](), [Xin Yan](), [Jia Xu](), [Linghui Zhu](https://github.com/zlh-thu) |
+| Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN), Guanhao Gan, Kuofeng Gao, Xin Yan, Jia Xu, [Linghui Zhu](https://github.com/zlh-thu) |
