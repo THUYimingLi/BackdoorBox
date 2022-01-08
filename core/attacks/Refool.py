@@ -521,11 +521,11 @@ class Refool(Base):
                  schedule=None,
                  seed=0,
                  deterministic=False,
-                 max_image_size=560, 
-                 ghost_rate=0.49, 
-                 alpha_b=-1., 
-                 offset=(0, 0), 
-                 sigma=-1, 
+                 max_image_size=560,
+                 ghost_rate=0.49,
+                 alpha_b=-1.,
+                 offset=(0, 0),
+                 sigma=-1,
                  ghost_alpha=-1.):
 
         super(Refool, self).__init__(
@@ -544,11 +544,11 @@ class Refool(Base):
             poisoned_transform_train_index,
             poisoned_target_transform_index,
             reflection_candidates,
-            max_image_size, 
-            ghost_rate, 
-            alpha_b, 
-            offset, 
-            sigma, 
+            max_image_size,
+            ghost_rate,
+            alpha_b,
+            offset,
+            sigma,
             ghost_alpha)
 
         self.poisoned_test_dataset = CreatePoisonedDataset(
@@ -558,9 +558,9 @@ class Refool(Base):
             poisoned_transform_test_index,
             poisoned_target_transform_index,
             reflection_candidates,
-            max_image_size, 
-            ghost_rate, 
-            alpha_b, 
-            offset, 
-            sigma, 
+            max_image_size,
+            ghost_rate,
+            alpha_b,
+            offset,
+            sigma,
             ghost_alpha)
