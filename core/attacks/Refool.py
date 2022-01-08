@@ -520,7 +520,7 @@ class Refool(Base):
                  poisoned_target_transform_index=0,
                  schedule=None,
                  seed=0,
-                 deterministic=False
+                 deterministic=False,
                  max_image_size=560, 
                  ghost_rate=0.49, 
                  alpha_b=-1., 
