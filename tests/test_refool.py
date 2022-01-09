@@ -1,6 +1,6 @@
 
 '''
-This is the test code of poisoned training on GTSRB ,CIFAR10, MNIST, using dataset class of torchvision.datasets.DatasetFolder torchvision.datasets.CIFAR10 torchvision.datasets.MNIST.
+This is the test code of poisoned training on GTSRB, CIFAR10, MNIST, using dataset class of torchvision.datasets.DatasetFolder torchvision.datasets.CIFAR10 torchvision.datasets.MNIST.
 The attack method is Refool.
 '''
 
@@ -42,7 +42,7 @@ reflection_images = [read_image(os.path.join(reflection_data_dir,img_path)) for 
 # Prepare datasets
 transform_train = Compose([
     transforms.ToPILImage(),
-    transforms.Resize((32,32)),
+    transforms.Resize((32, 32)),
     RandomHorizontalFlip(),
     ToTensor(),
     transforms.Normalize((0.485, 0.456, 0.406),
@@ -50,7 +50,7 @@ transform_train = Compose([
 ])
 transform_test = Compose([
     transforms.ToPILImage(),
-    transforms.Resize((32,32)),
+    transforms.Resize((32, 32)),
     ToTensor(),
     transforms.Normalize((0.485, 0.456, 0.406),
                         (0.229, 0.224, 0.225))
@@ -76,7 +76,7 @@ testset = DatasetFolder(
 refool= core.Refool(
     train_dataset=trainset,
     test_dataset=testset,
-    model=core.models.ResNet(18,43),
+    model=core.models.ResNet(18, 43),
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
@@ -122,14 +122,14 @@ refool.train(schedule)
 
 # Prepare datasets
 transform_train = Compose([
-    transforms.Resize((32,32)),
+    transforms.Resize((32, 32)),
     RandomHorizontalFlip(),
     ToTensor(),
     transforms.Normalize((0.485, 0.456, 0.406),
                         (0.229, 0.224, 0.225))
 ])
 transform_test = Compose([
-    transforms.Resize((32,32)),
+    transforms.Resize((32, 32)),
     ToTensor(),
     transforms.Normalize((0.485, 0.456, 0.406),
                         (0.229, 0.224, 0.225))
@@ -198,12 +198,12 @@ refool.train(schedule)
 # ===== Train backdoored model on MNIST using with MNIST ===== 
 # Prepare datasets
 transform_train = Compose([
-    transforms.Resize((28,28)),
+    transforms.Resize((28, 28)),
     RandomHorizontalFlip(),
     ToTensor(),
 ])
 transform_test = Compose([
-    transforms.Resize((28,28)),
+    transforms.Resize((28, 28)),
     ToTensor(),
 ])
 trainset = MNIST(
