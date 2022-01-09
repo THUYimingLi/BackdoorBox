@@ -2,7 +2,7 @@
 This is the implement of WaNet [1].
 
 Reference:
-[1] WANET – IMPERCEPTIBLE WARPING-BASED BACK- DOOR ATTACK. ICLR 2021.
+[1] WaNet - Imperceptible Warping-based Backdoor Attack. ICLR 2021.
 '''
 
 import copy
