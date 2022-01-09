@@ -1,6 +1,6 @@
 '''
 This is the test code of poisoned training on GTSRB , MNIST,CIFAR10, using dataset class of torchvision.datasets.DatasetFolder, torchvision.datasets.MNIST, torchvision.datasets.CIFAR10.
-Attack method is WaNet.
+The attack method is WaNet.
 '''
 
 
