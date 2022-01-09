@@ -18,6 +18,10 @@ from torchvision.datasets import DatasetFolder, CIFAR10, MNIST
 import core
 
 
+global_seed = 666
+deterministic = True
+torch.manual_seed(global_seed)
+
 # load reflection images
 reflection_images = []
 reflection_data_dir = "/data/ganguanhao/datasets/VOCdevkit/VOC2012/JPEGImages/" # please replace this with path to your desired reflection set
@@ -80,10 +84,12 @@ refool= core.Refool(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
-    poisoned_transform_index=0,
+    poisoned_transform_train_index=0,
+    poisoned_transform_test_index=0,
     poisoned_target_transform_index=0,
     schedule=None,
-    seed=666,
+    seed=global_seed,
+    deterministic=deterministic,
     reflection_candidates = reflection_images,
 )
 
@@ -156,10 +162,12 @@ refool= core.Refool(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
-    poisoned_transform_index=0,
+    poisoned_transform_train_index=0,
+    poisoned_transform_test_index=0,
     poisoned_target_transform_index=0,
     schedule=None,
-    seed=666,
+    seed=global_seed,
+    deterministic=deterministic,
     reflection_candidates = reflection_images,
 )
 
@@ -230,10 +238,12 @@ refool= core.Refool(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
-    poisoned_transform_index=0,
+    poisoned_transform_train_index=0,
+    poisoned_transform_test_index=0,
     poisoned_target_transform_index=0,
     schedule=None,
-    seed=666,
+    seed=global_seed,
+    deterministic=deterministic,
     reflection_candidates = reflection_images,
 )
 

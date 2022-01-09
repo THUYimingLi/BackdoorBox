@@ -10,6 +10,7 @@ data/
 experiments/
 
 # personal test code
+mytest/
 test.sh
 test.py
 test2.py

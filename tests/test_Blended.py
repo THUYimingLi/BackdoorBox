@@ -13,6 +13,10 @@ from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizon
 import core
 
 
+global_seed = 666
+deterministic = True
+torch.manual_seed(global_seed)
+
 # Define Benign Training and Testing Dataset
 # dataset = torchvision.datasets.CIFAR10
 dataset = torchvision.datasets.MNIST
@@ -64,7 +68,8 @@ blended = core.Blended(
     weight=weight,
     y_target=1,
     poisoned_rate=0.05,
-    seed=666
+    seed=global_seed,
+    deterministic=deterministic
 )
 
 poisoned_train_dataset, poisoned_test_dataset = blended.get_poisoned_dataset()
@@ -91,7 +96,7 @@ for a in x[0]:
 # Train Benign Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': '1',
     'GPU_num': 1,
 
     'benign_training': True,
@@ -118,17 +123,27 @@ schedule = {
 blended.train(schedule)
 benign_model = blended.get_model()
 
-
-'''
 # Test Benign Model
-blended.test()
-'''
+test_schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '1',
+    'GPU_num': 1,
+
+    'batch_size': 128,
+    'num_workers': 4,
+
+    'save_dir': 'experiments',
+    # 'experiment_name': 'test_benign_CIFAR10_Blended'
+    'experiment_name': 'test_benign_MNIST_Blended'
+}
+blended.test(test_schedule)
 
 
+blended.model = core.models.BaselineMNISTNetwork()
 # Train Infected Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': '1',
     'GPU_num': 1,
 
     'benign_training': False,
@@ -155,7 +170,17 @@ schedule = {
 blended.train(schedule)
 infected_model = blended.get_model()
 
-'''
 # Test Infected Model
-blended.test()
-'''
+test_schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '1',
+    'GPU_num': 1,
+
+    'batch_size': 128,
+    'num_workers': 4,
+
+    'save_dir': 'experiments',
+    # 'experiment_name': 'test_poisoned_CIFAR10_Blended'
+    'experiment_name': 'test_poisoned_MNIST_Blended'
+}
+blended.test(test_schedule)

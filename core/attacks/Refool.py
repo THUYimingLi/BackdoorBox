@@ -240,7 +240,7 @@ class AddCIFAR10TriggerMixin(AddTriggerMixin):
         return img
 
 class PoisonedDatasetFolder(DatasetFolder, AddDatasetFolderTriggerMixin):
-    def __init__(self, benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, seed, reflection_cadidates,\
+    def __init__(self, benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, reflection_cadidates,\
             max_image_size=560, ghost_rate=0.49, alpha_b=-1., offset=(0, 0), sigma=-1, ghost_alpha=-1.):
         """
         Args:
@@ -259,7 +259,6 @@ class PoisonedDatasetFolder(DatasetFolder, AddDatasetFolderTriggerMixin):
             benign_dataset.transform,
             benign_dataset.target_transform,
             None)
-        random.seed(seed)
         total_num = len(benign_dataset)
         poisoned_num = int(total_num * poisoned_rate)
         assert poisoned_num >= 0, 'poisoned_num should greater than or equal to zero.'
@@ -325,7 +324,7 @@ class PoisonedDatasetFolder(DatasetFolder, AddDatasetFolderTriggerMixin):
    
 class PoisonedCIFAR10(CIFAR10, AddCIFAR10TriggerMixin):
     def __init__(self, benign_dataset, y_target, poisoned_rate, poisoned_transform_index, \
-                 poisoned_target_transform_index, seed,reflection_cadidates,\
+                 poisoned_target_transform_index, reflection_cadidates,\
                  max_image_size=560, ghost_rate=0.49, alpha_b=-1., offset=(0, 0), \
                  sigma=-1, ghost_alpha=-1.):
         super(PoisonedCIFAR10, self).__init__(
@@ -334,7 +333,6 @@ class PoisonedCIFAR10(CIFAR10, AddCIFAR10TriggerMixin):
             benign_dataset.transform,
             benign_dataset.target_transform,
             download=True)
-        random.seed(seed)
         total_num = len(benign_dataset)
         poisoned_num = int(total_num * poisoned_rate)
         assert poisoned_num >= 0, 'poisoned_num should greater than or equal to zero.'
@@ -397,7 +395,7 @@ class PoisonedCIFAR10(CIFAR10, AddCIFAR10TriggerMixin):
 
 class PoisonedMNIST(MNIST, AddMNISTTriggerMixin):
     def __init__(self, benign_dataset, y_target, poisoned_rate, poisoned_transform_index, \
-                    poisoned_target_transform_index, seed,reflection_cadidates,\
+                    poisoned_target_transform_index, reflection_cadidates,\
                     max_image_size=560, ghost_rate=0.49, alpha_b=-1., offset=(0, 0), \
                     sigma=-1, ghost_alpha=-1.):
         super(PoisonedMNIST, self).__init__(
@@ -406,7 +404,6 @@ class PoisonedMNIST(MNIST, AddMNISTTriggerMixin):
             benign_dataset.transform,
             benign_dataset.target_transform,
             download=True)
-        random.seed(seed)
         total_num = len(benign_dataset)
         poisoned_num = int(total_num * poisoned_rate)
         assert poisoned_num >= 0, 'poisoned_num should greater than or equal to zero.'
@@ -465,17 +462,17 @@ class PoisonedMNIST(MNIST, AddMNISTTriggerMixin):
                 target = self.target_transform(target)
         return img, target
 
-def CreatePoisonedDataset(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, seed, reflection_cadidates, \
+def CreatePoisonedDataset(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, reflection_cadidates, \
     max_image_size=560, ghost_rate=0.49, alpha_b=-1., offset=(0, 0), sigma=-1, ghost_alpha=-1.):
     class_name = type(benign_dataset)
     if class_name == DatasetFolder:
-        return PoisonedDatasetFolder(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, seed, reflection_cadidates,\
+        return PoisonedDatasetFolder(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, reflection_cadidates,\
             max_image_size=max_image_size, ghost_rate=ghost_rate, alpha_b=alpha_b, offset=offset, sigma=sigma, ghost_alpha=ghost_alpha)
     elif class_name == CIFAR10:
-        return PoisonedCIFAR10(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, seed, reflection_cadidates,\
+        return PoisonedCIFAR10(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, reflection_cadidates,\
             max_image_size=max_image_size, ghost_rate=ghost_rate, alpha_b=alpha_b, offset=offset, sigma=sigma, ghost_alpha=ghost_alpha)
     elif class_name == MNIST:
-        return PoisonedMNIST(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, seed, reflection_cadidates,\
+        return PoisonedMNIST(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index, reflection_cadidates,\
             max_image_size=max_image_size, ghost_rate=ghost_rate, alpha_b=alpha_b, offset=offset, sigma=sigma, ghost_alpha=ghost_alpha)
     else:
         raise NotImplementedError
@@ -491,10 +488,15 @@ class Refool(Base):
         loss (torch.nn.Module): Loss.
         y_target (int): N-to-1 attack target label.
         poisoned_rate (float): Ratio of poisoned samples.
-        poisoned_transform_index (int): The position that poisoned transform will be inserted. Default: 0.
+        poisoned_transform_train_index (int): The position index that poisoned transform will be inserted in train dataset. Default: 0.
+        poisoned_transform_test_index (int): The position index that poisoned transform will be inserted in test dataset. Default: 0.
         poisoned_target_transform_index (int): The position that poisoned target transform will be inserted. Default: 0.
         schedule (dict): Training or testing schedule. Default: None.
         seed (int): Random seed for poisoned set. Default: 0.
+        deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
+            That is, algorithms which, given the same input, and when run on the same software and hardware,
+            always produce the same output. When enabled, operations will use deterministic algorithms when available,
+            and if only nondeterministic algorithms are available they will throw a RuntimeError when called. Default: False.
         
         reflection_cadidates (List of numpy.ndarray of shape (H, W, C) or (H, W))
         max_image_size (int): max(Height, Weight) of returned image
@@ -513,15 +515,17 @@ class Refool(Base):
                  y_target,
                  poisoned_rate,
                  reflection_candidates,
-                 poisoned_transform_index=0,
+                 poisoned_transform_train_index=0,
+                 poisoned_transform_test_index=0,
                  poisoned_target_transform_index=0,
                  schedule=None,
                  seed=0,
-                 max_image_size=560, 
-                 ghost_rate=0.49, 
-                 alpha_b=-1., 
-                 offset=(0, 0), 
-                 sigma=-1, 
+                 deterministic=False,
+                 max_image_size=560,
+                 ghost_rate=0.49,
+                 alpha_b=-1.,
+                 offset=(0, 0),
+                 sigma=-1,
                  ghost_alpha=-1.):
 
         super(Refool, self).__init__(
@@ -529,34 +533,34 @@ class Refool(Base):
             test_dataset=test_dataset,
             model=model,
             loss=loss,
-            schedule=schedule)
+            schedule=schedule,
+            seed=seed,
+            deterministic=deterministic)
 
         self.poisoned_train_dataset = CreatePoisonedDataset(
             train_dataset,
             y_target,
             poisoned_rate,
-            poisoned_transform_index,
+            poisoned_transform_train_index,
             poisoned_target_transform_index,
-            seed,
             reflection_candidates,
-            max_image_size, 
-            ghost_rate, 
-            alpha_b, 
-            offset, 
-            sigma, 
+            max_image_size,
+            ghost_rate,
+            alpha_b,
+            offset,
+            sigma,
             ghost_alpha)
 
         self.poisoned_test_dataset = CreatePoisonedDataset(
             test_dataset,
             y_target,
             1.0,
-            poisoned_transform_index,
+            poisoned_transform_test_index,
             poisoned_target_transform_index,
-            seed,
             reflection_candidates,
-            max_image_size, 
-            ghost_rate, 
-            alpha_b, 
-            offset, 
-            sigma, 
+            max_image_size,
+            ghost_rate,
+            alpha_b,
+            offset,
+            sigma,
             ghost_alpha)
