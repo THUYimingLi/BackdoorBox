@@ -32,7 +32,7 @@ def gen_grid(height, k):
     return identity_grid, noise_grid
 
 
-#############GTSRD#########
+#############GTSRB#########
 dataset = torchvision.datasets.DatasetFolder
 
 
@@ -136,7 +136,7 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poisoned_DatasetFolder_GTSRD_WaNet'
+    'experiment_name': 'train_poisoned_DatasetFolder_GTSRB_WaNet'
 }
 
 wanet.train(schedule)
