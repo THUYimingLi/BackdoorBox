@@ -250,7 +250,7 @@ schedule = {
     'momentum': 0.9,
     'weight_decay': 5e-4,
     'gamma': 0.1,
-    'schedule': [10,15,],
+    'schedule': [10, 15],
 
     'epochs': 20,
 
