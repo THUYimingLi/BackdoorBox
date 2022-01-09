@@ -4,5 +4,6 @@ from .Refool import Refool
 from .WaNet import WaNet
 
 __all__ = [
-    'BadNets', 'Blended','Refool','WaNet'
+    'BadNets', 'Blended','Refool', 'WaNet'
 ]
+
