@@ -1,5 +1,5 @@
 '''
-This is the test code of poisoned training on GTSRB , MNIST,CIFAR10, using dataset class of torchvision.datasets.DatasetFolder, torchvision.datasets.MNIST, torchvision.datasets.CIFAR10.
+This is the test code of poisoned training on GTSRB, MNIST, CIFAR10, using dataset class of torchvision.datasets.DatasetFolder, torchvision.datasets.MNIST, torchvision.datasets.CIFAR10.
 The attack method is WaNet.
 '''
 
@@ -21,10 +21,10 @@ def gen_grid(height, k):
     """Generate an identity grid with shape 1*height*height*2 and a noise grid with shape 1*height*height*2
     according to the input height ``height`` and the uniform grid size ``k``.
     """
-    ins = torch.rand(1,2, k, k) * 2 - 1
+    ins = torch.rand(1, 2, k, k) * 2 - 1
     ins = ins / torch.mean(torch.abs(ins))  # a uniform grid
     noise_grid = nn.functional.upsample(ins, size=height, mode="bicubic", align_corners=True)
-    noise_grid = noise_grid.permute(0,2, 3, 1)  # 1*height*height*2
+    noise_grid = noise_grid.permute(0, 2, 3, 1)  # 1*height*height*2
     array1d = torch.linspace(-1, 1, steps=height)  # 1D coordinate divided by height in [-1, 1]
     x, y = torch.meshgrid(array1d, array1d)  # 2D coordinates height*height
     identity_grid = torch.stack((y, x), 2)[None, ...]  # 1*height*height*2
@@ -41,13 +41,13 @@ transform_train = Compose([
     ToTensor(),
     RandomHorizontalFlip(),
     transforms.ToPILImage(),
-    transforms.Resize((32,32)),
+    transforms.Resize((32, 32)),
     ToTensor()
 ])
 transform_test = Compose([
     ToTensor(),
     transforms.ToPILImage(),
-    transforms.Resize((32,32)),
+    transforms.Resize((32, 32)),
     ToTensor()
 
 ])
@@ -78,12 +78,12 @@ for a in x[0]:
         print("%-4.2f" % float(b), end=' ')
     print()
 
-identity_grid,noise_grid=gen_grid(32,4)
+identity_grid,noise_grid=gen_grid(32, 4)
 
 wanet = core.WaNet(
     train_dataset=trainset,
     test_dataset=testset,
-    model=core.models.ResNet(18,43),
+    model=core.models.ResNet(18, 43),
     loss=nn.CrossEntropyLoss(),
     y_target=0,
     poisoned_rate=0.1,
