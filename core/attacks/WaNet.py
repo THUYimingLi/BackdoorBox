@@ -223,8 +223,7 @@ class PoisonedDatasetFolder(DatasetFolder):
                  noise_grid,
                  noise,
                  poisoned_transform_index,
-                 poisoned_target_transform_index,
-                 seed):
+                 poisoned_target_transform_index):
         super(PoisonedDatasetFolder, self).__init__(
             benign_dataset.root,
             benign_dataset.loader,
@@ -232,7 +231,6 @@ class PoisonedDatasetFolder(DatasetFolder):
             benign_dataset.transform,
             benign_dataset.target_transform,
             None)
-        random.seed(seed)
         total_num = len(benign_dataset)
         poisoned_num = int(total_num * poisoned_rate)
         assert poisoned_num >= 0, 'poisoned_num should greater than or equal to zero.'
@@ -303,15 +301,13 @@ class PoisonedMNIST(MNIST):
                  noise_grid,
                  noise,
                  poisoned_transform_index,
-                 poisoned_target_transform_index,
-                 seed):
+                 poisoned_target_transform_index):
         super(PoisonedMNIST, self).__init__(
             benign_dataset.root,
             benign_dataset.train,
             benign_dataset.transform,
             benign_dataset.target_transform,
             download=True)
-        random.seed(seed)
         total_num = len(benign_dataset)
         poisoned_num = int(total_num * poisoned_rate)
         assert poisoned_num >= 0, 'poisoned_num should greater than or equal to zero.'
@@ -377,15 +373,13 @@ class PoisonedCIFAR10(CIFAR10):
                  noise_grid,
                  noise,
                  poisoned_transform_index,
-                 poisoned_target_transform_index,
-                 seed):
+                 poisoned_target_transform_index):
         super(PoisonedCIFAR10, self).__init__(
             benign_dataset.root,
             benign_dataset.train,
             benign_dataset.transform,
             benign_dataset.target_transform,
             download=True)
-        random.seed(seed)
         total_num = len(benign_dataset)
         poisoned_num = int(total_num * poisoned_rate)
         assert poisoned_num >= 0, 'poisoned_num should greater than or equal to zero.'
@@ -442,14 +436,14 @@ class PoisonedCIFAR10(CIFAR10):
         return img, target
 
 
-def CreatePoisonedDataset(benign_dataset, y_target, poisoned_rate, identity_grid, noise_grid, noise, poisoned_transform_index, poisoned_target_transform_index, seed):
+def CreatePoisonedDataset(benign_dataset, y_target, poisoned_rate, identity_grid, noise_grid, noise, poisoned_transform_index, poisoned_target_transform_index):
     class_name = type(benign_dataset)
     if class_name == DatasetFolder:
-        return PoisonedDatasetFolder(benign_dataset, y_target, poisoned_rate, identity_grid, noise_grid, noise, poisoned_transform_index, poisoned_target_transform_index, seed)
+        return PoisonedDatasetFolder(benign_dataset, y_target, poisoned_rate, identity_grid, noise_grid, noise, poisoned_transform_index, poisoned_target_transform_index)
     elif class_name == MNIST:
-        return PoisonedMNIST(benign_dataset, y_target, poisoned_rate, identity_grid, noise_grid, noise, poisoned_transform_index, poisoned_target_transform_index, seed)
+        return PoisonedMNIST(benign_dataset, y_target, poisoned_rate, identity_grid, noise_grid, noise, poisoned_transform_index, poisoned_target_transform_index)
     elif class_name == CIFAR10:
-        return PoisonedCIFAR10(benign_dataset, y_target, poisoned_rate, identity_grid, noise_grid, noise, poisoned_transform_index, poisoned_target_transform_index, seed)
+        return PoisonedCIFAR10(benign_dataset, y_target, poisoned_rate, identity_grid, noise_grid, noise, poisoned_transform_index, poisoned_target_transform_index)
     else:
         raise NotImplementedError
 
@@ -466,10 +460,16 @@ class WaNet(Base):
         poisoned_rate (float): Ratio of poisoned samples.
         identity_grid (orch.Tensor): the poisoned pattern shape.
         noise_grid (orch.Tensor): the noise pattern.
-        poisoned_transform_index (int): The position that poisoned transform will be inserted. Default: 0.
+        poisoned_transform_train_index (int): The position index that poisoned transform will be inserted in train dataset. Default: 0.
+        poisoned_transform_test_index (int): The position index that poisoned transform will be inserted in test dataset. Default: 0.
         poisoned_target_transform_index (int): The position that poisoned target transform will be inserted. Default: 0.
         schedule (dict): Training or testing schedule. Default: None.
         seed (int): Random seed for poisoned set. Default: 0.
+        seed (int): Random seed for poisoned set. Default: 0.
+        deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
+            That is, algorithms which, given the same input, and when run on the same software and hardware,
+            always produce the same output. When enabled, operations will use deterministic algorithms when available,
+            and if only nondeterministic algorithms are available they will throw a RuntimeError when called. Default: False.
     """
 
     def __init__(self,
@@ -482,17 +482,21 @@ class WaNet(Base):
                  identity_grid,
                  noise_grid,
                  noise,
-                 poisoned_transform_index=0,
+                 poisoned_transform_train_index=0,
+                 poisoned_transform_test_index=0,
                  poisoned_target_transform_index=0,
                  schedule=None,
-                 seed=0):
+                 seed=0,
+                 deterministic=False):
        
         super(WaNet, self).__init__(
             train_dataset=train_dataset,
             test_dataset=test_dataset,
             model=model,
             loss=loss,
-            schedule=schedule)
+            schedule=schedule,
+            seed=seed,
+            deterministic=deterministic)
 
         self.poisoned_train_dataset = CreatePoisonedDataset(
             train_dataset,
@@ -501,9 +505,8 @@ class WaNet(Base):
             identity_grid,
             noise_grid,
             noise,
-            poisoned_transform_index,
-            poisoned_target_transform_index,
-            seed)
+            poisoned_transform_train_index,
+            poisoned_target_transform_index)
 
         self.poisoned_test_dataset = CreatePoisonedDataset(
             test_dataset,
@@ -512,6 +515,5 @@ class WaNet(Base):
             identity_grid,
             noise_grid,
             noise,
-            poisoned_transform_index,
-            poisoned_target_transform_index,
-            seed)
+            poisoned_transform_test_index,
+            poisoned_target_transform_index)

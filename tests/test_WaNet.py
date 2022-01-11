@@ -16,6 +16,9 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import DatasetFolder, CIFAR10, MNIST
 import core
 
+global_seed = 666
+deterministic = True
+torch.manual_seed(global_seed)
 
 def gen_grid(height, k):
     """Generate an identity grid with shape 1*height*height*2 and a noise grid with shape 1*height*height*2
@@ -90,10 +93,8 @@ wanet = core.WaNet(
     identity_grid=identity_grid,
     noise_grid=noise_grid,
     noise=True,
-    poisoned_transform_index=0,
-    poisoned_target_transform_index=0,
-    schedule=None,
-    seed=666
+    seed=global_seed,
+    deterministic=deterministic
 )
 
 poisoned_train_dataset, poisoned_test_dataset = wanet.get_poisoned_dataset()
@@ -142,8 +143,21 @@ schedule = {
 wanet.train(schedule)
 infected_model = wanet.get_model()
 
+# Test Benign Model
+test_schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '0',
+    'GPU_num': 1,
 
-wanet.test()
+    'batch_size': 128,
+    'num_workers': 4,
+
+    'save_dir': 'experiments',
+    'experiment_name': 'test_poisoned_DatasetFolder_GTSRB_WaNet'
+    # 'experiment_name': 'test_benign_MNIST_BadNets'
+}
+
+wanet.test(test_schedule)
 
 
 ########################MNIST#######################
@@ -185,7 +199,8 @@ wanet = core.WaNet(
     identity_grid=identity_grid,
     noise_grid=noise_grid,
     noise=False,
-    seed=666
+    seed=global_seed,
+    deterministic=deterministic
 )
 
 poisoned_train_dataset, poisoned_test_dataset = wanet.get_poisoned_dataset()
@@ -241,7 +256,21 @@ infected_model = wanet.get_model()
 
 
 # Test Infected Model
-wanet.test()
+
+# Test Benign Model
+test_schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '0',
+    'GPU_num': 1,
+
+    'batch_size': 128,
+    'num_workers': 4,
+
+    'save_dir': 'experiments',
+    'experiment_name': 'test_poisoned_MNIST_WaNet'
+    # 'experiment_name': 'test_benign_MNIST_BadNets'
+}
+badnets.test(test_schedule)
 
 
 ########################CIFAR10#######################
@@ -284,7 +313,8 @@ wanet = core.WaNet(
     identity_grid=identity_grid,
     noise_grid=noise_grid,
     noise=False,
-    seed=666
+    seed=global_seed,
+    deterministic=deterministic
 )
 
 poisoned_train_dataset, poisoned_test_dataset = wanet.get_poisoned_dataset()
@@ -341,5 +371,19 @@ infected_model = wanet.get_model()
 
 
 # Test Infected Model
-wanet.test()
+# Test Benign Model
+test_schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '0',
+    'GPU_num': 1,
+
+    'batch_size': 128,
+    'num_workers': 4,
+
+    'save_dir': 'experiments',
+    'experiment_name': 'test_poisoned_CIFAR10_WaNet'
+    # 'experiment_name': 'test_benign_MNIST_BadNets'
+}
+badnets.test(test_schedule)
+
 
