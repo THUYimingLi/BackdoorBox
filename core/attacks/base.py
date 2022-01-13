@@ -142,6 +142,7 @@ class Base(object):
                 shuffle=True,
                 num_workers=self.current_schedule['num_workers'],
                 drop_last=True,
+                pin_memory=True,
                 worker_init_fn=self._seed_worker
             )
         elif self.current_schedule['benign_training'] is False:
@@ -151,6 +152,7 @@ class Base(object):
                 shuffle=True,
                 num_workers=self.current_schedule['num_workers'],
                 drop_last=True,
+                pin_memory=True,
                 worker_init_fn=self._seed_worker
             )
         else:
@@ -240,6 +242,7 @@ class Base(object):
                 shuffle=False,
                 num_workers=num_workers,
                 drop_last=False,
+                pin_memory=True,
                 worker_init_fn=self._seed_worker
             )
 
