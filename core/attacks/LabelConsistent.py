@@ -23,6 +23,10 @@ from .base import *
 from ..utils import PGD
 
 
+def my_imread(file_path):
+    return cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
+
+
 class AddTrigger:
     def __init__(self):
         pass
@@ -428,6 +432,9 @@ class CreatePoisonedTargetDataset(DatasetFolder):
         path, target = self.samples[index]
         sample = self.loader(path)
 
+        if len(sample.shape) == 2:
+            sample = sample.reshape((sample.shape[0], sample.shape[1], 1))
+        
         img_index = int(path.split('/')[-1].split('.')[0])
         if img_index in self.poisoned_set:
             sample = self.poisoned_transform(sample) # add trigger to image
@@ -453,8 +460,9 @@ class LabelConsistent(Base):
         loss (torch.nn.Module): Loss.
         y_target (int): N-to-1 attack target label.
         poisoned_rate (float): Ratio of poisoned samples.
-        pattern (None | torch.Tensor): Trigger pattern, shape (C, H, W) or (H, W).
-        weight (None | torch.Tensor): Trigger pattern weight, shape (C, H, W) or (H, W).
+        adv_transform (Compose): The data transform for generating adversarial samples, Default: Compose([transforms.ToTensor()]).
+        pattern (None | torch.Tensor): Trigger pattern, shape (C, H, W) or (H, W), Default: None.
+        weight (None | torch.Tensor): Trigger pattern weight, shape (C, H, W) or (H, W), Default: None.
         eps (float): Maximum perturbation for PGD adversarial attack. Default: 8.
         alpha (float): Step size for PGD adversarial attack. Default: 1.5.
         steps (int): Number of steps for PGD adversarial attack. Default: 100.
@@ -479,6 +487,7 @@ class LabelConsistent(Base):
                  loss,
                  y_target,
                  poisoned_rate,
+                 adv_transform=Compose([transforms.ToTensor()]),
                  pattern=None,
                  weight=None,
                  eps=8,
@@ -505,6 +514,7 @@ class LabelConsistent(Base):
             train_dataset,
             adv_model=adv_model,
             adv_dataset_dir=adv_dataset_dir,
+            adv_transform=adv_transform,
             eps=eps/max_pixel,
             alpha=alpha/max_pixel,
             steps=steps,
@@ -527,9 +537,9 @@ class LabelConsistent(Base):
             poisoned_transform_test_index,
             poisoned_target_transform_index)
 
-    def _get_adv_dataset(self, dataset, adv_model, adv_dataset_dir, eps, alpha, steps, y_target, poisoned_rate):
+    def _get_adv_dataset(self, dataset, adv_model, adv_dataset_dir, adv_transform, eps, alpha, steps, y_target, poisoned_rate):
 
-        def _generate_adv_dataset(dataset, adv_model, adv_dataset_dir, eps, alpha, steps, y_target, poisoned_rate):
+        def _generate_adv_dataset(dataset, adv_model, adv_dataset_dir, adv_transform, eps, alpha, steps, y_target, poisoned_rate):
             if self.current_schedule is None and self.global_schedule is None:
                 self.current_schedule = {
                     'device': 'CPU',
@@ -562,7 +572,7 @@ class LabelConsistent(Base):
             adv_model = adv_model.to(device)
 
             backup_transform = deepcopy(dataset.transform)
-            dataset.transform = Compose([transforms.ToTensor()])
+            dataset.transform = adv_transform
 
             data_loader = DataLoader(
                 dataset,
@@ -607,27 +617,27 @@ class LabelConsistent(Base):
             poisoned_set = frozenset(list(y_target_index_list[:poisoned_num]))
 
             for target in np.unique(targets):
-                os.makedirs(osp.join(adv_dataset_dir, 'whole_adv_dataset', str(target)), exist_ok=True)
-                os.makedirs(osp.join(adv_dataset_dir, 'target_adv_dataset', str(target)), exist_ok=True)
+                os.makedirs(osp.join(adv_dataset_dir, 'whole_adv_dataset', str(target).zfill(2)), exist_ok=True)
+                os.makedirs(osp.join(adv_dataset_dir, 'target_adv_dataset', str(target).zfill(2)), exist_ok=True)
 
             np.save(osp.join(adv_dataset_dir, 'poisoned_set.npy'), y_target_index_list[:poisoned_num])
 
             for index, item in enumerate(zip(original_imgs, perturbed_imgs, targets)):
                 original_img, perturbed_img, target = item
-                cv2.imwrite(osp.join(adv_dataset_dir, 'whole_adv_dataset', str(target), str(index).zfill(8) + '.png'), perturbed_img)
+                cv2.imwrite(osp.join(adv_dataset_dir, 'whole_adv_dataset', str(target).zfill(2), str(index).zfill(8) + '.png'), perturbed_img)
 
                 if index in poisoned_set:
-                    cv2.imwrite(osp.join(adv_dataset_dir, 'target_adv_dataset', str(target), str(index).zfill(8) + '.png'), perturbed_img)
+                    cv2.imwrite(osp.join(adv_dataset_dir, 'target_adv_dataset', str(target).zfill(2), str(index).zfill(8) + '.png'), perturbed_img)
                 else:
-                    cv2.imwrite(osp.join(adv_dataset_dir, 'target_adv_dataset', str(target), str(index).zfill(8) + '.png'), original_img)
+                    cv2.imwrite(osp.join(adv_dataset_dir, 'target_adv_dataset', str(target).zfill(2), str(index).zfill(8) + '.png'), original_img)
 
 
         if not osp.exists(osp.join(adv_dataset_dir, 'whole_adv_dataset')) or not osp.exists(osp.join(adv_dataset_dir, 'target_adv_dataset')):
-            _generate_adv_dataset(dataset, adv_model, adv_dataset_dir, eps, alpha, steps, y_target, poisoned_rate)
+            _generate_adv_dataset(dataset, adv_model, adv_dataset_dir, adv_transform, eps, alpha, steps, y_target, poisoned_rate)
 
         whole_adv_dataset = DatasetFolder(
             root=osp.join(adv_dataset_dir, 'whole_adv_dataset'),
-            loader=cv2.imread,
+            loader=my_imread,
             extensions=('png',),
             transform=deepcopy(dataset.transform),
             target_transform=deepcopy(dataset.target_transform),
@@ -636,7 +646,7 @@ class LabelConsistent(Base):
 
         target_adv_dataset = DatasetFolder(
             root=osp.join(adv_dataset_dir, 'target_adv_dataset'),
-            loader=cv2.imread,
+            loader=my_imread,
             extensions=('png',),
             transform=deepcopy(dataset.transform),
             target_transform=deepcopy(dataset.target_transform),

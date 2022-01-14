@@ -11,6 +11,8 @@ adv_dataset_old/
 experiments/
 
 # personal test code
+*data*/
+*experiments*/
 tests/model/
 mytest/
 test.sh
