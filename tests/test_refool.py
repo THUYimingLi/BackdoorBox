@@ -72,7 +72,7 @@ testset = DatasetFolder(
     root='/data/ganguanhao/datasets/GTSRB/testset', # please replace this with path to your test set
     loader=cv2.imread,
     extensions=('png',),
-    transform=transform_train,
+    transform=transform_test,
     target_transform=None,
     is_valid_file=None)
 
