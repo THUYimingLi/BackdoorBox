@@ -344,7 +344,9 @@ class IAD(Base):
                 msg = f"Epoch {epoch} - {self.dataset_name} | mask_density: {self.mask_density} - lambda_div: {self.lambda_div}  - lambda_norm: {self.lambda_norm}\n"
                 log(msg)
                 self.train_mask_step(self.modelM, optimizerM, schedulerM, train_loader, train_loader1, epoch)
-                epoch = self.eval_mask(self.modelM, optimizerM, schedulerM, test_loader, test_loader1, epoch)
+                loss_div, loss_norm, epoch = self.eval_mask(self.modelM, optimizerM, schedulerM, test_loader, test_loader1, epoch)
+                msg = "Norm: {:.3f} | Diversity: {:.3f}\n".format(loss_norm, loss_div)
+                log(msg)
                 epoch += 1
         self.modelM.eval()
         self.modelM.requires_grad_(False)
@@ -694,7 +696,7 @@ class IAD(Base):
                 # infor_string = "Norm: {:.3f} | Diversity: {:.3f}".format(loss_norm, loss_div)
                 # progress_bar(batch_idx, len(test_dl1), infor_string)
 
-        return epoch
+        return loss_div, loss_norm, epoch
 
 
     def create_targets_bd(self, targets):
