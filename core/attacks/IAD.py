@@ -536,7 +536,7 @@ class IAD(Base):
 
             if batch_idx == len(train_dl1) - 2:
                 images = netG.denormalize_pattern(torch.cat((inputs1[:num_bd], patterns1, inputs_bd), dim=2))
-                file_name = "{}_images.png".format(self.dataset)
+                file_name = "{}_images.png".format(self.dataset_name)
                 file_path = os.path.join(self.work_dir, file_name)
                 torchvision.utils.save_image(images, file_path, normalize=True, pad_value=1)
         schedulerC.step()
@@ -704,7 +704,7 @@ class IAD(Base):
         #     bd_targets = torch.tensor([(label + 1) % opt.num_classes for label in targets])
         # else:
         #     raise Exception("{} attack mode is not implemented".format(opt.attack_mode))
-        
+
         bd_targets = torch.ones_like(targets) * self.y_target
         return bd_targets.to(self.device)
 
