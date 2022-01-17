@@ -1,3 +1,17 @@
+'''
+This is the implement of IAD [1]. 
+
+Reference:
+[1] Input-Aware Dynamic Backdoor Attack. NeurIPS 2020.
+
+Original source code:
+https://github.com/VinAIResearch/input-aware-backdoor-attack-release
+
+'''
+
+
+import warnings
+warnings.filterwarnings("ignore")
 import os
 import os.path as osp
 import time
@@ -16,7 +30,22 @@ from ..utils import Log
 from .base import *
 
 
+class ModifyTarget:
+    def __init__(self, y_target):
+        self.y_target = y_target
+
+    def __call__(self, targets):
+        return torch.ones_like(targets) * self.y_target
+
+
 class Normalize:
+    """Normalization of images.
+
+    Args:
+        dataset_name (str): the name of the dataset to be normalized.
+        expected_values (float): the normalization expected values.
+        variance (float): the normalization variance.
+    """
     def __init__(self, dataset_name, expected_values, variance):
         if dataset_name == "cifar10" or dataset_name == "gtsrb":
             self.n_channels = 3
@@ -34,6 +63,13 @@ class Normalize:
 
 
 class Denormalize:
+    """Denormalization of images.
+
+    Args:
+        dataset_name (str): the name of the dataset to be denormalized.
+        expected_values (float): the denormalization expected values.
+        variance (float): the denormalization variance.
+    """
     def __init__(self, dataset_name, expected_values, variance):
         if dataset_name == "cifar10" or dataset_name == "gtsrb":
             self.n_channels = 3
@@ -50,9 +86,9 @@ class Denormalize:
         return x_clone
 
 
-# ---------------------------- Generators ----------------------------#
-
+# ===== The generator of dynamic backdoor trigger ===== 
 class Conv2dBlock(nn.Module):
+    """The Conv2dBlock in the generator of dynamic backdoor trigger."""
     def __init__(self, in_c, out_c, ker_size=(3, 3), stride=1, padding=1, batch_norm=True, relu=True):
         super(Conv2dBlock, self).__init__()
         self.conv2d = nn.Conv2d(in_c, out_c, ker_size, stride, padding)
@@ -68,6 +104,7 @@ class Conv2dBlock(nn.Module):
 
 
 class DownSampleBlock(nn.Module):
+    """The DownSampleBlock in the generator of dynamic backdoor trigger."""
     def __init__(self, ker_size=(2, 2), stride=2, dilation=(1, 1), ceil_mode=False, p=0.0):
         super(DownSampleBlock, self).__init__()
         self.maxpooling = nn.MaxPool2d(kernel_size=ker_size, stride=stride, dilation=dilation, ceil_mode=ceil_mode)
@@ -81,6 +118,7 @@ class DownSampleBlock(nn.Module):
 
 
 class UpSampleBlock(nn.Module):
+    """The UpSampleBlock in the generator of dynamic backdoor trigger."""
     def __init__(self, scale_factor=(2, 2), mode="bilinear", p=0.0):
         super(UpSampleBlock, self).__init__()
         self.upsample = nn.Upsample(scale_factor=scale_factor, mode=mode)
@@ -94,6 +132,12 @@ class UpSampleBlock(nn.Module):
 
 
 class Generator(nn.Sequential):
+    """The generator of dynamic backdoor trigger.
+    
+    Args:
+        dataset_name (str): the name of the dataset.
+        out_channels (int): the output channel of the generator. 
+    """
     def __init__(self, dataset_name, out_channels=None):
         super(Generator, self).__init__()
         if dataset_name == "mnist":
@@ -182,24 +226,33 @@ class Generator(nn.Sequential):
     def threshold(self, x):
         return nn.Tanh()(x * 20 - 10) / (2 + self._EPSILON) + 0.5
 
+# ===== The generator of dynamic backdoor trigger (done) ===== 
+
 
 class IAD(Base):
-    """Construct poisoned datasets with IAD method.
+    """Construct backdoored model with IAD method.
 
     Args:
+        dataset_name (str): the name of the dataset.
         train_dataset (types in support_list): Benign training dataset.
         test_dataset (types in support_list): Benign testing dataset.
-        model (torch.nn.Module): Network.
+        train_dataset1 (types in support_list): Another benign training dataset to implement the diversity loss in [1].
+        test_dataset1 (types in support_list): Another benign testing dataset to implement the diversity loss in [1].
+        model (torch.nn.Module): Victim model.
         loss (torch.nn.Module): Loss.
         y_target (int): N-to-1 attack target label.
+        poisoned_rate (float): Ratio of poisoned samples.
+        cross_rate (float): Ratio of samples in diversity loss.
+        lambda_div (float): Hyper-parameter in diversity loss.
+        lambda_norm (float): Hyper-parameter in mask generation loss.
+        mask_density (float): Magnitude of the generated mask in the backdoor trigger.
+        EPSILON (float): Preventing divisor 0 errors in diversity loss.
         schedule (dict): Training or testing schedule. Default: None.
         seed (int): Random seed for poisoned set. Default: 0.
         deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
             That is, algorithms which, given the same input, and when run on the same software and hardware,
             always produce the same output. When enabled, operations will use deterministic algorithms when available,
             and if only nondeterministic algorithms are available they will throw a RuntimeError when called. Default: False.
-        poisoned_rate (float): Ratio of poisoned samples.
-        cross_rate (float): Ratio of 
     """
     def __init__(self, 
                  dataset_name,
@@ -239,6 +292,7 @@ class IAD(Base):
         self.lambda_norm = lambda_norm
         self.mask_density = mask_density
         self.EPSILON = EPSILON
+        self.create_targets_bd = ModifyTarget(self.y_target)
 
     def train(self, schedule=None):
         if schedule is None and self.global_schedule is None:
@@ -274,6 +328,7 @@ class IAD(Base):
             device = torch.device("cpu")
         self.device = device
 
+        # Prepare the dataset and construct the dataloader
         train_loader = DataLoader(
             self.train_dataset,
             batch_size=self.current_schedule['batch_size'],
@@ -307,20 +362,23 @@ class IAD(Base):
             worker_init_fn=self._seed_worker
         )
 
+        # Prepare the victim classification model
         self.model = self.model.to(device)
         self.model.train()
-
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.current_schedule['lr'], momentum=self.current_schedule['momentum'], weight_decay=self.current_schedule['weight_decay'])
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, self.current_schedule['milestones'], self.current_schedule['lambda'])
 
+        # Prepare the backdoor trigger pattern generator
         self.modelG = Generator(self.dataset_name).to(device)
         optimizerG = torch.optim.Adam(self.modelG.parameters(), lr=self.current_schedule['lr_G'], betas=self.current_schedule['betas_G'])
         schedulerG = torch.optim.lr_scheduler.MultiStepLR(optimizerG, self.current_schedule['milestones_G'], self.current_schedule['lambda_G'])
 
+        # Prepare the backdoor trigger mask generator
         self.modelM = Generator(self.dataset_name, out_channels=1).to(device)
         optimizerM = torch.optim.Adam(self.modelM.parameters(), lr=self.current_schedule['lr_M'], betas=self.current_schedule['betas_M'])
         schedulerM = torch.optim.lr_scheduler.MultiStepLR(optimizerM, self.current_schedule['milestones_M'], self.current_schedule['lambda_M'])
 
+        # The path to save log files and checkpoints
         work_dir = osp.join(self.current_schedule['save_dir'], self.current_schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
         os.makedirs(work_dir, exist_ok=True)
         log = Log(osp.join(work_dir, 'log.txt'))
@@ -331,30 +389,44 @@ class IAD(Base):
         # 2. test and output statistics
         # 3. save checkpoint
 
-        iteration = 0
+        self.iteration = 0
         epoch = 1
         last_time = time.time()
-
         msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size:{self.current_schedule['batch_size']}\niteration every epoch:{len(self.train_dataset) // self.current_schedule['batch_size']}\nInitial learning rate:{self.current_schedule['lr']}\n"
         log(msg)
 
+        # The backdoor trigger mask generator will be trained independently first in early epochs 
         if epoch == 1:
             self.modelM.train()
             for i in range(25):
-                msg = f"Epoch {epoch} - {self.dataset_name} | mask_density: {self.mask_density} - lambda_div: {self.lambda_div}  - lambda_norm: {self.lambda_norm}\n"
+                msg = "Epoch {} - {} | mask_density: {} - lambda_div: {}  - lambda_norm: {}\n".format(
+                        epoch, self.dataset_name, self.mask_density, self.lambda_div, self.lambda_norm
+                    )
                 log(msg)
-                self.train_mask_step(self.modelM, optimizerM, schedulerM, train_loader, train_loader1, epoch)
-                loss_div, loss_norm, epoch = self.eval_mask(self.modelM, optimizerM, schedulerM, test_loader, test_loader1, epoch)
-                msg = "Norm: {:.3f} | Diversity: {:.3f}\n".format(loss_norm, loss_div)
+                
+                total_loss, loss_norm, loss_div = self.train_mask_step(self.modelM, optimizerM, schedulerM, train_loader, train_loader1)
+                msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + "Train Mask loss: {:.4f} - Norm: {:.3f} | Diversity: {:.3f}\n".format(total_loss, loss_norm, loss_div)
                 log(msg)
+                
+                loss_norm_eval, loss_div_eval = self.eval_mask(self.modelM, test_loader, test_loader1)
+                if epoch % self.current_schedule['test_epoch_interval'] == 0:
+                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + "Test Norm: {:.3f} | Diversity: {:.3f}\n".format(loss_norm_eval, loss_div_eval)
+                    log(msg)
                 epoch += 1
+
+        # The backdoor trigger mask generator will been frozen
         self.modelM.eval()
         self.modelM.requires_grad_(False)
 
+        best_acc_clean = -1
+        best_acc_bd = -1
+        best_acc_cross = -1
+        best_epoch = 1
         for i in range(self.current_schedule['epochs']):
             msg = f"Epoch {epoch} - {self.dataset_name} | mask_density: {self.mask_density} - lambda_div: {self.lambda_div}\n"
             log(msg)
 
+            # Train the victim model and the backdoor trigger pattern generator jointly
             avg_loss, acc_clean, acc_bd, acc_cross = self.train_step(
                 self.model,
                 self.modelG,
@@ -364,107 +436,120 @@ class IAD(Base):
                 scheduler,
                 schedulerG,
                 train_loader,
-                train_loader1,
-                epoch
+                train_loader1
             )
-            msg = f"Train CE loss: {avg_loss} - Accuracy: {acc_clean} | BD Accuracy: {acc_bd} | Cross Accuracy: {acc_cross}"
+
+            msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + "Train CE loss: {:.4f} - Accuracy: {:.3f} | BD Accuracy: {:.3f} | Cross Accuracy: {:3f}\n".format(
+                avg_loss, acc_clean, acc_bd, acc_cross
+            )
             log(msg)
 
-            last_time = time.time()
-            avg_acc_clean, avg_acc_bd, avg_acc_cross, epoch = self.eval(
-                self.model,
-                self.modelG,
-                self.modelM,
-                optimizer,
-                optimizerG,
-                scheduler,
-                schedulerG,
-                test_loader,
-                test_loader1,
-                epoch
-            )
-            msg = "==========Test result on benign test dataset==========\n" + \
-                    time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                    f"Top-1 accuracy:{avg_acc_clean}, time: {time.time()-last_time}\n"
-            log(msg)
-            msg = "==========Test result on poisoned test dataset==========\n" + \
-                    time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                    f"Top-1 accuracy:{avg_acc_bd}, time: {time.time()-last_time}\n"
-            log(msg)
-            msg = "==========Test result on cross test dataset==========\n" + \
-                    time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                    f"Top-1 accuracy:{avg_acc_cross}, time: {time.time()-last_time}\n"
-            log(msg)
+            if epoch % self.current_schedule['test_epoch_interval'] == 0:
+                last_time = time.time()
+                # Test the victim model
+                avg_acc_clean, avg_acc_bd, avg_acc_cross = self.test(
+                    test_loader,
+                    test_loader1,
+                    self.model,
+                    self.modelG,
+                    self.modelM
+                )
+                msg = "==========Test result on benign test dataset==========\n" + \
+                        time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                        f"Accuracy:{avg_acc_clean}, time: {time.time()-last_time}\n"
+                log(msg)
+                msg = "==========Test result on poisoned test dataset==========\n" + \
+                        time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                        f"Accuracy:{avg_acc_bd}, time: {time.time()-last_time}\n"
+                log(msg)
+                msg = "==========Test result on cross test dataset==========\n" + \
+                        time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                        f"Accuracy:{avg_acc_cross}, time: {time.time()-last_time}\n"
+                log(msg)
+
+                # Record the best checkpoints
+                if (avg_acc_clean + avg_acc_bd) > (best_acc_clean + best_acc_bd):
+                    best_acc_clean = avg_acc_clean
+                    best_acc_bd = avg_acc_bd
+                    best_acc_cross = avg_acc_cross
+                    best_epoch = epoch
+                    best_state_dict = {
+                        "model": self.model.state_dict(),
+                        "modelG": self.modelG.state_dict(),
+                        "modelM": self.modelM.state_dict(),
+                        "optimizerC": optimizer.state_dict(),
+                        "optimizerG": optimizerG.state_dict(),
+                        "schedulerC": scheduler.state_dict(),
+                        "schedulerG": schedulerG.state_dict(),
+                        "best_acc_clean": best_acc_clean,
+                        "best_acc_bd": best_acc_bd,
+                        "best_acc_cross": best_acc_cross,
+                        "best_epoch": best_epoch
+                    }
+            
+            # Save the checkpoints
+            if epoch % self.current_schedule['save_epoch_interval'] == 0:
+                print(" Saving!!")
+                state_dict = {
+                    "model": self.model.state_dict(),
+                    "modelG": self.modelG.state_dict(),
+                    "modelM": self.modelM.state_dict(),
+                    "optimizerC": optimizer.state_dict(),
+                    "optimizerG": optimizerG.state_dict(),
+                    "schedulerC": scheduler.state_dict(),
+                    "schedulerG": schedulerG.state_dict(),
+                    "avg_acc_clean": avg_acc_clean,
+                    "avg_acc_bd": avg_acc_bd,
+                    "avg_acc_cross": avg_acc_cross,
+                    "epoch": epoch
+                }
+                ckpt_model_filename = "ckpt_epoch_" + str(epoch) + ".pth"
+                ckpt_model_path = os.path.join(work_dir, ckpt_model_filename)
+                torch.save(state_dict, ckpt_model_path)
+            
             epoch += 1
             if epoch > self.current_schedule['epochs']:
-                break            
-
-
-
-
-            # for batch_id, batch in enumerate(train_loader):
-            #     batch_img = batch[0]
-            #     batch_label = batch[1]
-            #     batch_img = batch_img.to(device)
-            #     batch_label = batch_label.to(device)
-            #     optimizer.zero_grad()
-            #     predict_digits = self.model(batch_img)
-            #     loss = self.loss(predict_digits, batch_label)
-            #     loss.backward()
-            #     optimizer.step()
-
-            #     iteration += 1
-
-            #     if iteration % self.current_schedule['log_iteration_interval'] == 0:
-            #         msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{self.current_schedule['epochs']}, iteration:{batch_id + 1}/{len(self.poisoned_train_dataset)//self.current_schedule['batch_size']}, lr: {self.current_schedule['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
-            #         last_time = time.time()
-            #         log(msg)
-
-
-
-            # if (i + 1) % self.current_schedule['test_epoch_interval'] == 0:
-            #     # test result on benign test dataset
-            #     predict_digits, labels = self._test(self.test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
-            #     total_num = labels.size(0)
-            #     prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-            #     top1_correct = int(round(prec1.item() / 100.0 * total_num))
-            #     top5_correct = int(round(prec5.item() / 100.0 * total_num))
-            #     msg = "==========Test result on benign test dataset==========\n" + \
-            #           time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-            #           f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num} time: {time.time()-last_time}\n"
-            #     log(msg)
-
-            #     # test result on poisoned test dataset
-            #     # if self.current_schedule['benign_training'] is False:
-            #     predict_digits, labels = self._test(self.poisoned_test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
-            #     total_num = labels.size(0)
-            #     prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-            #     top1_correct = int(round(prec1.item() / 100.0 * total_num))
-            #     top5_correct = int(round(prec5.item() / 100.0 * total_num))
-            #     msg = "==========Test result on poisoned test dataset==========\n" + \
-            #           time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-            #           f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num}, time: {time.time()-last_time}\n"
-            #     log(msg)
-
-            #     self.model = self.model.to(device)
-            #     self.model.train()
-
-            # if (i + 1) % self.current_schedule['save_epoch_interval'] == 0:
-            #     self.model.eval()
-            #     self.model = self.model.cpu()
-            #     ckpt_model_filename = "ckpt_epoch_" + str(i+1) + ".pth"
-            #     ckpt_model_path = os.path.join(work_dir, ckpt_model_filename)
-            #     torch.save(self.model.state_dict(), ckpt_model_path)
-            #     self.model = self.model.to(device)
-            #     self.model.train()
+                print(" Saving!!")
+                ckpt_model_filename = "best_ckpt_epoch_" + str(epoch) + ".pth"
+                ckpt_model_path = os.path.join(work_dir, ckpt_model_filename)
+                # Save the best checkpoints
+                torch.save(best_state_dict, ckpt_model_path)
+                msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
+                    "Best Epoch {}: Best Accuracy: {:.3f} | Best BD Accuracy: {:.3f} | Best Cross Accuracy: {:3f}\n".format(
+                        best_epoch, best_acc_clean, best_acc_bd, best_acc_cross
+                    )
+                log(msg)
+                break   
+       
 
 
     def train_step(
-        self, netC, netG, netM, optimizerC, optimizerG, schedulerC, schedulerG, train_dl1, train_dl2, epoch
+        self, 
+        model, 
+        modelG, 
+        modelM, 
+        optimizerC, 
+        optimizerG, 
+        schedulerC, 
+        schedulerG, 
+        train_dl1, 
+        train_dl2
     ):
-        netC.train()
-        netG.train()
-        print(" Training:")
+        """Train the victim model and the backdoor trigger pattern generator jointly.
+        
+        Args:
+            model (torch.nn.Module): Victim model.
+            modelG (torch.nn.Module): Backdoor trigger pattern generator.
+            modelM (torch.nn.Module): Backdoor trigger mask generator.
+            optimizerC (torch.optim.Optimizer): Optimizer of the victim model.
+            optimizerG (torch.optim.Optimizer): Optimizer of the backdoor trigger pattern generator.
+            schedulerC (torch.optim.lr_scheduler._LRScheduler): Scheduler of the victim model.
+            schedulerG (torch.optim.lr_scheduler._LRScheduler): Scheduler of the backdoor trigger pattern generator.
+            train_dl1 (torch.utils.data.DataLoader): Benign training dataloader.
+            train_dl2 (torch.utils.data.DataLoader): Another benign training dataloader to implement the diversity loss in [1].
+        """
+        model.train()
+        modelG.train()
         total = 0
         total_cross = 0
         total_bd = 0
@@ -474,8 +559,9 @@ class IAD(Base):
         total_cross_correct = 0
         total_bd_correct = 0
 
+        # Construct the classification loss and the diversity loss
         total_loss = 0
-        criterion = nn.CrossEntropyLoss()
+        criterion = self.loss
         criterion_div = nn.MSELoss(reduction="none")
         for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(train_dl1)), train_dl1, train_dl2):
             optimizerC.zero_grad()
@@ -483,19 +569,21 @@ class IAD(Base):
             inputs1, targets1 = inputs1.to(self.device), targets1.to(self.device)
             inputs2, targets2 = inputs2.to(self.device), targets2.to(self.device)
 
+            # Construct the benign samples, backdoored samples and cross samples
             bs = inputs1.shape[0]
             num_bd = int(self.poisoned_rate * bs)
             num_cross = int(self.cross_rate * bs)
 
-            inputs_bd, targets_bd, patterns1, masks1 = self.create_bd(inputs1[:num_bd], targets1[:num_bd], netG, netM)
+            inputs_bd, targets_bd, patterns1, masks1 = self.create_bd(inputs1[:num_bd], targets1[:num_bd], modelG, modelM)
             inputs_cross, patterns2, masks2 = self.create_cross(
-                inputs1[num_bd : num_bd + num_cross], inputs2[num_bd : num_bd + num_cross], netG, netM
+                inputs1[num_bd : num_bd + num_cross], inputs2[num_bd : num_bd + num_cross], modelG, modelM
             )
 
             total_inputs = torch.cat((inputs_bd, inputs_cross, inputs1[num_bd + num_cross :]), 0)
             total_targets = torch.cat((targets_bd, targets1[num_bd:]), 0)
 
-            preds = netC(total_inputs)
+            # Calculating the classification loss
+            preds = model(total_inputs)
             loss_ce = criterion(preds, total_targets)
 
             # Calculating diversity loss
@@ -510,6 +598,7 @@ class IAD(Base):
             loss_div = distance_images / (distance_patterns + self.EPSILON)
             loss_div = torch.mean(loss_div) * self.lambda_div
 
+            # Total loss
             total_loss = loss_ce + loss_div
             total_loss.backward()
             optimizerC.step()
@@ -520,12 +609,15 @@ class IAD(Base):
             total_cross += num_cross
             total_clean += bs - num_bd - num_cross
 
+            # Calculating the clean accuracy
             total_correct_clean += torch.sum(
                 torch.argmax(preds[num_bd + num_cross :], dim=1) == total_targets[num_bd + num_cross :]
             )
+            # Calculating the diversity accuracy
             total_cross_correct += torch.sum(
                 torch.argmax(preds[num_bd : num_bd + num_cross], dim=1) == total_targets[num_bd : num_bd + num_cross]
             )
+            # Calculating the backdoored accuracy
             total_bd_correct += torch.sum(torch.argmax(preds[:num_bd], dim=1) == targets_bd)
             total_loss += loss_ce.detach() * bs
             avg_loss = total_loss / total
@@ -535,9 +627,8 @@ class IAD(Base):
             acc_cross = total_cross_correct * 100.0 / total_cross
 
             # Saving images for debugging
-
             if batch_idx == len(train_dl1) - 2:
-                images = netG.denormalize_pattern(torch.cat((inputs1[:num_bd], patterns1, inputs_bd), dim=2))
+                images = modelG.denormalize_pattern(torch.cat((inputs1[:num_bd], inputs_bd), dim=2))
                 file_name = "{}_images.png".format(self.dataset_name)
                 file_path = os.path.join(self.work_dir, file_name)
                 torchvision.utils.save_image(images, file_path, normalize=True, pad_value=1)
@@ -546,219 +637,25 @@ class IAD(Base):
         return avg_loss, acc_clean, acc_bd, acc_cross
 
 
-    def eval(
-        self,
-        netC,
-        netG,
-        netM,
-        optimizerC,
-        optimizerG,
-        schedulerC,
-        schedulerG,
+    def test(
+        self, 
         test_dl1,
         test_dl2,
-        epoch
+        model=None,
+        modelG=None,
+        modelM=None,
+        schedule=None
     ):
-        netC.eval()
-        netG.eval()
-        print(" Eval:")
-        total = 0.0
-
-        total_correct_clean = 0.0
-        total_correct_bd = 0.0
-        total_correct_cross = 0.0
-        for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(test_dl1)), test_dl1, test_dl2):
-            with torch.no_grad():
-                inputs1, targets1 = inputs1.to(self.device), targets1.to(self.device)
-                inputs2, targets2 = inputs2.to(self.device), targets2.to(self.device)
-                bs = inputs1.shape[0]
-
-                preds_clean = netC(inputs1)
-                correct_clean = torch.sum(torch.argmax(preds_clean, 1) == targets1)
-                total_correct_clean += correct_clean
-
-                inputs_bd, targets_bd, _, _ = self.create_bd(inputs1, targets1, netG, netM)
-                preds_bd = netC(inputs_bd)
-                correct_bd = torch.sum(torch.argmax(preds_bd, 1) == targets_bd)
-                total_correct_bd += correct_bd
-
-                inputs_cross, _, _ = self.create_cross(inputs1, inputs2, netG, netM)
-                preds_cross = netC(inputs_cross)
-                correct_cross = torch.sum(torch.argmax(preds_cross, 1) == targets1)
-                total_correct_cross += correct_cross
-
-                total += bs
-                avg_acc_clean = total_correct_clean * 100.0 / total
-                avg_acc_cross = total_correct_cross * 100.0 / total
-                avg_acc_bd = total_correct_bd * 100.0 / total
-
-                # infor_string = "Clean Accuracy: {:.3f} | Backdoor Accuracy: {:.3f} | Cross Accuracy: {:3f}".format(
-                #     avg_acc_clean, avg_acc_bd, avg_acc_cross
-                # )
-                # progress_bar(batch_idx, len(test_dl1), infor_string)
-
-        # print(
-        #     " Result: Best Clean Accuracy: {:.3f} - Best Backdoor Accuracy: {:.3f} - Best Cross Accuracy: {:.3f}| Clean Accuracy: {:.3f}".format(
-        #         best_acc_clean, best_acc_bd, best_acc_cross, avg_acc_clean
-        #     )
-        # )
-        # print(" Saving!!")
-        # best_acc_clean = avg_acc_clean
-        # best_acc_bd = avg_acc_bd
-        # best_acc_cross = avg_acc_cross
-        # state_dict = {
-        #     "netC": netC.state_dict(),
-        #     "netG": netG.state_dict(),
-        #     "netM": netM.state_dict(),
-        #     "optimizerC": optimizerC.state_dict(),
-        #     "optimizerG": optimizerG.state_dict(),
-        #     "schedulerC": schedulerC.state_dict(),
-        #     "schedulerG": schedulerG.state_dict(),
-        #     "best_acc_clean": best_acc_clean,
-        #     "best_acc_bd": best_acc_bd,
-        #     "best_acc_cross": best_acc_cross,
-        #     "epoch": epoch,
-        #     "opt": opt,
-        # }
-        # ckpt_folder = os.path.join(opt.checkpoints, opt.dataset, opt.attack_mode)
-        # if not os.path.exists(ckpt_folder):
-        #     os.makedirs(ckpt_folder)
-        # ckpt_path = os.path.join(ckpt_folder, "{}_{}_ckpt.pth.tar".format(opt.attack_mode, opt.dataset))
-        # torch.save(state_dict, ckpt_path)
-        return avg_acc_clean, avg_acc_bd, avg_acc_cross, epoch
-
-
-    # -------------------------------------------------------------------------------------
-    def train_mask_step(self, netM, optimizerM, schedulerM, train_dl1, train_dl2, epoch):
-        netM.train()
-        print(" Training:")
-
-        total_loss = 0
-        criterion_div = nn.MSELoss(reduction="none")
-        for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(train_dl1)), train_dl1, train_dl2):
-            optimizerM.zero_grad()
-
-            inputs1, targets1 = inputs1.to(self.device), targets1.to(self.device)
-            inputs2, targets2 = inputs2.to(self.device), targets2.to(self.device)
-
-            masks1 = netM(inputs1)
-            masks1, masks2 = netM.threshold(netM(inputs1)), netM.threshold(netM(inputs2))
-
-            # Calculating diversity loss
-            distance_images = criterion_div(inputs1, inputs2)
-            distance_images = torch.mean(distance_images, dim=(1, 2, 3))
-            distance_images = torch.sqrt(distance_images)
-
-            distance_patterns = criterion_div(masks1, masks2)
-            distance_patterns = torch.mean(distance_patterns, dim=(1, 2, 3))
-            distance_patterns = torch.sqrt(distance_patterns)
-
-            loss_div = distance_images / (distance_patterns + self.EPSILON)
-            loss_div = torch.mean(loss_div) * self.lambda_div
-
-            loss_norm = torch.mean(F.relu(masks1 - self.mask_density))
-
-            total_loss = self.lambda_norm * loss_norm + self.lambda_div * loss_div
-            total_loss.backward()
-            optimizerM.step()
-            # infor_string = "Mask loss: {:.4f} - Norm: {:.3f} | Diversity: {:.3f}".format(total_loss, loss_norm, loss_div)
-            # progress_bar(batch_idx, len(train_dl1), infor_string)
-
-        schedulerM.step()
-
-
-    def eval_mask(self, netM, optimizerM, schedulerM, test_dl1, test_dl2, epoch):
-        netM.eval()
-        print(" Eval:")
-
-        criterion_div = nn.MSELoss(reduction="none")
-        for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(test_dl1)), test_dl1, test_dl2):
-            with torch.no_grad():
-                inputs1, targets1 = inputs1.to(self.device), targets1.to(self.device)
-                inputs2, targets2 = inputs2.to(self.device), targets2.to(self.device)
-                bs = inputs1.shape[0]
-                masks1, masks2 = netM.threshold(netM(inputs1)), netM.threshold(netM(inputs2))
-
-                # Calculating diversity loss
-                distance_images = criterion_div(inputs1, inputs2)
-                distance_images = torch.mean(distance_images, dim=(1, 2, 3))
-                distance_images = torch.sqrt(distance_images)
-
-                distance_patterns = criterion_div(masks1, masks2)
-                distance_patterns = torch.mean(distance_patterns, dim=(1, 2, 3))
-                distance_patterns = torch.sqrt(distance_patterns)
-
-                loss_div = distance_images / (distance_patterns + self.EPSILON)
-                loss_div = torch.mean(loss_div) * self.lambda_div
-
-                loss_norm = torch.mean(F.relu(masks1 - self.mask_density))
-
-                # infor_string = "Norm: {:.3f} | Diversity: {:.3f}".format(loss_norm, loss_div)
-                # progress_bar(batch_idx, len(test_dl1), infor_string)
-
-        return loss_div, loss_norm, epoch
-
-
-    def create_targets_bd(self, targets):
-        # if opt.attack_mode == "all2one":
-        #     bd_targets = torch.ones_like(targets) * opt.target_label
-        # elif opt.attack_mode == "all2all_mask":
-        #     bd_targets = torch.tensor([(label + 1) % opt.num_classes for label in targets])
-        # else:
-        #     raise Exception("{} attack mode is not implemented".format(opt.attack_mode))
-
-        bd_targets = torch.ones_like(targets) * self.y_target
-        return bd_targets.to(self.device)
-
-
-    def create_bd(self, inputs, targets, netG, netM):
-        bd_targets = self.create_targets_bd(targets)
-        patterns = netG(inputs)
-        patterns = netG.normalize_pattern(patterns)
-
-        masks_output = netM.threshold(netM(inputs))
-        bd_inputs = inputs + (patterns - inputs) * masks_output
-        return bd_inputs, bd_targets, patterns, masks_output
-
-
-    def create_cross(self, inputs1, inputs2, netG, netM):
-        patterns2 = netG(inputs2)
-        patterns2 = netG.normalize_pattern(patterns2)
-        masks_output = netM.threshold(netM(inputs2))
-        inputs_cross = inputs1 + (patterns2 - inputs1) * masks_output
-        return inputs_cross, patterns2, masks_output
-
-
-
-    def _test(self, dataset, device, batch_size=16, num_workers=8):
-        with torch.no_grad():
-            test_loader = DataLoader(
-                dataset,
-                batch_size=batch_size,
-                shuffle=False,
-                num_workers=num_workers,
-                drop_last=False,
-                worker_init_fn=self._seed_worker
-            )
-
-            self.model = self.model.to(device)
-            self.model.eval()
-
-            predict_digits = []
-            labels = []
-            for batch in test_loader:
-                batch_img, batch_label = batch
-                batch_img = batch_img.to(device)
-                batch_img = self.model(batch_img)
-                batch_img = batch_img.cpu()
-                predict_digits.append(batch_img)
-                labels.append(batch_label)
-
-            predict_digits = torch.cat(predict_digits, dim=0)
-            labels = torch.cat(labels, dim=0)
-            return predict_digits, labels
-
-    def test(self, schedule=None, model=None, test_dataset=None, poisoned_test_dataset=None):
+        """Test the victim model.
+        
+        Args:
+            test_dl1 (torch.utils.data.DataLoader): Benign testing dataloader
+            test_dl2 (torch.utils.data.DataLoader): Another benign testing dataloader to implement the diversity loss in [1].
+            model (torch.nn.Module): Victim model. Default: None.
+            modelG (torch.nn.Module): Backdoor trigger pattern generator. Default: None.
+            modelM (torch.nn.Module): Backdoor trigger mask generator. Default: None.
+            schedule (dict): Testing schedule. Default: None.
+        """
         if schedule is None and self.global_schedule is None:
             raise AttributeError("Test schedule is None, please check your schedule setting.")
         elif schedule is not None and self.global_schedule is None:
@@ -771,12 +668,20 @@ class IAD(Base):
         if model is None:
             model = self.model
 
+        if modelG is None:
+            modelG = self.modelG
+        
+        if modelM is None:
+            modelM = self.modelM
+
         if 'test_model' in self.current_schedule:
             model.load_state_dict(torch.load(self.current_schedule['test_model']), strict=False)
 
-        if test_dataset is None and poisoned_test_dataset is None:
-            test_dataset = self.test_dataset
-            poisoned_test_dataset = self.poisoned_test_dataset
+        if 'test_modelG' in self.current_schedule:
+            model.load_state_dict(torch.load(self.current_schedule['test_modelG']), strict=False)
+
+        if 'test_modelM' in self.current_schedule:
+            model.load_state_dict(torch.load(self.current_schedule['test_modelM']), strict=False)
 
         # Use GPU
         if 'device' in self.current_schedule and self.current_schedule['device'] == 'GPU':
@@ -798,36 +703,181 @@ class IAD(Base):
         else:
             device = torch.device("cpu")
 
-        work_dir = osp.join(self.current_schedule['save_dir'], self.current_schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
-        os.makedirs(work_dir, exist_ok=True)
-        log = Log(osp.join(work_dir, 'log.txt'))
+        model.eval()
+        modelG.eval()
+        total = 0.0
+
+        total_correct_clean = 0.0
+        total_correct_bd = 0.0
+        total_correct_cross = 0.0
+        for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(test_dl1)), test_dl1, test_dl2):
+            with torch.no_grad():
+                inputs1, targets1 = inputs1.to(device), targets1.to(device)
+                inputs2, targets2 = inputs2.to(device), targets2.to(device)
+                bs = inputs1.shape[0]
+
+                # Construct the benign samples and calculate the clean accuracy
+                preds_clean = model(inputs1)
+                correct_clean = torch.sum(torch.argmax(preds_clean, 1) == targets1)
+                total_correct_clean += correct_clean
+
+                # Construct the backdoored samples and calculate the backdoored accuracy
+                inputs_bd, targets_bd, _, _ = self.create_bd(inputs1, targets1, modelG, modelM)
+                preds_bd = model(inputs_bd)
+                correct_bd = torch.sum(torch.argmax(preds_bd, 1) == targets_bd)
+                total_correct_bd += correct_bd
+
+                # Construct the cross samples and calculate the diversity accuracy
+                inputs_cross, _, _ = self.create_cross(inputs1, inputs2, modelG, modelM)
+                preds_cross = model(inputs_cross)
+                correct_cross = torch.sum(torch.argmax(preds_cross, 1) == targets1)
+                total_correct_cross += correct_cross
+
+                total += bs
+                avg_acc_clean = total_correct_clean * 100.0 / total
+                avg_acc_cross = total_correct_cross * 100.0 / total
+                avg_acc_bd = total_correct_bd * 100.0 / total
+        
+        return avg_acc_clean, avg_acc_bd, avg_acc_cross
 
 
+    def train_mask_step(
+        self, 
+        modelM, 
+        optimizerM, 
+        schedulerM, 
+        train_dl1, 
+        train_dl2
+    ):
+        """Train the backdoor trigger mask generator.
+        
+        Args:
+            modelM (torch.nn.Module): Backdoor trigger mask generator.
+            optimizerM (torch.optim.Optimizer): Optimizer of the backdoor trigger mask generator.
+            schedulerM (torch.optim.lr_scheduler._LRScheduler): Scheduler of backdoor trigger mask generator.
+            train_dl1 (torch.utils.data.DataLoader): Benign training dataloader
+            train_dl2 (torch.utils.data.DataLoader): Another benign training dataloader to implement the diversity loss in [1].
+        """
+        modelM.train()
+
+        total_loss = 0
+        criterion_div = nn.MSELoss(reduction="none")
+        for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(train_dl1)), train_dl1, train_dl2):
+            optimizerM.zero_grad()
+
+            inputs1, targets1 = inputs1.to(self.device), targets1.to(self.device)
+            inputs2, targets2 = inputs2.to(self.device), targets2.to(self.device)
+
+            # Generate the mask of data
+            masks1 = modelM(inputs1)
+            masks1, masks2 = modelM.threshold(modelM(inputs1)), modelM.threshold(modelM(inputs2))
+
+            # Calculating diversity loss
+            distance_images = criterion_div(inputs1, inputs2)
+            distance_images = torch.mean(distance_images, dim=(1, 2, 3))
+            distance_images = torch.sqrt(distance_images)
+
+            distance_patterns = criterion_div(masks1, masks2)
+            distance_patterns = torch.mean(distance_patterns, dim=(1, 2, 3))
+            distance_patterns = torch.sqrt(distance_patterns)
+
+            loss_div = distance_images / (distance_patterns + self.EPSILON)
+            loss_div = torch.mean(loss_div) * self.lambda_div
+
+            # Calculating mask magnitude loss
+            loss_norm = torch.mean(F.relu(masks1 - self.mask_density))
+
+            total_loss = self.lambda_norm * loss_norm + self.lambda_div * loss_div
+            total_loss.backward()
+            optimizerM.step()
+
+        schedulerM.step()
+        return total_loss, loss_norm, loss_div
 
 
+    def eval_mask(
+        self, 
+        modelM, 
+        test_dl1, 
+        test_dl2
+    ):
+        """Test the backdoor trigger mask generator.
+        
+        Args:
+            modelM (torch.nn.Module): Backdoor trigger mask generator.
+            test_dl1 (torch.utils.data.DataLoader): Benign testing dataloader
+            test_dl2 (torch.utils.data.DataLoader): Another benign testing dataloader to implement the diversity loss in [1].
+        """
+        modelM.eval()
 
-        if test_dataset is not None:
-            last_time = time.time()
-            # test result on benign test dataset
-            predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
-            total_num = labels.size(0)
-            prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-            top1_correct = int(round(prec1.item() / 100.0 * total_num))
-            top5_correct = int(round(prec5.item() / 100.0 * total_num))
-            msg = "==========Test result on benign test dataset==========\n" + \
-                  time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                  f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num} time: {time.time()-last_time}\n"
-            log(msg)
+        criterion_div = nn.MSELoss(reduction="none")
+        for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(test_dl1)), test_dl1, test_dl2):
+            with torch.no_grad():
+                inputs1, targets1 = inputs1.to(self.device), targets1.to(self.device)
+                inputs2, targets2 = inputs2.to(self.device), targets2.to(self.device)
 
-        if poisoned_test_dataset is not None:
-            last_time = time.time()
-            # test result on poisoned test dataset
-            predict_digits, labels = self._test(poisoned_test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
-            total_num = labels.size(0)
-            prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-            top1_correct = int(round(prec1.item() / 100.0 * total_num))
-            top5_correct = int(round(prec5.item() / 100.0 * total_num))
-            msg = "==========Test result on poisoned test dataset==========\n" + \
-                  time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                  f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num}, time: {time.time()-last_time}\n"
-            log(msg)
+                # Generate the mask of data
+                bs = inputs1.shape[0]
+                masks1, masks2 = modelM.threshold(modelM(inputs1)), modelM.threshold(modelM(inputs2))
+
+                # Calculating diversity loss
+                distance_images = criterion_div(inputs1, inputs2)
+                distance_images = torch.mean(distance_images, dim=(1, 2, 3))
+                distance_images = torch.sqrt(distance_images)
+
+                distance_patterns = criterion_div(masks1, masks2)
+                distance_patterns = torch.mean(distance_patterns, dim=(1, 2, 3))
+                distance_patterns = torch.sqrt(distance_patterns)
+
+                loss_div = distance_images / (distance_patterns + self.EPSILON)
+                loss_div = torch.mean(loss_div) * self.lambda_div
+
+                # Calculating mask magnitude loss
+                loss_norm = torch.mean(F.relu(masks1 - self.mask_density))
+
+        return loss_norm, loss_div
+
+
+    def create_bd(
+        self, 
+        inputs, 
+        targets, 
+        modelG, 
+        modelM
+    ):
+        """Construct the backdoored samples by the backdoor trigger mask generator and backdoor trigger pattern generator.
+        
+        Args:
+            inputs (torch.Tensor): Benign samples to be attached with the backdoor trigger.
+            targets (int): The attacker-specified target label.
+            modelG (torch.nn.Module): Backdoor trigger pattern generator.
+            modelM (torch.nn.Module): Backdoor trigger mask generator.
+        """
+        bd_targets = self.create_targets_bd(targets).to(self.device)
+        patterns = modelG(inputs)
+        patterns = modelG.normalize_pattern(patterns)
+        masks_output = modelM.threshold(modelM(inputs))
+        bd_inputs = inputs + (patterns - inputs) * masks_output
+        return bd_inputs, bd_targets, patterns, masks_output
+
+
+    def create_cross(
+        self, 
+        inputs1, 
+        inputs2, 
+        modelG, 
+        modelM
+    ):
+        """Construct the cross samples to implement the diversity loss in [1].
+        
+        Args:
+            inputs1 (torch.Tensor): Benign samples.
+            inputs2 (torch.Tensor): Benign samples different from inputs1.
+            modelG (torch.nn.Module): Backdoor trigger pattern generator.
+            modelM (torch.nn.Module): Backdoor trigger mask generator.
+        """
+        patterns2 = modelG(inputs2)
+        patterns2 = modelG.normalize_pattern(patterns2)
+        masks_output = modelM.threshold(modelM(inputs2))
+        inputs_cross = inputs1 + (patterns2 - inputs1) * masks_output
+        return inputs_cross, patterns2, masks_output

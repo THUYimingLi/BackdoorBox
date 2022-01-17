@@ -1,4 +1,3 @@
-
 '''
 This is the test code of poisoned training on GTSRB, CIFAR10, MNIST, using dataset class of torchvision.datasets.DatasetFolder torchvision.datasets.CIFAR10 torchvision.datasets.MNIST.
 The attack method is IAD.
@@ -35,100 +34,123 @@ def read_image(img_path, type=None):
         raise NotImplementedError
     
 
-# # ===== Train backdoored model on GTSRB using with DatasetFolder ======
+# ===== Train backdoored model on GTSRB using with DatasetFolder ======
 
-# # Prepare datasets
-# transform_train = Compose([
-#     transforms.ToPILImage(),
-#     transforms.Resize((32, 32)),
-#     RandomHorizontalFlip(),
-#     ToTensor()
-# ])
-# transform_test = Compose([
-#     transforms.ToPILImage(),
-#     transforms.Resize((32, 32)),
-#     ToTensor()
-# ])
+# Prepare datasets and follow the default data augmentation in the original paper
+transform_train = Compose([
+    transforms.ToPILImage(),
+    transforms.Resize((32, 32)),
+    transforms.RandomCrop((32, 32), padding=5),
+    transforms.RandomRotation(10),
+    ToTensor()
+])
+transform_test = Compose([
+    transforms.ToPILImage(),
+    transforms.Resize((32, 32)),
+    ToTensor()
+])
 
-# trainset = DatasetFolder(
-#     root='/data/gaokuofeng/datasets/GTSRB/train', # please replace this with path to your training set
-#     loader=cv2.imread,
-#     extensions=('png',),
-#     transform=transform_train,
-#     target_transform=None,
-#     is_valid_file=None)
-
-# testset = DatasetFolder(
-#     root='/data/gaokuofeng/datasets/GTSRB/testset', # please replace this with path to your test set
-#     loader=cv2.imread,
-#     extensions=('png',),
-#     transform=transform_test,
-#     target_transform=None,
-#     is_valid_file=None)
-# # Configure the attack scheme
-# IAD = core.IAD(
-#     train_dataset=trainset,
-#     test_dataset=testset,
-#     model=core.models.ResNet(18, 43),
-#     loss=nn.CrossEntropyLoss(),
-#     y_target=1,
-#     poisoned_rate=0.05,
-#     poisoned_transform_train_index=0,
-#     poisoned_transform_test_index=0,
-#     poisoned_target_transform_index=0,
-#     schedule=None,
-#     seed=global_seed,
-#     deterministic=deterministic
-# )
+trainset = DatasetFolder(
+    root='/data/gaokuofeng/datasets/GTSRB/train', # please replace this with path to your training set
+    loader=cv2.imread,
+    extensions=('png',),
+    transform=transform_train,
+    target_transform=None,
+    is_valid_file=None)
+trainset1 = DatasetFolder(
+    root='/data/gaokuofeng/datasets/GTSRB/train', # please replace this with path to your training set
+    loader=cv2.imread,
+    extensions=('png',),
+    transform=transform_train,
+    target_transform=None,
+    is_valid_file=None)
+testset = DatasetFolder(
+    root='/data/gaokuofeng/datasets/GTSRB/testset', # please replace this with path to your test set
+    loader=cv2.imread,
+    extensions=('png',),
+    transform=transform_test,
+    target_transform=None,
+    is_valid_file=None)
+testset1 = DatasetFolder(
+    root='/data/gaokuofeng/datasets/GTSRB/testset', # please replace this with path to your test set
+    loader=cv2.imread,
+    extensions=('png',),
+    transform=transform_test,
+    target_transform=None,
+    is_valid_file=None)
 
 
-# schedule = {
-#     'device': 'GPU',
-#     'CUDA_VISIBLE_DEVICES': '0',
-#     'GPU_num': 1,
+schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '1',
+    'GPU_num': 1,
 
-#     'benign_training': False,
-#     'batch_size': 128,
-#     'num_workers': 8,
+    'benign_training': False,
+    'batch_size': 128,
+    'num_workers': 8,
 
-#     'lr': 0.01,
-#     'momentum': 0.9,
-#     'weight_decay': 5e-4,
-#     'milestones': [100, 200, 300, 400],
-#     'lambda': 0.1,
+    'lr': 0.01,
+    'momentum': 0.9,
+    'weight_decay': 5e-4,
+    'milestones': [100, 200, 300, 400],
+    'lambda': 0.1,
     
-#     'lr_G': 0.01,
-#     'betas_G': (0.5, 0.9),
-#     'milestones_G': [200, 300, 400, 500],
-#     'lambda_G': 0.1,
+    'lr_G': 0.01,
+    'betas_G': (0.5, 0.9),
+    'milestones_G': [200, 300, 400, 500],
+    'lambda_G': 0.1,
 
-#     'lr_M': 0.01,
-#     'betas_M': (0.5, 0.9),
-#     'milestones_M': [10, 20],
-#     'lambda_M': 0.1,
+    'lr_M': 0.01,
+    'betas_M': (0.5, 0.9),
+    'milestones_M': [10, 20],
+    'lambda_M': 0.1,
     
-#     'epochs': 600,
-#     'epochs_M': 25,
+    'epochs': 600,
+    'epochs_M': 25,
 
-#     'log_iteration_interval': 100,
-#     'test_epoch_interval': 10,
-#     'save_epoch_interval': 10,
+    'log_iteration_interval': 100,
+    'test_epoch_interval': 10,
+    'save_epoch_interval': 10,
 
-#     'save_dir': 'experiments',
-#     'experiment_name': 'train_poison_DataFolder_GTSRB_IAD'
-# }
+    'save_dir': 'experiments',
+    'experiment_name': 'train_poison_DataFolder_GTSRB_IAD'
+}
 
-# # Train backdoored model
-# refool.train(schedule)
 
-# # ===== Train backdoored model on GTSRB using with DatasetFolder (done) ======
+# Configure the attack scheme
+IAD = core.IAD(
+    dataset_name="gtsrb",
+    train_dataset=trainset,
+    test_dataset=testset,
+    train_dataset1=trainset1,
+    test_dataset1=testset1,
+    model=core.models.ResNet(18, 43),
+    loss=nn.CrossEntropyLoss(),
+    y_target=1,
+    poisoned_rate=0.1,      # follow the default configure in the original paper
+    cross_rate=0.1,         # follow the default configure in the original paper
+    lambda_div=1,
+    lambda_norm=100,
+    mask_density=0.032,
+    EPSILON=1e-7,
+    schedule=schedule,
+    seed=global_seed,
+    deterministic=deterministic
+)
+
+
+# Train backdoored model
+IAD.train()
+
 
 # ===== Train backdoored model on CIFAR10 using with CIFAR10 ===== 
 
-# Prepare datasets
+# Prepare datasets and follow the default data augmentation in the original paper
 transform_train = Compose([
     transforms.Resize((32, 32)),
-    RandomHorizontalFlip(),
+    transforms.RandomCrop((32, 32), padding=5),
+    transforms.RandomRotation(10),
+    transforms.RandomHorizontalFlip(p=0.5),
     ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465),
                         (0.247, 0.243, 0.261))
@@ -139,6 +161,7 @@ transform_test = Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465),
                         (0.247, 0.243, 0.261))
 ])
+
 trainset = CIFAR10(
     root='/data/gaokuofeng/datasets', # please replace this with path to your dataset
     transform=transform_train,
@@ -163,28 +186,6 @@ testset1 = CIFAR10(
     target_transform=None,
     train=False,
     download=True)
-
-
-# Configure the attack scheme
-IAD = core.IAD(
-    dataset_name="cifar10",
-    train_dataset=trainset,
-    test_dataset=testset,
-    train_dataset1=trainset1,
-    test_dataset1=testset1,
-    model=core.models.ResNet(18),
-    loss=nn.CrossEntropyLoss(),
-    y_target=1,
-    poisoned_rate=0.1,      # follow the default configure in the original paper
-    cross_rate=0.1,
-    lambda_div=1,
-    lambda_norm=100,
-    mask_density=0.032,
-    EPSILON=1e-7,
-    schedule=None,
-    seed=global_seed,
-    deterministic=deterministic
-)
 
 
 schedule = {
@@ -224,79 +225,135 @@ schedule = {
 }
 
 
+# Configure the attack scheme
+IAD = core.IAD(
+    dataset_name="cifar10",
+    train_dataset=trainset,
+    test_dataset=testset,
+    train_dataset1=trainset1,
+    test_dataset1=testset1,
+    model=core.models.ResNet(18),
+    loss=nn.CrossEntropyLoss(),
+    y_target=1,
+    poisoned_rate=0.1,      # follow the default configure in the original paper
+    cross_rate=0.1,         # follow the default configure in the original paper
+    lambda_div=1,
+    lambda_norm=100,
+    mask_density=0.032,
+    EPSILON=1e-7,
+    schedule=schedule,
+    seed=global_seed,
+    deterministic=deterministic
+)
+
+
 # Train backdoored model
-IAD.train(schedule)
+IAD.train()
 
 # ===== Train backdoored model on CIFAR10 using with CIFAR10 (done)===== 
 
-# # ===== Train backdoored model on MNIST using with MNIST ===== 
-# # Prepare datasets
-# transform_train = Compose([
-#     transforms.Resize((28, 28)),
-#     RandomHorizontalFlip(),
-#     ToTensor(),
-# ])
-# transform_test = Compose([
-#     transforms.Resize((28, 28)),
-#     ToTensor(),
-# ])
-# trainset = MNIST(
-#     root='/data/ganguanhao/datasets', # please replace this with path to your dataset
-#     transform=transform_train,
-#     target_transform=None,
-#     train=True,
-#     download=True)
-# testset = MNIST(
-#     root='/data/ganguanhao/datasets', # please replace this with path to your dataset
-#     transform=transform_test,
-#     target_transform=None,
-#     train=False,
-#     download=True)
+# ===== Train backdoored model on MNIST using with MNIST ===== 
 
-# loader = DataLoader(trainset,)
+# Prepare datasets and follow the default data augmentation in the original paper
+transform_train = Compose([
+    transforms.Resize((28, 28)),
+    transforms.RandomCrop((28, 28), padding=5),
+    ToTensor(),
+    transforms.Normalize((0.5),
+                    (0.5))
+])
+transform_test = Compose([
+    transforms.Resize((28, 28)),
+    ToTensor(),
+    transforms.Normalize((0.5),
+                    (0.5))
+])
+
+trainset = MNIST(
+    root='/data/gaokuofeng/datasets', # please replace this with path to your dataset
+    transform=transform_train,
+    target_transform=None,
+    train=True,
+    download=True)
+trainset1 = MNIST(
+    root='/data/gaokuofeng/datasets', # please replace this with path to your dataset
+    transform=transform_train,
+    target_transform=None,
+    train=True,
+    download=True)
+testset = MNIST(
+    root='/data/gaokuofeng/datasets', # please replace this with path to your dataset
+    transform=transform_test,
+    target_transform=None,
+    train=False,
+    download=True)
+testset1 = MNIST(
+    root='/data/gaokuofeng/datasets', # please replace this with path to your dataset
+    transform=transform_test,
+    target_transform=None,
+    train=False,
+    download=True)
 
 
-# # Configure the attack scheme
-# refool= core.Refool(
-#     train_dataset=trainset,
-#     test_dataset=testset,
-#     model=core.models.BaselineMNISTNetwork(),
-#     loss=nn.CrossEntropyLoss(),
-#     y_target=1,
-#     poisoned_rate=0.05,
-#     poisoned_transform_train_index=0,
-#     poisoned_transform_test_index=0,
-#     poisoned_target_transform_index=0,
-#     schedule=None,
-#     seed=global_seed,
-#     deterministic=deterministic,
-#     reflection_candidates = reflection_images,
-# )
+schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': '1',
+    'GPU_num': 1,
 
-# schedule = {
-#     'device': 'GPU',
-#     'CUDA_VISIBLE_DEVICES': '0',
-#     'GPU_num': 1,
+    'benign_training': False,
+    'batch_size': 128,
+    'num_workers': 8,
 
-#     'benign_training': False,
-#     'batch_size': 128,
-#     'num_workers': 8,
+    'lr': 0.01,
+    'momentum': 0.9,
+    'weight_decay': 5e-4,
+    'milestones': [100, 200, 300, 400],
+    'lambda': 0.1,
+    
+    'lr_G': 0.01,
+    'betas_G': (0.5, 0.9),
+    'milestones_G': [200, 300, 400, 500],
+    'lambda_G': 0.1,
 
-#     'lr': 0.1,
-#     'momentum': 0.9,
-#     'weight_decay': 5e-4,
-#     'gamma': 0.1,
-#     'schedule': [10, 15],
+    'lr_M': 0.01,
+    'betas_M': (0.5, 0.9),
+    'milestones_M': [10, 20],
+    'lambda_M': 0.1,
+    
+    'epochs': 600,
+    'epochs_M': 25,
 
-#     'epochs': 20,
+    'log_iteration_interval': 100,
+    'test_epoch_interval': 10,
+    'save_epoch_interval': 10,
 
-#     'log_iteration_interval': 100,
-#     'test_epoch_interval': 5,
-#     'save_epoch_interval': 5,
+    'save_dir': 'experiments',
+    'experiment_name': 'train_poison_DataFolder_MNIST_IAD'
+}
 
-#     'save_dir': 'experiments',
-#     'experiment_name': 'train_poison_MNIST_Refool'
-# }
-# # Train backdoored model
-# refool.train(schedule)
-# # ===== Train backdoored model on MNIST using with MNIST (done)===== 
+
+# Configure the attack scheme
+IAD = core.IAD(
+    dataset_name="mnist",
+    train_dataset=trainset,
+    test_dataset=testset,
+    train_dataset1=trainset1,
+    test_dataset1=testset1,
+    model=core.models.BaselineMNISTNetwork(),
+    loss=nn.CrossEntropyLoss(),
+    y_target=1,
+    poisoned_rate=0.15,      # follow the default configure in the original paper
+    cross_rate=0.15,
+    lambda_div=1,
+    lambda_norm=100,
+    mask_density=0.032,
+    EPSILON=1e-7,
+    schedule=schedule,
+    seed=global_seed,
+    deterministic=deterministic
+)
+
+
+# Train backdoored model
+IAD.train()
+# ===== Train backdoored model on MNIST using with MNIST (done)===== 
