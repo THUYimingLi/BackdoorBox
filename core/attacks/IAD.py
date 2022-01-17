@@ -293,7 +293,7 @@ class IAD(Base):
         test_loader = DataLoader(
             self.test_dataset,
             batch_size=self.current_schedule['batch_size'],
-            shuffle=False,
+            shuffle=True,
             num_workers=self.current_schedule['num_workers'],
             drop_last=False,
             worker_init_fn=self._seed_worker
@@ -301,7 +301,7 @@ class IAD(Base):
         test_loader1 = DataLoader(
             self.test_dataset1,
             batch_size=self.current_schedule['batch_size'],
-            shuffle=False,
+            shuffle=True,
             num_workers=self.current_schedule['num_workers'],
             drop_last=False,
             worker_init_fn=self._seed_worker
