@@ -468,7 +468,7 @@ class IAD(Base):
                 log(msg)
 
                 # Record the best checkpoints
-                if (avg_acc_clean + avg_acc_bd) > (best_acc_clean + best_acc_bd):
+                if (avg_acc_clean + avg_acc_bd + avg_acc_cross) > (best_acc_clean + best_acc_bd + best_acc_cross):
                     best_acc_clean = avg_acc_clean
                     best_acc_bd = avg_acc_bd
                     best_acc_cross = avg_acc_cross
@@ -702,7 +702,8 @@ class IAD(Base):
         # Use CPU
         else:
             device = torch.device("cpu")
-
+        
+        device = self.device if self.device else device
         model.eval()
         modelG.eval()
         total = 0.0
