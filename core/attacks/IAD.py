@@ -119,7 +119,7 @@ class DownSampleBlock(nn.Module):
 
 class UpSampleBlock(nn.Module):
     """The UpSampleBlock in the generator of dynamic backdoor trigger."""
-    def __init__(self, scale_factor=(2, 2), mode="bilinear", p=0.0):
+    def __init__(self, scale_factor=(2, 2), mode="nearest", p=0.0):
         super(UpSampleBlock, self).__init__()
         self.upsample = nn.Upsample(scale_factor=scale_factor, mode=mode)
         if p:

@@ -18,7 +18,7 @@ import core
 
 
 global_seed = 666
-deterministic = False
+deterministic = True
 torch.manual_seed(global_seed)
 
 
