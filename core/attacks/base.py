@@ -270,7 +270,7 @@ class Base(object):
             self.current_schedule = deepcopy(schedule)
         elif schedule is None and self.global_schedule is not None:
             self.current_schedule = deepcopy(self.global_schedule)
-        elif schedule is not None and self.schedule is not None:
+        elif schedule is not None and self.global_schedule is not None:
             self.current_schedule = deepcopy(schedule)
 
         if model is None:

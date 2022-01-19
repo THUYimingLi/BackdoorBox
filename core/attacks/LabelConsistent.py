@@ -509,24 +509,27 @@ class LabelConsistent(Base):
             schedule=schedule,
             seed=seed,
             deterministic=deterministic)
+        
+        if poisoned_rate > 0:
+            self.whole_adv_dataset, self.target_adv_dataset, poisoned_set = self._get_adv_dataset(
+                train_dataset,
+                adv_model=adv_model,
+                adv_dataset_dir=adv_dataset_dir,
+                adv_transform=adv_transform,
+                eps=eps/max_pixel,
+                alpha=alpha/max_pixel,
+                steps=steps,
+                y_target=y_target,
+                poisoned_rate=poisoned_rate)
 
-        self.whole_adv_dataset, self.target_adv_dataset, poisoned_set = self._get_adv_dataset(
-            train_dataset,
-            adv_model=adv_model,
-            adv_dataset_dir=adv_dataset_dir,
-            adv_transform=adv_transform,
-            eps=eps/max_pixel,
-            alpha=alpha/max_pixel,
-            steps=steps,
-            y_target=y_target,
-            poisoned_rate=poisoned_rate)
-
-        self.poisoned_train_dataset = CreatePoisonedTargetDataset(
-            self.target_adv_dataset,
-            poisoned_set,
-            pattern,
-            weight,
-            poisoned_transform_train_index)
+            self.poisoned_train_dataset = CreatePoisonedTargetDataset(
+                self.target_adv_dataset,
+                poisoned_set,
+                pattern,
+                weight,
+                poisoned_transform_train_index)
+        else:
+            self.poisoned_train_dataset = train_dataset
 
         self.poisoned_test_dataset = CreatePoisonedDataset(
             test_dataset,
