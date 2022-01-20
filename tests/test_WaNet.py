@@ -270,7 +270,7 @@ test_schedule = {
     'experiment_name': 'test_poisoned_MNIST_WaNet'
     # 'experiment_name': 'test_benign_MNIST_BadNets'
 }
-badnets.test(test_schedule)
+wanet.test(test_schedule)
 
 
 ########################CIFAR10#######################
@@ -384,6 +384,6 @@ test_schedule = {
     'experiment_name': 'test_poisoned_CIFAR10_WaNet'
     # 'experiment_name': 'test_benign_MNIST_BadNets'
 }
-badnets.test(test_schedule)
+wanet.test(test_schedule)
 
 
