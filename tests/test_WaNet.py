@@ -114,7 +114,7 @@ for a in x[0]:
     print()
 
 
-# train attacked model
+# Train Attacked Model
 schedule = {
     'device': 'GPU',
     'CUDA_VISIBLE_DEVICES': '1',
@@ -143,7 +143,7 @@ schedule = {
 wanet.train(schedule)
 infected_model = wanet.get_model()
 
-# Test Benign Model
+# Test Attacked Model
 test_schedule = {
     'device': 'GPU',
     'CUDA_VISIBLE_DEVICES': '0',
@@ -154,7 +154,6 @@ test_schedule = {
 
     'save_dir': 'experiments',
     'experiment_name': 'test_poisoned_DatasetFolder_GTSRB_WaNet'
-    # 'experiment_name': 'test_benign_MNIST_BadNets'
 }
 
 wanet.test(test_schedule)
@@ -256,8 +255,6 @@ infected_model = wanet.get_model()
 
 
 # Test Infected Model
-
-# Test Benign Model
 test_schedule = {
     'device': 'GPU',
     'CUDA_VISIBLE_DEVICES': '0',
@@ -268,9 +265,8 @@ test_schedule = {
 
     'save_dir': 'experiments',
     'experiment_name': 'test_poisoned_MNIST_WaNet'
-    # 'experiment_name': 'test_benign_MNIST_BadNets'
 }
-badnets.test(test_schedule)
+wanet.test(test_schedule)
 
 
 ########################CIFAR10#######################
@@ -363,7 +359,6 @@ schedule = {
 
     'save_dir': 'experiments',
     'experiment_name': 'train_poisoned_CIFAR10_WaNet'
-    #'experiment_name': 'train_poisoned_MNIST_BadNets'
 }
 
 wanet.train(schedule)
@@ -371,7 +366,6 @@ infected_model = wanet.get_model()
 
 
 # Test Infected Model
-# Test Benign Model
 test_schedule = {
     'device': 'GPU',
     'CUDA_VISIBLE_DEVICES': '0',
@@ -382,8 +376,7 @@ test_schedule = {
 
     'save_dir': 'experiments',
     'experiment_name': 'test_poisoned_CIFAR10_WaNet'
-    # 'experiment_name': 'test_benign_MNIST_BadNets'
 }
-badnets.test(test_schedule)
+wanet.test(test_schedule)
 
 
