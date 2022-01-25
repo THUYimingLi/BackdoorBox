@@ -142,6 +142,7 @@ class Base(object):
                 shuffle=True,
                 num_workers=self.current_schedule['num_workers'],
                 drop_last=True,
+                pin_memory=True,
                 worker_init_fn=self._seed_worker
             )
         elif self.current_schedule['benign_training'] is False:
@@ -151,6 +152,7 @@ class Base(object):
                 shuffle=True,
                 num_workers=self.current_schedule['num_workers'],
                 drop_last=True,
+                pin_memory=True,
                 worker_init_fn=self._seed_worker
             )
         else:
@@ -240,6 +242,7 @@ class Base(object):
                 shuffle=False,
                 num_workers=num_workers,
                 drop_last=False,
+                pin_memory=True,
                 worker_init_fn=self._seed_worker
             )
 
@@ -267,7 +270,7 @@ class Base(object):
             self.current_schedule = deepcopy(schedule)
         elif schedule is None and self.global_schedule is not None:
             self.current_schedule = deepcopy(self.global_schedule)
-        elif schedule is not None and self.schedule is not None:
+        elif schedule is not None and self.global_schedule is not None:
             self.current_schedule = deepcopy(schedule)
 
         if model is None:
