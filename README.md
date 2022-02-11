@@ -18,10 +18,10 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 - [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py)
 - [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py)
 - [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py)
+- [Blind Backdoor](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py)
 
 ## Methods Under Development
 - TUAP (basic version)
-- Blind Backdoor
 - Input-aware Dynamic Attack
 - Physical Attack
 
