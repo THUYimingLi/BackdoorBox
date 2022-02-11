@@ -3,8 +3,9 @@ from .Blended import Blended
 from .LabelConsistent import LabelConsistent
 from .Refool import Refool
 from .WaNet import WaNet
+from .Blind import Blind
 
 __all__ = [
-    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent'
+    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind'
 ]
 
