@@ -175,7 +175,7 @@ class Base(object):
         iteration = 0
         last_time = time.time()
 
-        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size:{self.current_schedule['batch_size']}\niteration every epoch:{len(self.train_dataset) // self.current_schedule['batch_size']}\nInitial learning rate:{self.current_schedule['lr']}\n"
+        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size: {self.current_schedule['batch_size']}\niteration every epoch: {len(self.train_dataset) // self.current_schedule['batch_size']}\nInitial learning rate: {self.current_schedule['lr']}\n"
         log(msg)
 
         for i in range(self.current_schedule['epochs']):
@@ -207,7 +207,7 @@ class Base(object):
                 top5_correct = int(round(prec5.item() / 100.0 * total_num))
                 msg = "==========Test result on benign test dataset==========\n" + \
                       time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                      f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num} time: {time.time()-last_time}\n"
+                      f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num} time: {time.time()-last_time}\n"
                 log(msg)
 
                 # test result on poisoned test dataset
@@ -219,7 +219,7 @@ class Base(object):
                 top5_correct = int(round(prec5.item() / 100.0 * total_num))
                 msg = "==========Test result on poisoned test dataset==========\n" + \
                       time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                      f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num}, time: {time.time()-last_time}\n"
+                      f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num}, time: {time.time()-last_time}\n"
                 log(msg)
 
                 self.model = self.model.to(device)
@@ -317,7 +317,7 @@ class Base(object):
             top5_correct = int(round(prec5.item() / 100.0 * total_num))
             msg = "==========Test result on benign test dataset==========\n" + \
                   time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                  f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num} time: {time.time()-last_time}\n"
+                  f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num} time: {time.time()-last_time}\n"
             log(msg)
 
         if poisoned_test_dataset is not None:
@@ -330,5 +330,5 @@ class Base(object):
             top5_correct = int(round(prec5.item() / 100.0 * total_num))
             msg = "==========Test result on poisoned test dataset==========\n" + \
                   time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                  f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num}, time: {time.time()-last_time}\n"
+                  f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num}, time: {time.time()-last_time}\n"
             log(msg)
