@@ -530,7 +530,7 @@ class Blind(Base):
         iteration = 0
         last_time = time.time()
 
-        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size:{self.current_schedule['batch_size']}\niteration every epoch:{len(self.train_dataset) // self.current_schedule['batch_size']}\nInitial learning rate:{self.current_schedule['lr']}\n"
+        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size: {self.current_schedule['batch_size']}\niteration every epoch: {len(self.train_dataset) // self.current_schedule['batch_size']}\nInitial learning rate: {self.current_schedule['lr']}\n"
         log(msg)
         
         for i in range(self.current_schedule['epochs']):
@@ -550,7 +550,7 @@ class Blind(Base):
                 iteration += 1
 
                 if iteration % self.current_schedule['log_iteration_interval'] == 0:
-                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{self.current_schedule['epochs']}, iteration:{batch_id + 1}/{len(self.train_dataset)//self.current_schedule['batch_size']}, lr: {self.current_schedule['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
+                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch: {i+1}/{self.current_schedule['epochs']}, iteration: {batch_id + 1}/{len(self.train_dataset)//self.current_schedule['batch_size']}, lr: {self.current_schedule['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
                     last_time = time.time()
                     log(msg)
             if (i + 1) % self.current_schedule['test_epoch_interval'] == 0:
