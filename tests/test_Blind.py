@@ -1,7 +1,7 @@
 
 '''
 This is the test code of poisoned training on GTSRB, CIFAR10, MNIST, using dataset class of torchvision.datasets.DatasetFolder torchvision.datasets.CIFAR10 torchvision.datasets.MNIST.
-The attack method is Refool.
+The attack method is Blind.
 '''
 
 
