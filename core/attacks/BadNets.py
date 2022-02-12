@@ -2,7 +2,7 @@
 This is the implement of BadNets [1].
 
 Reference:
-[1] Badnets: Evaluating backdooring attacks on deep neural networks. IEEE Access 2019.
+[1] Badnets: Evaluating Backdooring Attacks on Deep Neural Networks. IEEE Access 2019.
 '''
 
 import copy

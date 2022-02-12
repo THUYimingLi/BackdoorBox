@@ -562,7 +562,7 @@ class Blind(Base):
                 top5_correct = int(round(prec5.item() / 100.0 * total_num))
                 msg = "==========Test result on benign test dataset==========\n" + \
                         time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                        f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num} time: {time.time()-last_time}\n"
+                        f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num} time: {time.time()-last_time}\n"
                 log(msg)
 
                 # test result on poisoned test dataset
@@ -574,7 +574,7 @@ class Blind(Base):
                 top5_correct = int(round(prec5.item() / 100.0 * total_num))
                 msg = "==========Test result on poisoned test dataset==========\n" + \
                         time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                        f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num}, time: {time.time()-last_time}\n"
+                        f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num}, time: {time.time()-last_time}\n"
                 log(msg)
 
                 self.model = self.model.to(device)
@@ -691,7 +691,7 @@ class Blind(Base):
             top5_correct = int(round(prec5.item() / 100.0 * total_num))
             msg = "==========Test result on benign test dataset==========\n" + \
                   time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                  f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num} time: {time.time()-last_time}\n"
+                  f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num} time: {time.time()-last_time}\n"
             log(msg)
 
         if test_dataset is not None:
@@ -704,7 +704,7 @@ class Blind(Base):
             top5_correct = int(round(prec5.item() / 100.0 * total_num))
             msg = "==========Test result on poisoned test dataset==========\n" + \
                   time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                  f"Top-1 correct / Total:{top1_correct}/{total_num}, Top-1 accuracy:{top1_correct/total_num}, Top-5 correct / Total:{top5_correct}/{total_num}, Top-5 accuracy:{top5_correct/total_num}, time: {time.time()-last_time}\n"
+                  f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num}, time: {time.time()-last_time}\n"
             log(msg)
 
     
