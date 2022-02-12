@@ -1,5 +1,6 @@
 --find-links https://mirror.sjtu.edu.cn/pytorch-wheels/torch_stable.html
 tqdm
+matplotlib
 numpy>=1.19.5
 pillow>=8.1.0
 opencv-python>=4.5.1.48
