@@ -19,12 +19,14 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 - [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py)
 - [Blind Backdoor](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py)
 - [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py)
+- [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) 
 
 
 ## Methods Under Development
 - TUAP (basic version)
-- Input-aware Dynamic Attack
 - Physical Attack
+- ISSBA
+- SleeperAgent
 
 
 # Contributors
