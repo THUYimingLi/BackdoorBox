@@ -27,6 +27,7 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 - Physical Attack
 - ISSBA
 - SleeperAgent
+- LIRA
 
 
 # Contributors
