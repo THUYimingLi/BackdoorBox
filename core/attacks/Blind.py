@@ -1,6 +1,6 @@
 '''
 This is the implement of Blind Attack [1].
-This code heavily refers to its official implementation (https://github.com/ebagdasa/backdoors101).
+This code is developed based on its official codes (https://github.com/ebagdasa/backdoors101).
 
 Reference:
 [1] Blind Backdoors in Deep Learning Models. USENIX Security, 2021.
