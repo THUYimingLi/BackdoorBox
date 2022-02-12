@@ -1,6 +1,6 @@
 '''
-This is the implement of IAD [1]. 
-This code is developed based on its official implementation (https://github.com/VinAIResearch/input-aware-backdoor-attack-release)
+This is the implementation of IAD [1]. 
+This code is developed based on its official codes (https://github.com/VinAIResearch/input-aware-backdoor-attack-release)
 
 Reference:
 [1] Input-Aware Dynamic Backdoor Attack. NeurIPS 2020.
