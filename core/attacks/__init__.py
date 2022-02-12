@@ -4,8 +4,9 @@ from .LabelConsistent import LabelConsistent
 from .Refool import Refool
 from .WaNet import WaNet
 from .Blind import Blind
+from .IAD import IAD
 
 __all__ = [
-    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind'
+    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD'
 ]
 
