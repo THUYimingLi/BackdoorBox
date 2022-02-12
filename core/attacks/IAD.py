@@ -413,20 +413,20 @@ class IAD(Base):
         self.iteration = 0
         epoch = 1
         last_time = time.time()
-        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size:{self.current_schedule['batch_size']}\niteration every epoch:{len(self.train_dataset) // self.current_schedule['batch_size']}\nInitial learning rate:{self.current_schedule['lr']}\n"
+        msg = f"Total train samples: {len(self.train_dataset)}\nTotal test samples: {len(self.test_dataset)}\nBatch size: {self.current_schedule['batch_size']}\niteration every epoch: {len(self.train_dataset) // self.current_schedule['batch_size']}\nInitial learning rate: {self.current_schedule['lr']}\n"
         log(msg)
 
         # The backdoor trigger mask generator will be trained independently first in early epochs 
         if epoch == 1:
             self.modelM.train()
             for i in range(25):
-                msg = "Epoch {} - {} | mask_density: {} - lambda_div: {}  - lambda_norm: {}\n".format(
-                        epoch, self.dataset_name, self.mask_density, self.lambda_div, self.lambda_norm
+                msg = "Epoch {} | mask_density: {} | - {}  - lambda_div: {}  - lambda_norm: {}\n".format(
+                        epoch, self.mask_density, self.dataset_name, self.lambda_div, self.lambda_norm
                     )
                 log(msg)
                 
                 total_loss, loss_norm, loss_div = self.train_mask_step(self.modelM, optimizerM, schedulerM, train_loader, train_loader1)
-                msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + "Train Mask loss: {:.4f} - Norm: {:.3f} | Diversity: {:.3f}\n".format(total_loss, loss_norm, loss_div)
+                msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + "Train Mask loss: {:.4f} | Norm: {:.3f} | Diversity: {:.3f}\n".format(total_loss, loss_norm, loss_div)
                 log(msg)
                 
                 loss_norm_eval, loss_div_eval = self.eval_mask(self.modelM, test_loader, test_loader1)
@@ -444,7 +444,7 @@ class IAD(Base):
         best_acc_cross = -1
         best_epoch = 1
         for i in range(self.current_schedule['epochs']):
-            msg = f"Epoch {epoch} - {self.dataset_name} | mask_density: {self.mask_density} - lambda_div: {self.lambda_div}\n"
+            msg = f"Epoch {epoch} | mask_density: {self.mask_density} | - {self.dataset_name} - lambda_div: {self.lambda_div}\n"
             log(msg)
 
             # Train the victim model and the backdoor trigger pattern generator jointly
@@ -477,15 +477,15 @@ class IAD(Base):
                 )
                 msg = "==========Test result on benign test dataset==========\n" + \
                         time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                        f"Accuracy:{avg_acc_clean}, time: {time.time()-last_time}\n"
+                        f"Accuracy: {avg_acc_clean}, time: {time.time()-last_time}\n"
                 log(msg)
                 msg = "==========Test result on poisoned test dataset==========\n" + \
                         time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                        f"Accuracy:{avg_acc_bd}, time: {time.time()-last_time}\n"
+                        f"Accuracy: {avg_acc_bd}, time: {time.time()-last_time}\n"
                 log(msg)
                 msg = "==========Test result on cross test dataset==========\n" + \
                         time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                        f"Accuracy:{avg_acc_cross}, time: {time.time()-last_time}\n"
+                        f"Accuracy: {avg_acc_cross}, time: {time.time()-last_time}\n"
                 log(msg)
 
                 # Record the best checkpoints
