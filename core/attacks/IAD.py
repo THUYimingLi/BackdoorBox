@@ -38,6 +38,26 @@ class ModifyTarget:
         return torch.ones_like(targets) * self.y_target
 
 
+class GetPoisonedDataset(torch.utils.data.Dataset):
+    """Construct a dataset.
+
+    Args:
+        data_list (list): the list of data.
+        labels (list): the list of label.
+    """
+    def __init__(self, data_list, labels):
+        self.data_list = data_list
+        self.labels = labels
+
+    def __len__(self):
+        return len(self.data_list)
+
+    def __getitem__(self, index):
+        img = torch.tensor(self.data_list[index])
+        label = torch.tensor(self.labels[index])
+        return img, label
+
+
 class Normalize:
     """Normalization of images.
 
@@ -293,6 +313,10 @@ class IAD(Base):
         self.mask_density = mask_density
         self.EPSILON = EPSILON
         self.create_targets_bd = ModifyTarget(self.y_target)
+        self.train_poisoned_data = []
+        self.train_poisoned_label = []
+        self.test_poisoned_data = []
+        self.test_poisoned_label = []
 
     def train(self, schedule=None):
         if schedule is None and self.global_schedule is None:
@@ -563,6 +587,7 @@ class IAD(Base):
         total_loss = 0
         criterion = self.loss
         criterion_div = nn.MSELoss(reduction="none")
+        self.train_poisoned_data, self.train_poisoned_label = [], []
         for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(train_dl1)), train_dl1, train_dl2):
             optimizerC.zero_grad()
 
@@ -581,6 +606,9 @@ class IAD(Base):
 
             total_inputs = torch.cat((inputs_bd, inputs_cross, inputs1[num_bd + num_cross :]), 0)
             total_targets = torch.cat((targets_bd, targets1[num_bd:]), 0)
+
+            self.train_poisoned_data += total_inputs.detach().cpu().numpy().tolist()
+            self.train_poisoned_label += total_targets.detach().cpu().numpy().tolist()
 
             # Calculating the classification loss
             preds = model(total_inputs)
@@ -711,6 +739,7 @@ class IAD(Base):
         total_correct_clean = 0.0
         total_correct_bd = 0.0
         total_correct_cross = 0.0
+        self.test_poisoned_data, self.test_poisoned_label = [], []
         for batch_idx, (inputs1, targets1), (inputs2, targets2) in zip(range(len(test_dl1)), test_dl1, test_dl2):
             with torch.no_grad():
                 inputs1, targets1 = inputs1.to(device), targets1.to(device)
@@ -724,6 +753,10 @@ class IAD(Base):
 
                 # Construct the backdoored samples and calculate the backdoored accuracy
                 inputs_bd, targets_bd, _, _ = self.create_bd(inputs1, targets1, modelG, modelM)
+
+                self.test_poisoned_data += inputs_bd.detach().cpu().numpy().tolist()
+                self.test_poisoned_label += targets_bd.detach().cpu().numpy().tolist()
+
                 preds_bd = model(inputs_bd)
                 correct_bd = torch.sum(torch.argmax(preds_bd, 1) == targets_bd)
                 total_correct_bd += correct_bd
@@ -909,4 +942,16 @@ class IAD(Base):
         """
             Return the poisoned dataset.
         """
-        raise Exception("IAD is implemented by controlling the training process so that the poisoned dataset is dynamic and hard to return.")
+        warnings.warn("IAD is implemented by controlling the training process so that the poisoned dataset is dynamic.")
+        if len(self.train_poisoned_data) == 0 and len(self.test_poisoned_data) == 0:
+            return None, None
+        elif len(self.train_poisoned_data) == 0 and len(self.test_poisoned_data) != 0:
+            poisoned_test_dataset = GetPoisonedDataset(self.test_poisoned_data, self.test_poisoned_label)
+            return None, poisoned_test_dataset
+        elif len(self.train_poisoned_data) != 0 and len(self.test_poisoned_data) == 0:
+            poisoned_train_dataset = GetPoisonedDataset(self.train_poisoned_data, self.train_poisoned_label)
+            return poisoned_train_dataset, None
+        else:
+            poisoned_train_dataset = GetPoisonedDataset(self.train_poisoned_data, self.train_poisoned_label)
+            poisoned_test_dataset = GetPoisonedDataset(self.test_poisoned_data, self.test_poisoned_label)
+            return poisoned_train_dataset, poisoned_test_dataset

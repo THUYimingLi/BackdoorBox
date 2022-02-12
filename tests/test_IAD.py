@@ -367,6 +367,26 @@ modelM = IAD.get_modelM()
 modelG = IAD.get_modelG()
 
 # Get the poisoned dataset
-poisoned_dataset = IAD.get_poisoned_dataset()
+poisoned_train_dataset, poisoned_test_dataset = IAD.get_poisoned_dataset()
+
+# Show an Example of Poisoned Training Samples
+index = 44
+x, y = poisoned_train_dataset[index]
+print(y)
+for a in x[0]:
+    for b in a:
+        print("%-4.2f" % float(b), end=' ')
+    print()
+
+# Show an Example of Poisoned Testing Samples
+x, y = poisoned_test_dataset[index]
+print(y)
+for a in x[0]:
+    for b in a:
+        print("%-4.2f" % float(b), end=' ')
+    print()
+
+print("The length of poisoned train dataset is: ", len(poisoned_train_dataset))
+print("The length of poisoned test dataset is: ", len(poisoned_test_dataset))
 
 # ===== Train backdoored model on MNIST using with MNIST (done)===== 
