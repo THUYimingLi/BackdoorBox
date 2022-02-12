@@ -1,5 +1,5 @@
 '''
-This is the implementation of IAD [1]. 
+This is the implement of IAD [1]. 
 This code is developed based on its official codes (https://github.com/VinAIResearch/input-aware-backdoor-attack-release)
 
 Reference:
