@@ -460,7 +460,7 @@ class IAD(Base):
                 train_loader1
             )
 
-            msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + "Train CE loss: {:.4f} | BA: {:.3f} | ASR: {:.3f} | Cross BA: {:3f}\n".format(
+            msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + "Train CE loss: {:.4f} | BA: {:.3f} | ASR: {:.3f} | Cross Accuracy: {:3f}\n".format(
                 avg_loss, acc_clean, acc_bd, acc_cross
             )
             log(msg)
@@ -536,7 +536,7 @@ class IAD(Base):
                 # Save the best checkpoints
                 torch.save(best_state_dict, ckpt_model_path)
                 msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                    "Best Epoch {}: | Best BA: {:.3f} | Best ASR: {:.3f} | Best Cross BA: {:3f}\n".format(
+                    "Best Epoch {}: | Best BA: {:.3f} | Best ASR: {:.3f} | Best Cross Accuracy: {:3f}\n".format(
                         best_epoch, best_acc_clean, best_acc_bd, best_acc_cross
                     )
                 log(msg)
