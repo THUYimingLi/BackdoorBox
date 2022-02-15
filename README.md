@@ -13,13 +13,13 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 
 ## Developed Methods
 
-- [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py) (**Key Properties**: poison-only, visible, non-optimized, non-semantic, sample-agnostic, digital)
-- [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py) (**Key Properties**: poison-only, invisible, non-optimized, non-semantic, sample-agnostic, digital)
-- [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py) (**Key Properties**: poison-only, visible, non-optimized, non-semantic, sample-specific, physical)
-- [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py) (**Key Properties**: poison-only, invisible, non-optimized, non-semantic, sample-specific, digital)
-- [Blind Backdoor](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py) (**Key Properties**: training-controlled, visible & invisible, non-optimized, non-semantic & semantic, sample-agnostic & sample-specific, digital & physical)
-- [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) (**Key Properties**: poison-only, invisible, non-optimized, non-semantic, sample-agnostic, digital)
-- [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) (**Key Properties**: training-controlled, visible, optimized, non-semantic, sample-specific, digital)
+- [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py) (**Key Properties**: poison-only, visible, poison-label, non-optimized, non-semantic, sample-agnostic, digital)
+- [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py) (**Key Properties**: poison-only, invisible, poison-label, non-optimized, non-semantic, sample-agnostic, digital)
+- [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py) (**Key Properties**: poison-only, visible, poison-label, non-optimized, non-semantic, sample-specific, physical)
+- [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py) (**Key Properties**: poison-only, invisible, poison-label, non-optimized, non-semantic, sample-specific, digital)
+- [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) (**Key Properties**: poison-only, invisible, clean-label, non-optimized, non-semantic, sample-agnostic, digital)
+- [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py) (**Key Properties**: training-controlled, invisible, poison-label, non-optimized, non-semantic, sample-agnostic, digital)
+- [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) (**Key Properties**: training-controlled, visible, poison-label, optimized, non-semantic, sample-specific, digital)
 
 
 ## Methods Under Development
