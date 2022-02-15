@@ -234,7 +234,12 @@ class Base(object):
                 self.model = self.model.to(device)
                 self.model.train()
 
-    def _test(self, dataset, device, batch_size=16, num_workers=8):
+    def _test(self, dataset, device, batch_size=16, num_workers=8, model=None):
+        if model is None:
+            model = self.model
+        else:
+            model = model
+
         with torch.no_grad():
             test_loader = DataLoader(
                 dataset,
@@ -246,15 +251,15 @@ class Base(object):
                 worker_init_fn=self._seed_worker
             )
 
-            self.model = self.model.to(device)
-            self.model.eval()
+            model = model.to(device)
+            model.eval()
 
             predict_digits = []
             labels = []
             for batch in test_loader:
                 batch_img, batch_label = batch
                 batch_img = batch_img.to(device)
-                batch_img = self.model(batch_img)
+                batch_img = model(batch_img)
                 batch_img = batch_img.cpu()
                 predict_digits.append(batch_img)
                 labels.append(batch_label)
@@ -310,7 +315,7 @@ class Base(object):
         if test_dataset is not None:
             last_time = time.time()
             # test result on benign test dataset
-            predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
+            predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'], model)
             total_num = labels.size(0)
             prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
             top1_correct = int(round(prec1.item() / 100.0 * total_num))
@@ -323,7 +328,7 @@ class Base(object):
         if poisoned_test_dataset is not None:
             last_time = time.time()
             # test result on poisoned test dataset
-            predict_digits, labels = self._test(poisoned_test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
+            predict_digits, labels = self._test(poisoned_test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'], model)
             total_num = labels.size(0)
             prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
             top1_correct = int(round(prec1.item() / 100.0 * total_num))
