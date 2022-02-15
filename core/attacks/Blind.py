@@ -599,7 +599,7 @@ class Blind(Base):
                 
 
    
-    def _test(self, dataset, device, batch_size=16, num_workers=8, backdoor=True):
+    def _test(self, dataset, device, batch_size=16, num_workers=8, backdoor=True, model=None):
         with torch.no_grad():
             test_loader = DataLoader(
                 dataset,
@@ -609,11 +609,10 @@ class Blind(Base):
                 drop_last=False,
                 worker_init_fn=self._seed_worker
             )
-
-            self.model = self.model.to(device)
-            self.model.eval()
-            self.nc_model = self.nc_model.to(device)
-            self.nc_model.eval()
+            if model is None:
+                model = self.model
+            model = model.to(device)
+            model.eval()
 
 
             predict_digits = []
@@ -623,7 +622,7 @@ class Blind(Base):
                 batch_img = batch_img.to(device)
                 if backdoor:
                     batch_img, batch_label = self.make_backdoor_batches(batch_img, batch_label)
-                batch_predict_digits = self.model(batch_img)
+                batch_predict_digits = model(batch_img)
                 batch_predict_digits = batch_predict_digits.cpu()
                 predict_digits.append(batch_predict_digits)
                 labels.append(batch_label)
@@ -684,7 +683,7 @@ class Blind(Base):
         if test_dataset is not None:
             last_time = time.time()
             # test result on benign test dataset
-            predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'], backdoor=False)
+            predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'], backdoor=False, model=model)
             total_num = labels.size(0)
             prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
             top1_correct = int(round(prec1.item() / 100.0 * total_num))
@@ -697,7 +696,7 @@ class Blind(Base):
         if test_dataset is not None:
             last_time = time.time()
             # test result on poisoned test dataset
-            predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'])
+            predict_digits, labels = self._test(test_dataset, device, self.current_schedule['batch_size'], self.current_schedule['num_workers'], model=model)
             total_num = labels.size(0)
             prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
             top1_correct = int(round(prec1.item() / 100.0 * total_num))
