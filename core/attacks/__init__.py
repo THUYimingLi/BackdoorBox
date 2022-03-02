@@ -5,8 +5,9 @@ from .Refool import Refool
 from .WaNet import WaNet
 from .Blind import Blind
 from .IAD import IAD
+from .LIRA import LIRA
 
 __all__ = [
-    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD'
+    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA'
 ]
 
