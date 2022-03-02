@@ -20,6 +20,7 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 - [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) (**Key Properties**: poison-only, invisible, clean-label, non-optimized, non-semantic, sample-agnostic, digital)
 - [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py) (**Key Properties**: training-controlled, invisible, poison-label, non-optimized, non-semantic, sample-agnostic, digital)
 - [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) (**Key Properties**: training-controlled, visible, poison-label, optimized, non-semantic, sample-specific, digital)
+- [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py) (**Key Properties**: training-controlled, invisible, poison-label, optimized, non-semantic, sample-specific, digital)
 
 
 ## Methods Under Development
@@ -27,7 +28,7 @@ BackdoorBox is a Python toolbox for backdoor learning research. Specifically, Ba
 - Physical Attack
 - ISSBA
 - SleeperAgent
-- LIRA
+
 
 
 # Contributors
