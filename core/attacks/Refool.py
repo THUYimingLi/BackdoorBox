@@ -123,10 +123,6 @@ class AddTriggerMixin(object):
             blended[blended > 1.] = 1.
             blended[blended < 0.] = 0.
 
-            ghost_r = np.power(ghost_r, 1 / 2.2)
-            ghost_r[blended > 1.] = 1.
-            ghost_r[blended < 0.] = 0.
-
             reflection_layer = np.uint8(ghost_r * 255)
             blended = np.uint8(blended * 255)
             transmission_layer = np.uint8(transmission_layer * 255)
