@@ -7,6 +7,7 @@
 
 BackdoorBox is a Python toolbox for backdoor learning research. Specifically, BackdoorBox contains modules for conducting backdoor attacks and backdoor defenses.  
 
+This project is still under development and therefore there is no user manual yet. Please refer to the 'test' sub-folder to get more insights about how to use our implemented methods.
 
 
 # Current Status
