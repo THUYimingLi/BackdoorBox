@@ -17,6 +17,7 @@ from torchvision.datasets.folder import make_dataset
 from torchvision.transforms import functional as F
 from torchvision.transforms import Compose
 from .base import *
+import warnings
 
 # 1. Dynamic Trigger
 # 2. Static Trigger
@@ -456,6 +457,16 @@ class Blind(Base):
         self.nc_mask_p_norm=nc_mask_p_norm
         self.add_trigger = AddTrigger(pattern, alpha)
         self.y_target = y_target
+        self.crafted = False
+    
+    def get_model(self, return_NC=False):
+        if self.crafted is False:
+            warnings.warn("Models haven't complete training yet! Will get incompetent models!")
+            print("Models haven't complete training yet! Will get incompetent models!")
+        if return_NC:
+            return self.model, self.nc_model
+        else:
+            return self.model
 
         
     def train(self, schedule=None):
@@ -596,8 +607,7 @@ class Blind(Base):
                 self.nc_model = self.nc_model.to(device)
                 self.nc_model.train()
                 
-                
-
+        self.crafted=True
    
     def _test(self, dataset, device, batch_size=16, num_workers=8, backdoor=True, model=None):
         with torch.no_grad():
@@ -846,4 +856,3 @@ class Blind(Base):
             labels = torch.cat(labels,dim=0)
             return torch.utils.data.TensorDataset(imgs, labels)
         
-
