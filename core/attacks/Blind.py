@@ -436,18 +436,47 @@ class Blind(Base):
         test_dataset (types in support_list): Benign testing dataset.
         model (torch.nn.Module): Network.
         loss (torch.nn.Module): Loss.
+        pattern (None | torch.Tensor): Trigger pattern, shape (C, H, W) or (H, W).
+        alpha (torch.Tensor): Transparency of trigger pattern, shape (C, H, W).
+        y_target (int): N-to-1 attack target label.
         schedule (dict): Training or testing global schedule. Default: None.
-        pattern: (torch.Tensor): shape (C,H,W) trigger pattern
-        alpha: (torch.Tensor): shape (C,H,W) transparency of trigger pattern
-        y_target: (int): target label
-
+        seed (int): Global seed for random numbers. Default: 0.
+        deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
+            That is, algorithms which, given the same input, and when run on the same software and hardware,
+            always produce the same output. When enabled, operations will use deterministic algorithms when available,
+            and if only nondeterministic algorithms are available they will throw a RuntimeError when called. Default: False.
+        use_neural_cleanse: ?
+        nc_mask_p_norm: ?
+        loss_balance: ?
+        mgda_normalize: ?
+        fixed_scales: ?
     """
-    def __init__(self, train_dataset, test_dataset, model, loss, pattern, alpha, 
-    y_target, schedule=None, seed=0, deterministic=False, use_neural_cleanse=True, 
-    nc_mask_p_norm=1, loss_balance='MGDA', mgda_normalize='loss+', fixed_scales=[]):
-        super(Blind, self).__init__(train_dataset, test_dataset, 
-        model, loss, schedule, seed, deterministic)
-        # print(torch.randn(2,2))
+
+    def __init__(self,
+                 train_dataset,
+                 test_dataset,
+                 model,
+                 loss,
+                 pattern,
+                 alpha,
+                 y_target,
+                 schedule=None,
+                 seed=0,
+                 deterministic=False,
+                 use_neural_cleanse=True,
+                 nc_mask_p_norm=1,
+                 loss_balance='MGDA',
+                 mgda_normalize='loss+',
+                 fixed_scales=[]):
+        super(Blind, self).__init__(
+            train_dataset,
+            test_dataset,
+            model,
+            loss,
+            schedule,
+            seed,
+            deterministic)
+
         self.loss_balance=loss_balance
         self.mgda_normalize = mgda_normalize
         self.fixed_scales = fixed_scales

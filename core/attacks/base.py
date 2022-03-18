@@ -49,6 +49,11 @@ class Base(object):
         model (torch.nn.Module): Network.
         loss (torch.nn.Module): Loss.
         schedule (dict): Training or testing global schedule. Default: None.
+        seed (int): Global seed for random numbers. Default: 0.
+        deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
+            That is, algorithms which, given the same input, and when run on the same software and hardware,
+            always produce the same output. When enabled, operations will use deterministic algorithms when available,
+            and if only nondeterministic algorithms are available they will throw a RuntimeError when called. Default: False.
     """
 
     def __init__(self, train_dataset, test_dataset, model, loss, schedule=None, seed=0, deterministic=False):
@@ -141,7 +146,7 @@ class Base(object):
                 batch_size=self.current_schedule['batch_size'],
                 shuffle=True,
                 num_workers=self.current_schedule['num_workers'],
-                drop_last=True,
+                drop_last=False,
                 pin_memory=True,
                 worker_init_fn=self._seed_worker
             )
@@ -151,7 +156,7 @@ class Base(object):
                 batch_size=self.current_schedule['batch_size'],
                 shuffle=True,
                 num_workers=self.current_schedule['num_workers'],
-                drop_last=True,
+                drop_last=False,
                 pin_memory=True,
                 worker_init_fn=self._seed_worker
             )

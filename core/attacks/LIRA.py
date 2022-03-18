@@ -318,7 +318,7 @@ class LIRA(Base):
         tune_test_alpha (float): The hyperparameter to balance the clean loss and backdoor loss in finetuning process.
         best_threshold (float): The threshold to decide whether the model should be saved.
         schedule (dict): Training or testing schedule. Default: None.
-        seed (int): Random seed for poisoned set. Default: 0.
+        seed (int): Global seed for random numbers. Default: 0.
         deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
             That is, algorithms which, given the same input, and when run on the same software and hardware,
             always produce the same output. When enabled, operations will use deterministic algorithms when available,
