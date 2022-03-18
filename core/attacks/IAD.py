@@ -265,7 +265,7 @@ class IAD(Base):
         mask_density (float): Magnitude of the generated mask in the backdoor trigger.
         EPSILON (float): Preventing divisor 0 errors in diversity loss.
         schedule (dict): Training or testing schedule. Default: None.
-        seed (int): Random seed for poisoned set. Default: 0.
+        seed (int): Global seed for random numbers. Default: 0.
         deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
             That is, algorithms which, given the same input, and when run on the same software and hardware,
             always produce the same output. When enabled, operations will use deterministic algorithms when available,

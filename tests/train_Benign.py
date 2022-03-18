@@ -46,12 +46,12 @@ badnets = core.BadNets(
 # Train Benign Model (schedule is set by yamengxi.)
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'benign_training': True, # Train Benign Model
     'batch_size': 128,
-    'num_workers': 4,
+    'num_workers': 2,
 
     'lr': 0.1,
     'momentum': 0.9,
@@ -102,12 +102,12 @@ badnets = core.BadNets(
 # Train Benign Model (schedule is the same as https://github.com/THUYimingLi/Open-sourced_Dataset_Protection/blob/main/CIFAR/train_standard.py)
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
     'benign_training': True, # Train Benign Model
     'batch_size': 128,
-    'num_workers': 4,
+    'num_workers': 2,
 
     'lr': 0.1,
     'momentum': 0.9,
@@ -174,12 +174,12 @@ badnets = core.BadNets(
 # Train Benign Model (schedule is the same as https://github.com/THUYimingLi/Open-sourced_Dataset_Protection/blob/main/GTSRB/train_standard.py)
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '0',
     'GPU_num': 1,
 
-    'benign_training': True,
+    'benign_training': True, # Train Benign Model
     'batch_size': 128,
-    'num_workers': 8,
+    'num_workers': 2,
 
     'lr': 0.01,
     'momentum': 0.9,

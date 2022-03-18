@@ -488,13 +488,13 @@ class Refool(Base):
         poisoned_transform_test_index (int): The position index that poisoned transform will be inserted in test dataset. Default: 0.
         poisoned_target_transform_index (int): The position that poisoned target transform will be inserted. Default: 0.
         schedule (dict): Training or testing schedule. Default: None.
-        seed (int): Random seed for poisoned set. Default: 0.
+        seed (int): Global seed for random numbers. Default: 0.
         deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
             That is, algorithms which, given the same input, and when run on the same software and hardware,
             always produce the same output. When enabled, operations will use deterministic algorithms when available,
             and if only nondeterministic algorithms are available they will throw a RuntimeError when called. Default: False.
         
-        reflection_cadidates (List of numpy.ndarray of shape (H, W, C) or (H, W))
+        reflection_candidates (List of numpy.ndarray of shape (H, W, C) or (H, W))
         max_image_size (int): max(Height, Weight) of returned image
         ghost_rate (float): rate of ghost reflection
         alpha_b (float): the ratio of background image in blended image, alpha_b should be in $(0,1)$, set to -1 if random alpha_b is desired

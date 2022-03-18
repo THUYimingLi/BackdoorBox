@@ -464,8 +464,7 @@ class WaNet(Base):
         poisoned_transform_test_index (int): The position index that poisoned transform will be inserted in test dataset. Default: 0.
         poisoned_target_transform_index (int): The position that poisoned target transform will be inserted. Default: 0.
         schedule (dict): Training or testing schedule. Default: None.
-        seed (int): Random seed for poisoned set. Default: 0.
-        seed (int): Random seed for poisoned set. Default: 0.
+        seed (int): Global seed for random numbers. Default: 0.
         deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
             That is, algorithms which, given the same input, and when run on the same software and hardware,
             always produce the same output. When enabled, operations will use deterministic algorithms when available,
