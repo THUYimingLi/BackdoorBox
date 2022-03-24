@@ -43,7 +43,7 @@ This project is still under development and therefore there is no user manual ye
 If our toolbox is useful for your research, please cite our paper(s) as follows:
 ```
 @article{li2022backdoorbox,
-  title={BackdoorBox: A Python Toolbox for Backdoor Learning},
+  title={{BackdoorBox}: A Python Toolbox for Backdoor Learning},
   author={Li, Yiming and Ya, Mengxi and Bai, Yang and Jiang, Yong and Xia, Shu-Tao},
   year={2022}
 }
