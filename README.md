@@ -37,3 +37,23 @@ This project is still under development and therefore there is no user manual ye
 | Organization        | Contributors                                                 |
 | ------------------- | ------------------------------------------------------------ |
 | Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Guanhao Gan](https://github.com/GuanhaoGan), [Kuofeng Gao](https://github.com/KuofengGao), [Xin Yan](https://scholar.google.com/citations?hl=zh-CN&user=08WTTPMAAAAJ), [Jia Xu](https://www.researchgate.net/profile/Xu-Jia-10), [Tong Xu](https://github.com/spicy1007), [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN), [Linghui Zhu](https://github.com/zlh-thu) |
+
+
+# Citation
+If our toolbox is useful for your research, please cite our paper(s) as follows:
+```
+@article{li2022backdoorbox,
+  title={BackdoorBox: A Python Toolbox for Backdoor Learning},
+  author={Li, Yiming and Ya, Mengxi and Bai, Yang and Jiang, Yong and Xia, Shu-Tao},
+  year={2022}
+}
+```
+
+```
+@article{li2020backdoor,
+  title={Backdoor Learning: A Survey},
+  author={Li, Yiming and Jiang, Yong and Li, Zhifeng and Xia, Shu-Tao},
+  journal={arXiv preprint arXiv:2007.08745},
+  year={2020}
+}
+```
