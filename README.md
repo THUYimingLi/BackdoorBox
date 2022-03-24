@@ -5,7 +5,7 @@
 ![CUDA 11.1](https://img.shields.io/badge/cuda-11.1-DodgerBlue.svg?style=plastic)
 ![License GPL](https://img.shields.io/badge/license-GPL-DodgerBlue.svg?style=plastic)
 
-BackdoorBox is a Python toolbox for backdoor learning research. Specifically, BackdoorBox contains modules for conducting backdoor attacks and backdoor defenses.  
+BackdoorBox is a Python toolbox for backdoor attacks and defenses.  
 
 This project is still under development and therefore there is no user manual yet. Please refer to the 'tests' sub-folder to get more insights about how to use our implemented methods.
 
