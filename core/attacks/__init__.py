@@ -1,3 +1,4 @@
+from ast import Import
 from .BadNets import BadNets
 from .Blended import Blended
 from .LabelConsistent import LabelConsistent
@@ -6,8 +7,9 @@ from .WaNet import WaNet
 from .Blind import Blind
 from .IAD import IAD
 from .LIRA import LIRA
+from .PhysicalBA import PhysicalBA
 
 __all__ = [
-    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA'
+    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA'
 ]
 
