@@ -2,7 +2,7 @@
 This is the implement of PhysicalBA [1].
 
 Reference:
-[1] Backdoor Attack In The Physical World. ICLR 2021.
+[1] Backdoor Attack in the Physical World. ICLR Workshop, 2021.
 '''
 
 import os
