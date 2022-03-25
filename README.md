@@ -14,19 +14,18 @@ This project is still under development and therefore there is no user manual ye
 
 ## Developed Methods
 
-- [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py) (**Key Properties**: poison-only, visible, poison-label, non-optimized, non-semantic, sample-agnostic, digital)
-- [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py) (**Key Properties**: poison-only, invisible, poison-label, non-optimized, non-semantic, sample-agnostic, digital)
-- [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py) (**Key Properties**: poison-only, visible, poison-label, non-optimized, non-semantic, sample-specific, physical)
-- [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py) (**Key Properties**: poison-only, invisible, poison-label, non-optimized, non-semantic, sample-specific, digital)
-- [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) (**Key Properties**: poison-only, invisible, clean-label, non-optimized, non-semantic, sample-agnostic, digital)
-- [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py) (**Key Properties**: training-controlled, invisible, poison-label, non-optimized, non-semantic, sample-agnostic, digital)
-- [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) (**Key Properties**: training-controlled, visible, poison-label, optimized, non-semantic, sample-specific, digital)
-- [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py) (**Key Properties**: training-controlled, invisible, poison-label, optimized, non-semantic, sample-specific, digital)
-
+- [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py) (**Key Properties**: poison-only)
+- [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py) (**Key Properties**: poison-only, invisible)
+- [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py) (**Key Properties**: poison-only, sample-specific, physical)
+- [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py) (**Key Properties**: poison-only, invisible, sample-specific)
+- [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) (**Key Properties**: poison-only, invisible, clean-label)
+- [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py) (**Key Properties**: training-controlled)
+- [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) (**Key Properties**: training-controlled, optimized, sample-specific)
+- [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py) (**Key Properties**: training-controlled, invisible, optimized, sample-specific)
+- [Physical Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/PhysicalBA.py) (**Key Properties**: training-controlled, physical)
 
 ## Methods Under Development
 - TUAP (basic version)
-- Physical Attack
 - ISSBA
 - SleeperAgent
 
