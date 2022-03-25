@@ -242,7 +242,7 @@ class PhysicalBA(BadNets):
             That is, algorithms which, given the same input, and when run on the same software and hardware,
             always produce the same output. When enabled, operations will use deterministic algorithms when available,
             and if only nondeterministic algorithms are available they will throw a RuntimeError when called. Default: False.
-        physical_transformations(types in torchvsion.transforms):choose transformation from torchvsion.transforms or use default
+        physical_transformations(types in torchvsion.transforms): Transformations used to approximate the physical world. Choose transformation from torchvsion.transforms or use default
     """
 
     def __init__(self,
