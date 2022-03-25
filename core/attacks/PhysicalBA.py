@@ -1,5 +1,5 @@
 '''
-This is the implement of PhysicalBA [1].
+This is the implement of BadNets-based physical backdoor attack proposed in [1].
 
 Reference:
 [1] Backdoor Attack in the Physical World. ICLR Workshop, 2021.
