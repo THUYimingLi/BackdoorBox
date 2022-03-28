@@ -89,11 +89,11 @@ class AddDatasetFolderTrigger(AddTrigger):
             # 1 x H x W
             if img.size(0) == 1:
                 img = img.squeeze().numpy()
-                img = Image.fromarray(img.round().astype(np.uint8), mode='L')
+                img = Image.fromarray(np.clip(img*255,0,255).astype(np.uint8), mode='L')
             # 3 x H x W
             elif img.size(0) == 3:
                 img = img.numpy().transpose(1, 2, 0)
-                img = Image.fromarray(img.round().astype(np.uint8))
+                img = Image.fromarray(np.clip(img*255,0,255).astype(np.uint8))
             else:
                 raise ValueError("Unsupportable image shape.")
             return img
@@ -163,9 +163,9 @@ class AddMNISTTrigger(AddTrigger):
         img = F.convert_image_dtype(img, torch.float)
         img = self.add_trigger(img, noise=self.noise)
         # print("img:",img.shape)
-        #poison_img = Image.fromarray(img.round().astype(np.uint8))
+        #poison_img = Image.fromarray(np.clip(img*255,0,255).astype(np.uint8))
         img = img.squeeze().numpy()
-        img = Image.fromarray(img.round().astype(np.uint8), mode='L')
+        img = Image.fromarray(np.clip(img*255,0,255).astype(np.uint8), mode='L')
         return img
 
 
@@ -201,7 +201,7 @@ class AddCIFAR10Trigger(AddTrigger):
         img = F.convert_image_dtype(img, torch.float)
         img = self.add_trigger(img, noise=self.noise)
         img = img.numpy().transpose(1, 2, 0)
-        img = Image.fromarray(img.round().astype(np.uint8))
+        img = Image.fromarray(np.clip(img*255,0,255).astype(np.uint8))
         # img = Image.fromarray(img.permute(1, 2, 0).numpy())
         return img
 
