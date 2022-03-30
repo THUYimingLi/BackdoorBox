@@ -16,7 +16,8 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import DatasetFolder, CIFAR10, MNIST
 import core
 
-global_seed = 666
+# if global_seed = 666, the network will crash during training on MNIST. Here, we set global_seed = 555.
+global_seed = 555
 deterministic = True
 torch.manual_seed(global_seed)
 
@@ -57,7 +58,7 @@ transform_test = Compose([
 
 
 trainset = dataset(
-    root='/data/ganguanhao/datasets/GTSRB/train', # please replace this with path to your training set
+    root='/data/yamengxi/Backdoor/datasets/GTSRB/train', # please replace this with path to your training set
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_train,
@@ -65,7 +66,7 @@ trainset = dataset(
     is_valid_file=None)
 
 testset = dataset(
-    root='/data/ganguanhao/datasets/GTSRB/testset', # please replace this with path to your test set
+    root='/data/yamengxi/Backdoor/datasets/GTSRB/testset', # please replace this with path to your test set
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_test,
@@ -82,7 +83,8 @@ for a in x[0]:
     print()
 
 identity_grid,noise_grid=gen_grid(32, 4)
-
+torch.save(identity_grid, 'ResNet-18_GTSRB_WaNet_identity_grid.pth')
+torch.save(noise_grid, 'ResNet-18_GTSRB_WaNet_noise_grid.pth')
 wanet = core.WaNet(
     train_dataset=trainset,
     test_dataset=testset,
@@ -117,7 +119,7 @@ for a in x[0]:
 # Train Attacked Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '2',
     'GPU_num': 1,
 
     'benign_training': False,
@@ -137,26 +139,26 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poisoned_DatasetFolder_GTSRB_WaNet'
+    'experiment_name': 'ResNet-18_GTSRB_WaNet'
 }
 
 wanet.train(schedule)
 infected_model = wanet.get_model()
 
-# Test Attacked Model
-test_schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
+# # Test Attacked Model
+# test_schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': '2',
+#     'GPU_num': 1,
 
-    'batch_size': 128,
-    'num_workers': 4,
+#     'batch_size': 128,
+#     'num_workers': 4,
 
-    'save_dir': 'experiments',
-    'experiment_name': 'test_poisoned_DatasetFolder_GTSRB_WaNet'
-}
+#     'save_dir': 'experiments',
+#     'experiment_name': 'test_poisoned_DatasetFolder_GTSRB_WaNet'
+# }
 
-wanet.test(test_schedule)
+# wanet.test(test_schedule)
 
 
 ########################MNIST#######################
@@ -168,12 +170,12 @@ transform_train = Compose([
     ToTensor(),
     RandomHorizontalFlip()
 ])
-trainset = dataset('data', train=True, transform=transform_train, download=False)
+trainset = dataset('../datasets', train=True, transform=transform_train, download=False)
 
 transform_test = Compose([
     ToTensor()
 ])
-testset = dataset('data', train=False, transform=transform_test, download=False)
+testset = dataset('../datasets', train=False, transform=transform_test, download=False)
 
 
 # Show an Example of Benign Training Samples
@@ -187,6 +189,8 @@ for a in x[0]:
     print()
 
 identity_grid,noise_grid=gen_grid(28,4)
+torch.save(identity_grid, 'BaselineMNISTNetwork_MNIST_WaNet_identity_grid.pth')
+torch.save(noise_grid, 'BaselineMNISTNetwork_MNIST_WaNet_noise_grid.pth')
 wanet = core.WaNet(
     train_dataset=trainset,
     test_dataset=testset,
@@ -227,7 +231,7 @@ for a in x[0]:
 # Train Infected Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': '2',
     'GPU_num': 1,
 
     'benign_training': False,
@@ -247,26 +251,26 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poisoned_MNIST_WaNet'
+    'experiment_name': 'BaselineMNISTNetwork_MNIST_WaNet'
 }
 
 wanet.train(schedule)
 infected_model = wanet.get_model()
 
 
-# Test Infected Model
-test_schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
+# # Test Infected Model
+# test_schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': '2',
+#     'GPU_num': 1,
 
-    'batch_size': 128,
-    'num_workers': 4,
+#     'batch_size': 128,
+#     'num_workers': 4,
 
-    'save_dir': 'experiments',
-    'experiment_name': 'test_poisoned_MNIST_WaNet'
-}
-wanet.test(test_schedule)
+#     'save_dir': 'experiments',
+#     'experiment_name': 'test_poisoned_MNIST_WaNet'
+# }
+# wanet.test(test_schedule)
 
 
 ########################CIFAR10#######################
@@ -279,12 +283,12 @@ transform_train = Compose([
     ToTensor(),
     RandomHorizontalFlip()
 ])
-trainset = dataset('data', train=True, transform=transform_train, download=False)
+trainset = dataset('../datasets', train=True, transform=transform_train, download=False)
 
 transform_test = Compose([
     ToTensor()
 ])
-testset = dataset('data', train=False, transform=transform_test, download=False)
+testset = dataset('../datasets', train=False, transform=transform_test, download=False)
 
 
 # Show an Example of Benign Training Samples
@@ -298,6 +302,8 @@ for a in x[0]:
     print()
 
 identity_grid,noise_grid=gen_grid(32,4)
+torch.save(identity_grid, 'ResNet-18_CIFAR-10_WaNet_identity_grid.pth')
+torch.save(noise_grid, 'ResNet-18_CIFAR-10_WaNet_noise_grid.pth')
 wanet = core.WaNet(
     train_dataset=trainset,
     test_dataset=testset,
@@ -338,7 +344,7 @@ for a in x[0]:
 # Train Infected Model
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '1',
+    'CUDA_VISIBLE_DEVICES': '2',
     'GPU_num': 1,
 
     'benign_training': False,
@@ -358,25 +364,23 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poisoned_CIFAR10_WaNet'
+    'experiment_name': 'ResNet-18_CIFAR-10_WaNet'
 }
 
 wanet.train(schedule)
 infected_model = wanet.get_model()
 
 
-# Test Infected Model
-test_schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
+# # Test Infected Model
+# test_schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': '2',
+#     'GPU_num': 1,
 
-    'batch_size': 128,
-    'num_workers': 4,
+#     'batch_size': 128,
+#     'num_workers': 4,
 
-    'save_dir': 'experiments',
-    'experiment_name': 'test_poisoned_CIFAR10_WaNet'
-}
-wanet.test(test_schedule)
-
-
+#     'save_dir': 'experiments',
+#     'experiment_name': 'test_poisoned_CIFAR10_WaNet'
+# }
+# wanet.test(test_schedule)

@@ -12,4 +12,3 @@ from .PhysicalBA import PhysicalBA
 __all__ = [
     'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA'
 ]
-
