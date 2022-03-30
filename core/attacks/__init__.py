@@ -10,4 +10,3 @@ from .LIRA import LIRA
 __all__ = [
     'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA'
 ]
-

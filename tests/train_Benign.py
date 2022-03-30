@@ -1,34 +1,45 @@
-import os
+'''
+This is the test code of Benign training.
+'''
+
+
+import os.path as osp
 
 import cv2
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
 import torchvision
-from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizontalFlip
-import torchvision.transforms as transforms
 from torchvision.datasets import DatasetFolder
+from torchvision.transforms import Compose, ToTensor, RandomHorizontalFlip, ToPILImage, Resize
+
 import core
 
 
+# ========== Set global settings ==========
 global_seed = 666
 deterministic = True
 torch.manual_seed(global_seed)
+CUDA_VISIBLE_DEVICES = '0'
+datasets_root_dir = '../datasets'
 
 
-# ============== Train Benign BaselineMNISTNetwork on MNIST ==============
+# ========== BaselineMNISTNetwork_MNIST_Benign ==========
 dataset = torchvision.datasets.MNIST
 
 transform_train = Compose([
     ToTensor()
 ])
-trainset = dataset('data', train=True, transform=transform_train, download=True)
+trainset = dataset(datasets_root_dir, train=True, transform=transform_train, download=True)
 
 transform_test = Compose([
     ToTensor()
 ])
-testset = dataset('data', train=False, transform=transform_test, download=True)
+testset = dataset(datasets_root_dir, train=False, transform=transform_test, download=True)
 
+pattern = torch.zeros((28, 28), dtype=torch.uint8)
+pattern[-3:, -3:] = 255
+weight = torch.zeros((28, 28), dtype=torch.float32)
+weight[-3:, -3:] = 1.0
 
 badnets = core.BadNets(
     train_dataset=trainset,
@@ -37,8 +48,8 @@ badnets = core.BadNets(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
-    pattern=torch.zeros((28, 28), dtype=torch.uint8),
-    weight=torch.zeros((28, 28), dtype=torch.float32),
+    pattern=pattern,
+    weight=weight,
     seed=global_seed,
     deterministic=deterministic
 )
@@ -46,7 +57,7 @@ badnets = core.BadNets(
 # Train Benign Model (schedule is set by yamengxi.)
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
 
     'benign_training': True, # Train Benign Model
@@ -66,25 +77,29 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'MNIST_BaselineMNISTNetwork_Benign'
+    'experiment_name': 'BaselineMNISTNetwork_MNIST_Benign'
 }
 badnets.train(schedule)
 
 
-# ============== Train Benign ResNet-18 on CIFAR-10 ==============
+# ========== ResNet-18_CIFAR-10_Benign ==========
 dataset = torchvision.datasets.CIFAR10
 
 transform_train = Compose([
-    ToTensor(),
-    RandomHorizontalFlip()
+    RandomHorizontalFlip(),
+    ToTensor()
 ])
-trainset = dataset('data', train=True, transform=transform_train, download=True)
+trainset = dataset(datasets_root_dir, train=True, transform=transform_train, download=True)
 
 transform_test = Compose([
     ToTensor()
 ])
-testset = dataset('data', train=False, transform=transform_test, download=True)
+testset = dataset(datasets_root_dir, train=False, transform=transform_test, download=True)
 
+pattern = torch.zeros((32, 32), dtype=torch.uint8)
+pattern[-3:, -3:] = 255
+weight = torch.zeros((32, 32), dtype=torch.float32)
+weight[-3:, -3:] = 1.0
 
 badnets = core.BadNets(
     train_dataset=trainset,
@@ -93,8 +108,8 @@ badnets = core.BadNets(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
-    pattern=torch.zeros((32, 32), dtype=torch.uint8),
-    weight=torch.zeros((32, 32), dtype=torch.float32),
+    pattern=pattern,
+    weight=weight,
     seed=global_seed,
     deterministic=deterministic
 )
@@ -102,7 +117,7 @@ badnets = core.BadNets(
 # Train Benign Model (schedule is the same as https://github.com/THUYimingLi/Open-sourced_Dataset_Protection/blob/main/CIFAR/train_standard.py)
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
 
     'benign_training': True, # Train Benign Model
@@ -122,20 +137,19 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'CIFAR-10_ResNet-18_Benign'
+    'experiment_name': 'ResNet-18_CIFAR-10_Benign'
 }
 badnets.train(schedule)
 
 
-# ============== Train Benign ResNet-18 on GTSRB ==============
+# ========== ResNet-18_GTSRB_Benign ==========
 transform_train = Compose([
-    transforms.ToPILImage(),
-    transforms.Resize((32, 32)),
-    RandomHorizontalFlip(),
+    ToPILImage(),
+    Resize((32, 32)),
     ToTensor()
 ])
 trainset = DatasetFolder(
-    root='/data/yamengxi/Backdoor/datasets/GTSRB/train', # please replace this with path to your training set
+    root=osp.join(datasets_root_dir, 'GTSRB', 'train'), # please replace this with path to your training set
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_train,
@@ -143,18 +157,23 @@ trainset = DatasetFolder(
     is_valid_file=None)
 
 transform_test = Compose([
-    transforms.ToPILImage(),
-    transforms.Resize((32, 32)),
+    ToPILImage(),
+    Resize((32, 32)),
     ToTensor()
 ])
 testset = DatasetFolder(
-    root='/data/yamengxi/Backdoor/datasets/GTSRB/testset', # please replace this with path to your test set
+    root=osp.join(datasets_root_dir, 'GTSRB', 'testset'), # please replace this with path to your test set
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_test,
     target_transform=None,
     is_valid_file=None)
 
+
+pattern = torch.zeros((32, 32), dtype=torch.uint8)
+pattern[-3:, -3:] = 255
+weight = torch.zeros((32, 32), dtype=torch.float32)
+weight[-3:, -3:] = 1.0
 
 badnets = core.BadNets(
     train_dataset=trainset,
@@ -163,8 +182,8 @@ badnets = core.BadNets(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
-    pattern=torch.zeros((32, 32), dtype=torch.uint8),
-    weight=torch.zeros((32, 32), dtype=torch.float32),
+    pattern=pattern,
+    weight=weight,
     poisoned_transform_train_index=2,
     poisoned_transform_test_index=2,
     seed=global_seed,
@@ -174,7 +193,7 @@ badnets = core.BadNets(
 # Train Benign Model (schedule is the same as https://github.com/THUYimingLi/Open-sourced_Dataset_Protection/blob/main/GTSRB/train_standard.py)
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
 
     'benign_training': True, # Train Benign Model
@@ -194,6 +213,6 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'GTSRB_ResNet-18_Benign'
+    'experiment_name': 'ResNet-18_GTSRB_Benign'
 }
 badnets.train(schedule)

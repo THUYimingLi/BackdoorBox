@@ -1,9 +1,10 @@
 '''
-This is the test code of benign training and poisoned training under LabelConsistent.
+This is the test code of poisoned training under LabelConsistent.
 '''
 
 
 import os
+import os.path as osp
 
 import cv2
 import numpy as np
@@ -14,11 +15,13 @@ import torchvision
 from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizontalFlip
 import torchvision.transforms as transforms
 from torchvision.datasets import DatasetFolder
+
 import core
 
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
-
+CUDA_VISIBLE_DEVICES = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
+datasets_root_dir = '../datasets'
 global_seed = 666
 deterministic = True
 torch.manual_seed(global_seed)
@@ -30,15 +33,15 @@ dataset = torchvision.datasets.MNIST
 transform_train = Compose([
     ToTensor()
 ])
-trainset = dataset('data', train=True, transform=transform_train, download=True)
+trainset = dataset(datasets_root_dir, train=True, transform=transform_train, download=True)
 
 transform_test = Compose([
     ToTensor()
 ])
-testset = dataset('data', train=False, transform=transform_test, download=True)
+testset = dataset(datasets_root_dir, train=False, transform=transform_test, download=True)
 
 adv_model = core.models.BaselineMNISTNetwork()
-adv_ckpt = torch.load('/data/yamengxi/Backdoor/BackdoorBox/experiments/MNIST_BaselineMNISTNetwork_Benign_2022-01-13_18:28:22/ckpt_epoch_200.pth')
+adv_ckpt = torch.load('/data/yamengxi/Backdoor/experiments/BaselineMNISTNetwork_MNIST_Benign_2022-03-29_16:18:02/ckpt_epoch_200.pth')
 adv_model.load_state_dict(adv_ckpt)
 
 
@@ -80,7 +83,7 @@ weight[-k:,-k:] = 1.0
 
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '2',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
 
     'benign_training': False, # Train Attacked Model
@@ -100,7 +103,7 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poisioned_MNIST_LabelConsistent'
+    'experiment_name': 'BaselineMNISTNetwork_MNIST_LabelConsistent'
 }
 
 
@@ -143,15 +146,15 @@ transform_train = Compose([
     ToTensor(),
     RandomHorizontalFlip()
 ])
-trainset = dataset('data', train=True, transform=transform_train, download=True)
+trainset = dataset(datasets_root_dir, train=True, transform=transform_train, download=True)
 
 transform_test = Compose([
     ToTensor()
 ])
-testset = dataset('data', train=False, transform=transform_test, download=True)
+testset = dataset(datasets_root_dir, train=False, transform=transform_test, download=True)
 
 adv_model = core.models.ResNet(18)
-adv_ckpt = torch.load('/data/yamengxi/Backdoor/BackdoorBox/experiments/CIFAR-10_ResNet-18_Benign_2022-01-13_18:33:00/ckpt_epoch_200.pth')
+adv_ckpt = torch.load('/data/yamengxi/Backdoor/experiments/ResNet-18_CIFAR-10_Benign_2022-03-29_16:27:15/ckpt_epoch_200.pth')
 adv_model.load_state_dict(adv_ckpt)
 
 pattern = torch.zeros((32, 32), dtype=torch.uint8)
@@ -184,7 +187,7 @@ weight[-3:,-3:] = 1.0
 
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '2',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
 
     'benign_training': False, # Train Attacked Model
@@ -204,7 +207,7 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poisioned_CIFAR10_LabelConsistent'
+    'experiment_name': 'ResNet-18_CIFAR-10_LabelConsistent'
 }
 
 
@@ -248,7 +251,7 @@ transform_train = Compose([
     ToTensor()
 ])
 trainset = DatasetFolder(
-    root='/data/yamengxi/Backdoor/datasets/GTSRB/train', # please replace this with path to your training set
+    root=osp.join(datasets_root_dir, 'GTSRB', 'train'), # please replace this with path to your training set
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_train,
@@ -261,7 +264,7 @@ transform_test = Compose([
     ToTensor()
 ])
 testset = DatasetFolder(
-    root='/data/yamengxi/Backdoor/datasets/GTSRB/testset', # please replace this with path to your test set
+    root=osp.join(datasets_root_dir, 'GTSRB', 'testset'), # please replace this with path to your test set
     loader=cv2.imread,
     extensions=('png',),
     transform=transform_test,
@@ -270,7 +273,7 @@ testset = DatasetFolder(
 
 
 adv_model = core.models.ResNet(18, 43)
-adv_ckpt = torch.load('/data/yamengxi/Backdoor/BackdoorBox/experiments/GTSRB_ResNet-18_Benign_2022-01-13_19:42:33/ckpt_epoch_30.pth')
+adv_ckpt = torch.load('/data/yamengxi/Backdoor/experiments/ResNet-18_GTSRB_Benign_2022-03-29_19:59:05/ckpt_epoch_30.pth')
 adv_model.load_state_dict(adv_ckpt)
 
 pattern = torch.zeros((32, 32), dtype=torch.uint8)
@@ -318,7 +321,7 @@ weight[-3:,-3:] = 1.0
 
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '2',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
 
     'benign_training': False, # Train Attacked Model
@@ -338,7 +341,7 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poisioned_GTSRB_LabelConsistent'
+    'experiment_name': 'ResNet-18_GTSRB_LabelConsistent'
 }
 
 

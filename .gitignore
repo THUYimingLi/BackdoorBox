@@ -15,6 +15,6 @@ experiments/
 *experiments*/
 tests/model/
 mytest/
-test.sh
-test.py
-test2.py
+./test.sh
+./test.py
+./test2.py

@@ -1,92 +1,128 @@
 '''
-This is the test code of benign training and poisoned training under BadNets.
+This is the test code of poisoned training under BadNets.
 '''
 
 
-import os
+import os.path as osp
 
+import cv2
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
 import torchvision
-from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizontalFlip
+from torchvision.datasets import DatasetFolder
+from torchvision.transforms import Compose, ToTensor, RandomHorizontalFlip, ToPILImage, Resize
+
 import core
 
 
+# ========== Set global settings ==========
 global_seed = 666
 deterministic = True
 torch.manual_seed(global_seed)
+CUDA_VISIBLE_DEVICES = '1'
+datasets_root_dir = '../datasets'
 
-# Define Benign Training and Testing Dataset
-dataset = torchvision.datasets.CIFAR10
-# dataset = torchvision.datasets.MNIST
 
+# ========== BaselineMNISTNetwork_MNIST_BadNets ==========
+dataset = torchvision.datasets.MNIST
 
 transform_train = Compose([
-    ToTensor(),
-    RandomHorizontalFlip()
+    ToTensor()
 ])
-trainset = dataset('data', train=True, transform=transform_train, download=True)
+trainset = dataset(datasets_root_dir, train=True, transform=transform_train, download=True)
 
 transform_test = Compose([
     ToTensor()
 ])
-testset = dataset('data', train=False, transform=transform_test, download=True)
+testset = dataset(datasets_root_dir, train=False, transform=transform_test, download=True)
+
+pattern = torch.zeros((28, 28), dtype=torch.uint8)
+pattern[-3:, -3:] = 255
+weight = torch.zeros((28, 28), dtype=torch.float32)
+weight[-3:, -3:] = 1.0
+
+badnets = core.BadNets(
+    train_dataset=trainset,
+    test_dataset=testset,
+    model=core.models.BaselineMNISTNetwork(),
+    loss=nn.CrossEntropyLoss(),
+    y_target=1,
+    poisoned_rate=0.05,
+    pattern=pattern,
+    weight=weight,
+    seed=global_seed,
+    deterministic=deterministic
+)
+
+# Train Attacked Model (schedule is set by yamengxi)
+schedule = {
+    'device': 'GPU',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
+    'GPU_num': 1,
+
+    'benign_training': False,
+    'batch_size': 128,
+    'num_workers': 2,
+
+    'lr': 0.1,
+    'momentum': 0.9,
+    'weight_decay': 5e-4,
+    'gamma': 0.1,
+    'schedule': [150, 180],
+
+    'epochs': 200,
+
+    'log_iteration_interval': 100,
+    'test_epoch_interval': 10,
+    'save_epoch_interval': 10,
+
+    'save_dir': 'experiments',
+    'experiment_name': 'BaselineMNISTNetwork_MNIST_BadNets'
+}
+badnets.train(schedule)
 
 
-# Show an Example of Benign Training Samples
-index = 44
+# ========== ResNet-18_CIFAR-10_BadNets ==========
+dataset = torchvision.datasets.CIFAR10
 
-x, y = trainset[index]
-print(y)
-for a in x[0]:
-    for b in a:
-        print("%-4.2f" % float(b), end=' ')
-    print()
+transform_train = Compose([
+    RandomHorizontalFlip(),
+    ToTensor()
+])
+trainset = dataset(datasets_root_dir, train=True, transform=transform_train, download=True)
 
+transform_test = Compose([
+    ToTensor()
+])
+testset = dataset(datasets_root_dir, train=False, transform=transform_test, download=True)
+
+pattern = torch.zeros((32, 32), dtype=torch.uint8)
+pattern[-3:, -3:] = 255
+weight = torch.zeros((32, 32), dtype=torch.float32)
+weight[-3:, -3:] = 1.0
 
 badnets = core.BadNets(
     train_dataset=trainset,
     test_dataset=testset,
     model=core.models.ResNet(18),
-    # model=core.models.BaselineMNISTNetwork(),
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
+    pattern=pattern,
+    weight=weight,
     seed=global_seed,
     deterministic=deterministic
 )
 
-poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
-
-
-# Show an Example of Poisoned Training Samples
-x, y = poisoned_train_dataset[index]
-print(y)
-for a in x[0]:
-    for b in a:
-        print("%-4.2f" % float(b), end=' ')
-    print()
-
-
-# Show an Example of Poisoned Testing Samples
-x, y = poisoned_test_dataset[index]
-print(y)
-for a in x[0]:
-    for b in a:
-        print("%-4.2f" % float(b), end=' ')
-    print()
-
-
-# Train Benign Model
+# Train Attacked Model (schedule is the same as https://github.com/THUYimingLi/Open-sourced_Dataset_Protection/blob/main/CIFAR/train_watermarked.py)
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
 
-    'benign_training': True, # Train Benign Model
+    'benign_training': False,
     'batch_size': 128,
-    'num_workers': 4,
+    'num_workers': 2,
 
     'lr': 0.1,
     'momentum': 0.9,
@@ -101,72 +137,82 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_benign_CIFAR10_BadNets'
-    # 'experiment_name': 'train_benign_MNIST_BadNets'
+    'experiment_name': 'ResNet-18_CIFAR-10_BadNets'
 }
-
 badnets.train(schedule)
-benign_model = badnets.get_model()
 
 
-# Test Benign Model
-test_schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
+# ========== ResNet-18_GTSRB_BadNets ==========
+transform_train = Compose([
+    ToPILImage(),
+    Resize((32, 32)),
+    ToTensor()
+])
+trainset = DatasetFolder(
+    root=osp.join(datasets_root_dir, 'GTSRB', 'train'), # please replace this with path to your training set
+    loader=cv2.imread,
+    extensions=('png',),
+    transform=transform_train,
+    target_transform=None,
+    is_valid_file=None)
 
-    'batch_size': 128,
-    'num_workers': 4,
+transform_test = Compose([
+    ToPILImage(),
+    Resize((32, 32)),
+    ToTensor()
+])
+testset = DatasetFolder(
+    root=osp.join(datasets_root_dir, 'GTSRB', 'testset'), # please replace this with path to your test set
+    loader=cv2.imread,
+    extensions=('png',),
+    transform=transform_test,
+    target_transform=None,
+    is_valid_file=None)
 
-    'save_dir': 'experiments',
-    'experiment_name': 'test_benign_CIFAR10_BadNets'
-    # 'experiment_name': 'test_benign_MNIST_BadNets'
-}
-badnets.test(test_schedule)
 
+pattern = torch.zeros((32, 32), dtype=torch.uint8)
+pattern[-3:, -3:] = 255
+weight = torch.zeros((32, 32), dtype=torch.float32)
+weight[-3:, -3:] = 1.0
 
-badnets.model = core.models.ResNet(18)
-# Train Infected Model
+badnets = core.BadNets(
+    train_dataset=trainset,
+    test_dataset=testset,
+    model=core.models.ResNet(18, 43),
+    loss=nn.CrossEntropyLoss(),
+    y_target=1,
+    poisoned_rate=0.05,
+    pattern=pattern,
+    weight=weight,
+    poisoned_transform_train_index=2,
+    poisoned_transform_test_index=2,
+    seed=global_seed,
+    deterministic=deterministic
+)
+
+# Train Attacked Model (schedule is the same as https://github.com/THUYimingLi/Open-sourced_Dataset_Protection/blob/main/GTSRB/train_watermarked.py)
 schedule = {
     'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
+    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
 
-    'benign_training': False, # Train Infected Model
+    'benign_training': False,
     'batch_size': 128,
-    'num_workers': 4,
+    'num_workers': 2,
 
-    'lr': 0.1,
+    'lr': 0.01,
     'momentum': 0.9,
     'weight_decay': 5e-4,
     'gamma': 0.1,
-    'schedule': [150, 180],
+    'schedule': [20],
 
-    'epochs': 200,
+    'epochs': 30,
 
     'log_iteration_interval': 100,
     'test_epoch_interval': 10,
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'train_poisoned_CIFAR10_BadNets'
-    # 'experiment_name': 'train_poisoned_MNIST_BadNets'
+    'experiment_name': 'ResNet-18_GTSRB_BadNets'
 }
-
 badnets.train(schedule)
-infected_model = badnets.get_model()
-
-# Test Infected Model
-test_schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
-
-    'batch_size': 128,
-    'num_workers': 4,
-
-    'save_dir': 'experiments',
-    'experiment_name': 'test_poisoned_CIFAR10_BadNets'
-    # 'experiment_name': 'test_poisoned_MNIST_BadNets'
-}
-badnets.test(test_schedule)
