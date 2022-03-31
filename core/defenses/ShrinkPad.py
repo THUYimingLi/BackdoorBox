@@ -1,3 +1,11 @@
+'''
+This is the implement of pre-processing-based backdoor defense with ShrinkPad proposed in [1].
+
+Reference:
+[1] Backdoor Attack in the Physical World. ICLR Workshop, 2021.
+'''
+
+
 import os
 from copy import deepcopy
 
