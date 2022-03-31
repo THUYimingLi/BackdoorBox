@@ -1,5 +1,5 @@
 '''
-This is the test code of defense method ShrinkPad.
+This is the test code of ShrinkPad defense.
 '''
 
 
