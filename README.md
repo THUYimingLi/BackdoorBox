@@ -13,7 +13,7 @@ This project is still under development and therefore there is no user manual ye
 # Current Status
 
 ## Developed Methods
-
+### Backdoor Attacks
 - [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py) (**Key Properties**: poison-only)
 - [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py) (**Key Properties**: poison-only, invisible)
 - [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py) (**Key Properties**: poison-only, sample-specific, physical)
@@ -23,6 +23,9 @@ This project is still under development and therefore there is no user manual ye
 - [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) (**Key Properties**: training-controlled, optimized, sample-specific)
 - [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py) (**Key Properties**: training-controlled, invisible, optimized, sample-specific)
 - [Physical Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/PhysicalBA.py) (**Key Properties**: training-controlled, physical)
+
+### Backdoor Defenses
+- [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py) (**Key Properties**: Pre-processing-based Defense)
 
 ## Methods Under Development
 - TUAP (basic version)
