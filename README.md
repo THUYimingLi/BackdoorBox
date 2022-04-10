@@ -14,30 +14,18 @@ This project is still under development and therefore there is no user manual ye
 
 ## Developed Methods
 ### Backdoor Attacks
-- [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py) (**Key Properties**: poison-only)
-- [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py) (**Key Properties**: poison-only, invisible)
-- [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py) (**Key Properties**: poison-only, sample-specific)
-- [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py) (**Key Properties**: poison-only, invisible, sample-specific)
-- [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) (**Key Properties**: poison-only, invisible, clean-label)
-- [ISSBA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/ISSBA.py) (**Key Properties**: poison-only, sample-specific, physical)
-- [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py) (**Key Properties**: training-controlled)
-- [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) (**Key Properties**: training-controlled, optimized, sample-specific)
-- [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py) (**Key Properties**: training-controlled, invisible, optimized, sample-specific)
-- [Physical Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/PhysicalBA.py) (**Key Properties**: training-controlled, physical)
-
-|                                                    **Method**                                                   |       **Source**      |                     **Key Properties**                     |                           **Note**                          |
-|:---------------------------------------------------------------------------------------------------------------:|:---------------------:|:----------------------------------------------------------:|:-----------------------------------------------------------:|
-|             [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py)             |   IEEE ACCESS, 2019   |                         poison-only                        | first backdoor attack                                       |
-|          [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py)         |      arXiv, 2017      |                   poison-only, invisible                   | first invisible attack                                      |
-|    [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py)   |       ECCV, 2020      |                poison-only, sample-specific                | first stealthy attack with visible yet natural trigger      |
-| [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) |      arXiv, 2019      |             poison-only, invisible, clean-label            | first clean-label backdoor attack                           |
-|               [ISSBA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/ISSBA.py)               |       ICCV, 2021      |           poison-only, sample-specific, physical           | first poison-only sample-specific attack                    |
-|               [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py)               |       ICLR, 2021      |           poison-only, invisible, sample-specific          |                                                             |
-|   [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py)  | USENIX Security, 2021 |                     training-controlled                    | first training-controlled attack targeting loss computation |
-|      [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py)     |     NeurIPS, 2020     |       training-controlled, optimized, sample-specific      | first training-controlled sample-specific attack            |
-|        [Physical Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/PhysicalBA.py)       |  ICLR Workshop, 2021  |                training-controlled, physical               | first physical backdoor attack                              |
+|                                                    **Method**                                                   |       **Source**      | **Key Properties**                                         | **Note**                                                    |
+|:---------------------------------------------------------------------------------------------------------------:|:---------------------:|------------------------------------------------------------|-------------------------------------------------------------|
+|             [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py)             |   IEEE ACCESS, 2019   | poison-only                                                | first backdoor attack                                       |
+|          [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py)         |      arXiv, 2017      | poison-only, invisible                                     | first invisible attack                                      |
+|    [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py)   |       ECCV, 2020      | poison-only, sample-specific                               | first stealthy attack with visible yet natural trigger      |
+| [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) |      arXiv, 2019      | poison-only, invisible, clean-label                        | first clean-label backdoor attack                           |
+|               [ISSBA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/ISSBA.py)               |       ICCV, 2021      | poison-only, sample-specific, physical                     | first poison-only sample-specific attack                    |
+|               [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py)               |       ICLR, 2021      | poison-only, invisible, sample-specific                    |                                                             |
+|   [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py)  | USENIX Security, 2021 | training-controlled                                        | first training-controlled attack targeting loss computation |
+|      [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py)     |     NeurIPS, 2020     | training-controlled, optimized, sample-specific            | first training-controlled sample-specific attack            |
+|        [Physical Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/PhysicalBA.py)       |  ICLR Workshop, 2021  | training-controlled, physical                              | first physical backdoor attack                              |
 |                [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py)                |       ICCV, 2021      | training-controlled, invisible, optimized, sample-specific |                                                             |
-
 
 ### Backdoor Defenses
 - [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py) (**Key Properties**: Pre-processing-based Defense)
