@@ -16,20 +16,21 @@ This project is still under development and therefore there is no user manual ye
 ### Backdoor Attacks
 - [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py) (**Key Properties**: poison-only)
 - [Blended Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blended.py) (**Key Properties**: poison-only, invisible)
-- [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py) (**Key Properties**: poison-only, sample-specific, physical)
+- [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py) (**Key Properties**: poison-only, sample-specific)
 - [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py) (**Key Properties**: poison-only, invisible, sample-specific)
 - [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) (**Key Properties**: poison-only, invisible, clean-label)
 - [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py) (**Key Properties**: training-controlled)
 - [Input-aware Dynamic Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py) (**Key Properties**: training-controlled, optimized, sample-specific)
 - [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py) (**Key Properties**: training-controlled, invisible, optimized, sample-specific)
 - [Physical Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/PhysicalBA.py) (**Key Properties**: training-controlled, physical)
+- [ISSBA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/ISSBA.py) (**Key Properties**: poison-only, sample-specific, physical)
+
 
 ### Backdoor Defenses
 - [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py) (**Key Properties**: Pre-processing-based Defense)
 
 ## Methods Under Development
 - TUAP (basic version)
-- ISSBA
 - SleeperAgent
 
 
