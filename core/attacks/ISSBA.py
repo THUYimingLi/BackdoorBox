@@ -1,3 +1,11 @@
+'''
+This is the implement of invisible sample-specific backdoor attack (ISSBA) [1].
+
+Reference:
+[1] Invisible Backdoor Attack with Sample-Specific Triggers. ICCV, 2021.
+'''
+
+
 import collections
 from itertools import repeat
 import torch
