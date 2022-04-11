@@ -565,7 +565,8 @@ class ISSBA(Base):
         enc_in_channel (int): Channel of the input image into the image steganography encoder.
         enc_total_epoch (int): Training epoch of the image steganography encoder.
         enc_secret_only_epoch (int): The final epoch to train the image steganography encoder with only secret loss function.
-        enc_use_dis (bool): Whether to use discriminator during the training of the image steganography encoder.
+        enc_use_dis (bool): Whether to use discriminator during the training of the image steganography encoder. Default: False.
+        encoder (torch.nn.Module): The pretrained image steganography encoder. Default: None.
         schedule (dict): Training or testing schedule. Default: None.
         seed (int): Global seed for random numbers. Default: 0.
         deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
@@ -589,6 +590,7 @@ class ISSBA(Base):
                  enc_total_epoch,
                  enc_secret_only_epoch,
                  enc_use_dis=False,
+                 encoder=None,
                  schedule=None, 
                  seed=0, 
                  deterministic=False,
@@ -607,6 +609,7 @@ class ISSBA(Base):
         self.enc_total_epoch = enc_total_epoch
         self.enc_secret_only_epoch = enc_secret_only_epoch
         self.enc_use_dis = enc_use_dis
+        self.encoder = encoder
 
         total_num = len(train_dataset)
         poisoned_num = int(total_num * poisoned_rate)
@@ -810,7 +813,8 @@ class ISSBA(Base):
         os.makedirs(self.work_dir, exist_ok=True)
         self.log = Log(osp.join(self.work_dir, 'log.txt'))
 
-        self.train_encoder_decoder(train_only=False)
+        if self.encoder is None:
+            self.train_encoder_decoder(train_only=False)
         self.get_img()
 
         trainset, testset = self.train_dataset, self.test_dataset
