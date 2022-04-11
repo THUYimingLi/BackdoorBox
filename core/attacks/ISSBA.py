@@ -1088,7 +1088,7 @@ class ISSBA(Base):
             num_workers=8,
             worker_init_fn=self._seed_worker)
 
-        for idx, (image_input, secret_input) in enumerate(train_dl):
+        for _, (image_input, secret_input) in enumerate(train_dl):
             image_input, secret_input = image_input.cuda(), secret_input.cuda()
             residual = encoder([secret_input, image_input])
             encoded_image = image_input + residual
