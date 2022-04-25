@@ -35,6 +35,12 @@ This project is still under development and therefore there is no user manual ye
 ## Methods Under Development
 - TUAP (basic version)
 - SleeperAgent
+- NAD
+- Fine-tuning
+- Pruning
+- MCR
+- DBD
+- SS
 
 
 
