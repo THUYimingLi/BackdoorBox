@@ -34,7 +34,7 @@ This project is still under development and therefore there is no user manual ye
 
 ## Methods Under Development
 - TUAP (basic version)
-- SleeperAgent
+- Sleeper Agent
 - NAD
 - Fine-tuning
 - Pruning
