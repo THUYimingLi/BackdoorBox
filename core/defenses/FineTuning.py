@@ -30,8 +30,8 @@ def adjust_learning_rate(lr, optimizer, epoch):
 
 
 
-class Finetuning(Base):
-    """Finetuning process.
+class FineTuning(Base):
+    """FineTuning process.
 
     Args:
         train_dataset (types in support_list): Benign training dataset.
@@ -56,7 +56,7 @@ class Finetuning(Base):
                  seed=0,
                  deterministic=False):
 
-        super(Finetuning, self).__init__(seed=seed, deterministic=deterministic)
+        super(FineTuning, self).__init__(seed=seed, deterministic=deterministic)
 
         self.train_dataset=train_dataset
         self.test_dataset=test_dataset
@@ -70,7 +70,7 @@ class Finetuning(Base):
         """Frozen the layers which don't need to fine tuning.
 
         """
-        if self.layer==None or self.layer[0]=="full layer":
+        if self.layer==None or self.layer[0]=="full layers":
             return
         else:
             for name, child in self.model.named_children():

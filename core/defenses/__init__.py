@@ -1,6 +1,6 @@
 from .ShrinkPad import ShrinkPad
-from .Finetuning import Finetuning
+from .FineTuning import FineTuning
 
 __all__ = [
-    'ShrinkPad', 'Finetuning'
+    'ShrinkPad', 'FineTuning'
 ]
