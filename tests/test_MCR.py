@@ -25,10 +25,10 @@ from core.models.vgg_curve import *
 
 # ========== Set global settings ==========
 global_seed = 666
-deterministic = True
+deterministic = False             #TODO: 'deterministic=True' works on 3th, May. But it meets a Runtime Error on 5th, May.
 torch.manual_seed(global_seed)
 datasets_root_dir = '../datasets'
-CUDA_VISIBLE_DEVICES = '2'
+CUDA_VISIBLE_DEVICES = '7'
 batch_size = 128
 num_workers = 8
 
@@ -37,10 +37,10 @@ fix_start = True
 fix_end = True
 num_bends = 3
 fix_points = [fix_start] + [False] * (num_bends - 2) + [fix_end]
-curve_type =  'PolyChain' #'Bezier'   
-portion = 0.1 # portion of training dataset to train the curve model.
-l2_regularizer = True # whether use l2-regularizer
-coeffs_t = np.arange(0, 1.1, 0.1) # [0, 0.1, ... , 1.0]
+curve_type =  'Bezier'            # 'PolyChain' | 'Bezier'   
+portion = 0.1                     # portion of training dataset to train the curve model.
+l2_regularizer = True             # whether use l2-regularizer
+coeffs_t = np.arange(0, 1.1, 0.1) # float or list. hyperparam for MCR testing, in range(0,1)
 initialize_curve = True
 
 settings = dict(
@@ -61,21 +61,51 @@ settings = dict(
     initialize_curve = initialize_curve
 )
 
+def test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, benign_dataset, attacked_dataset, y_target):
+    """test BA and ASR before MCR.
 
-def test(model_name, dataset_name, attack_name, defense_name, benign_dataset, attacked_dataset, defense, y_target, portion, coeffs_t):
-    """test BA and ASR before MCR and after MCR.
-    
     Args:
-        model_name (str): model_name of the network
-        dataset_name (str):
-        attack_name (str):
-        defense_name (str):
+        start_model (nn.Module): Start model of MCR, params needs to be loaded beforehand.
+        end_model (nn.Module): End model of MCR, params needs to be loaded beforehand.
+        model_name (str): name of the network
+        dataset_name (str): name of the dataset
+        attack_name (str): name of attack method
         benign_dataset (types in support_list): Benign dataset.
         attacked_dataset (types in support_list): Attacked dataset.
-        defense (core.defense.Base): object of defense class.
         y_target (int or None): target attack label.
-        coeffs_t (float or list): Hyperparam for the curve, in range(0,1).
     """
+
+    print("===> Start testing start model and end model before MCR")
+    schedule = {
+        'device': 'GPU',
+        'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
+        'GPU_num': 1,
+
+        'batch_size': batch_size,
+        'num_workers': num_workers,
+
+        'metric': 'BA',
+
+        'save_dir': 'experiments/MCR-defense',
+        'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_MCR_Start_BA'
+    }
+    core.utils.test(start_model, benign_dataset, schedule)
+
+    schedule = {
+        'device': 'GPU',
+        'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
+        'GPU_num': 1,
+
+        'batch_size': batch_size,
+        'num_workers': num_workers,
+
+        'metric': 'ASR_NoTarget',
+        'y_target': 0,
+
+        'save_dir': 'experiments/MCR-defense',
+        'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_MCR_Start_ASR'
+    }
+    core.utils.test(start_model, attacked_dataset, schedule)
 
     schedule = {
         'device': 'GPU',
@@ -87,7 +117,55 @@ def test(model_name, dataset_name, attack_name, defense_name, benign_dataset, at
 
         'metric': 'BA',
 
-        'save_dir': 'experiments',
+        'save_dir': 'experiments/MCR-defense',
+        'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_MCR_End_BA'
+    }
+    core.utils.test(end_model, benign_dataset, schedule)
+
+    schedule = {
+        'device': 'GPU',
+        'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
+        'GPU_num': 1,
+
+        'batch_size': batch_size,
+        'num_workers': num_workers,
+
+        'metric': 'ASR_NoTarget',
+        'y_target': 0,
+
+        'save_dir': 'experiments/MCR-defense',
+        'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_MCR_End_ASR'
+    }
+    core.utils.test(end_model, attacked_dataset, schedule)
+
+
+def test(model_name, dataset_name, attack_name, defense_name, benign_dataset, attacked_dataset, defense, y_target, portion, coeffs_t):
+    """test BA and ASR after MCR.
+    
+    Args:
+        model_name (str): name of the network
+        dataset_name (str): name of the dataset
+        attack_name (str): name of the attack method
+        defense_name (str): name of the defense method
+        benign_dataset (types in support_list): Benign dataset.
+        attacked_dataset (types in support_list): Attacked dataset.
+        defense (core.defense.Base): object of defense class.
+        y_target (int or None): target attack label.
+        portion (float): proportion of the training set for model repairing training.
+        coeffs_t (float or list): Hyperparam for the curve, in range(0,1).
+    """
+    print(f"===> Start testing repaired Model from {defense_name}")
+    schedule = {
+        'device': 'GPU',
+        'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
+        'GPU_num': 1,
+
+        'batch_size': batch_size,
+        'num_workers': num_workers,
+
+        'metric': 'BA',
+
+        'save_dir': 'experiments/MCR-defense',
         'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}_BA'
     }
     defense.test(benign_dataset, schedule, coeffs_t)
@@ -109,14 +187,18 @@ def test(model_name, dataset_name, attack_name, defense_name, benign_dataset, at
         'metric': 'ASR_NoTarget',
         'y_target': y_target,
 
-        'save_dir': 'experiments',
+        'save_dir': 'experiments/MCR-defense',
         'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}_ASR'
     }
     defense.test(attacked_dataset, schedule, coeffs_t)
 
+
+
+
 # ========== ResNet-18_CIFAR-10_Attack_MCR ========== #
 # 1. Benign
 model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'CIFAR-10', 'Benign', 'MCR'
+print(f"===> Running {defense_name} on {dataset_name}, {attack_name}, {model_name}")
 
 dataset = torchvision.datasets.CIFAR10
 transform_train = Compose([
@@ -137,8 +219,12 @@ end_model = core.models.ResNet(18)
 end_model_path = '/data/zhonghaoxiang/BackdoorBox/experiments/ResNet-18_CIFAR-10_Benign_2022-04-29_10:38:25/ckpt_epoch_200.pth'
 end_model.load_state_dict(torch.load(end_model_path), strict=False)
 
+test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, testset, testset, None)
+
 base_model = ResNetCurve(18, fix_points, initialize=initialize_curve)
 
+# use "pretrained" during MCR initialize, you can load a trained MCR model and avoid training during repairing.
+# although "defense.repair()" is still required to be called for possible BN layer handling.
 defense = core.MCR(
     start_model,
     end_model,
@@ -149,7 +235,7 @@ defense = core.MCR(
     fix_start=fix_start,
     fix_end=fix_end,
     init_linear=True,
-    # pretrained = '/data/zhonghaoxiang/BackdoorBox/experiments/mcr/ResNet-18_CIFAR-10_Benign_MCR_Bezier_p0.1_2022-05-02_11:38:17/ckpt_epoch_600.pth',
+    # pretrained = '/data/zhonghaoxiang/BackdoorBox/experiments/MCR/ResNet-18_CIFAR-10_Benign_MCR_Bezier_p0.1_2022-05-03_18:04:27/ckpt_epoch_600.pth',
     seed=global_seed,
     deterministic=deterministic
 )
@@ -167,7 +253,7 @@ schedule = {
     'momentum': 0.9,
     'weight_decay': 5e-4,
     'gamma': 0.1,
-    'schedule':  [450, 540], #[750, 900], 
+    'schedule':  [450, 540], 
 
     'l2_regularizer': l2_regularizer,
 
@@ -177,10 +263,11 @@ schedule = {
     'test_epoch_interval': 20,
     'save_epoch_interval': 20,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}'
 }
 
+# 'settings' could be ignored. Only for logging purpose.
 defense.repair(dataset=trainset, portion=portion, schedule=schedule, settings=settings)
 
 test(model_name, dataset_name, attack_name, defense_name, testset, testset, defense, None, portion, coeffs_t)
@@ -188,6 +275,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, testset, defe
 
 # 2. BadNet
 attack_name = 'BadNets'
+print(f"===> Running {defense_name} on {dataset_name}, {attack_name}, {model_name}")
 
 start_model = core.models.ResNet(18)
 start_model_path = '/data/zhonghaoxiang/BackdoorBox/experiments/ResNet-18_CIFAR-10_BadNets_2022-04-28_16:06:15/ckpt_epoch_200.pth'
@@ -218,6 +306,8 @@ attack = core.BadNets(
 )
 poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
 
+test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, testset, poisoned_testset, 1)
+
 defense = core.MCR(
     start_model,
     end_model,
@@ -228,6 +318,7 @@ defense = core.MCR(
     fix_start=fix_start,
     fix_end=fix_end,
     init_linear=True,
+    # pretrained="/data/zhonghaoxiang/BackdoorBox/experiments/MCR/ResNet-18_CIFAR-10_BadNets_MCR_Bezier_p0.1_2022-05-03_19:16:25/ckpt_epoch_600.pth",
     seed=global_seed,
     deterministic=deterministic
 )
@@ -255,7 +346,7 @@ schedule = {
     'test_epoch_interval': 50,
     'save_epoch_interval': 50,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}'
 }
 
@@ -266,6 +357,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 
 #3. LabelConsistant
 attack_name = 'LabelConsistent'
+print(f"===> Running {defense_name} on {dataset_name}, {attack_name}, {model_name}")
 
 start_model = core.models.ResNet(18)
 start_model_path = '/data/yamengxi/Backdoor/experiments/ResNet-18_CIFAR-10_LabelConsistent_2022-03-30_01:20:03/ckpt_epoch_200.pth'
@@ -326,7 +418,7 @@ schedule = {
     'test_epoch_interval': 50,
     'save_epoch_interval': 50,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': 'ResNet-18_CIFAR-10_LabelConsistent'
 }
 
@@ -356,9 +448,11 @@ attack = core.LabelConsistent(
     poisoned_target_transform_index=0,
     schedule=schedule,
     seed=global_seed,
-    deterministic=True
+    deterministic=deterministic
 )
 poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
+
+test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, testset, poisoned_testset, 2)
 
 defense = core.MCR(
     start_model,
@@ -370,6 +464,7 @@ defense = core.MCR(
     fix_start=fix_start,
     fix_end=fix_end,
     init_linear=True,
+    # pretrained="/data/zhonghaoxiang/BackdoorBox/experiments/MCR/ResNet-18_CIFAR-10_LabelConsistent_MCR_Bezier_p0.1_2022-05-03_20:31:42/ckpt_epoch_600.pth",
     seed=global_seed,
     deterministic=deterministic
 )
@@ -397,7 +492,7 @@ schedule = {
     'test_epoch_interval': 50,
     'save_epoch_interval': 50,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}'
 }
 
@@ -408,6 +503,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 
 #4. WaNet
 attack_name = 'WaNet'
+print(f"===> Running {defense_name} on {dataset_name}, {attack_name}, {model_name}")
 
 start_model = core.models.ResNet(18)
 start_model_path = '/data/zhonghaoxiang/BackdoorBox/experiments/ResNet-18_CIFAR-10_WaNet_2022-04-29_18:18:21/ckpt_epoch_200.pth'
@@ -435,6 +531,8 @@ attack = core.WaNet(
 )
 poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
 
+test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, testset, poisoned_testset, 0)
+
 defense = core.MCR(
     start_model,
     end_model,
@@ -445,6 +543,7 @@ defense = core.MCR(
     fix_start=fix_start,
     fix_end=fix_end,
     init_linear=True,
+    # pretrained="/data/zhonghaoxiang/BackdoorBox/experiments/MCR/ResNet-18_CIFAR-10_WaNet_MCR_Bezier_p0.1_2022-05-03_21:46:36/ckpt_epoch_600.pth",
     seed=global_seed,
     deterministic=deterministic
 )
@@ -472,19 +571,21 @@ schedule = {
     'test_epoch_interval': 50,
     'save_epoch_interval': 50,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}'
 }
 
 defense.repair(dataset=trainset, portion=portion, schedule=schedule, settings=settings)
+
 test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, 0, portion, coeffs_t)
+
 
 
 
 # ========== ResNet-18_GTSRB_Attack_MCR ========== #
 # 1. Benign
 model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'GTSRB', 'Benign', 'MCR'
-
+print(f"===> Running {defense_name} on {dataset_name}, {attack_name}, {model_name}")
 
 transform_train = Compose([
     ToPILImage(),
@@ -520,6 +621,8 @@ end_model = core.models.ResNet(18, num_classes=43)
 end_model_path = '/data/zhonghaoxiang/BackdoorBox/experiments/ResNet-18_GTSRB_Benign_2022-04-29_16:22:16/ckpt_epoch_30.pth'
 end_model.load_state_dict(torch.load(end_model_path), strict=False)
 
+test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, testset, testset, None)
+
 base_model = ResNetCurve(18, fix_points, num_classes=43, initialize=initialize_curve)
 
 defense = core.MCR(
@@ -532,6 +635,7 @@ defense = core.MCR(
     fix_start=fix_start,
     fix_end=fix_end,
     init_linear=True,
+    # pretrained="/data/zhonghaoxiang/BackdoorBox/experiments/MCR/ResNet-18_GTSRB_Benign_MCR_Bezier_p0.1_2022-05-03_19:58:51/ckpt_epoch_100.pth",
     seed=global_seed,
     deterministic=deterministic
 )
@@ -559,7 +663,7 @@ schedule = {
     'test_epoch_interval': 10,
     'save_epoch_interval': 10,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}'
 }
 
@@ -570,6 +674,8 @@ test(model_name, dataset_name, attack_name, defense_name, testset, testset, defe
 
 #2. BadNets
 attack_name = "BadNets"
+print(f"===> Running {defense_name} on {dataset_name}, {attack_name}, {model_name}")
+
 start_model = core.models.ResNet(18, 43)
 start_model_path = '/data/zhonghaoxiang/BackdoorBox/experiments/ResNet-18_GTSRB_BadNets_2022-04-28_19:37:09/ckpt_epoch_30.pth'
 start_model.load_state_dict(torch.load(start_model_path), strict=False)
@@ -601,6 +707,8 @@ attack = core.BadNets(
 )
 poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
 
+test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, testset, poisoned_testset, 1)
+
 defense = core.MCR(
     start_model,
     end_model,
@@ -611,6 +719,7 @@ defense = core.MCR(
     fix_start=fix_start,
     fix_end=fix_end,
     init_linear=True,
+    # pretrained="/data/zhonghaoxiang/BackdoorBox/experiments/MCR/ResNet-18_GTSRB_BadNets_MCR_Bezier_p0.1_2022-05-03_20:10:41/ckpt_epoch_100.pth",
     seed=global_seed,
     deterministic=deterministic
 )
@@ -638,7 +747,7 @@ schedule = {
     'test_epoch_interval': 10,
     'save_epoch_interval': 10,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}'
 }
 
@@ -648,6 +757,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 
 # 3. LabelConsistent
 attack_name = 'LabelConsistent'
+print(f"===> Running {defense_name} on {dataset_name}, {attack_name}, {model_name}")
 
 start_model = core.models.ResNet(18, 43)
 start_model_path = '/data/yamengxi/Backdoor/experiments/ResNet-18_GTSRB_LabelConsistent_2022-03-30_06:05:46/ckpt_epoch_50.pth'
@@ -741,9 +851,11 @@ attack = core.LabelConsistent(
     poisoned_target_transform_index=0,
     schedule=schedule,
     seed=global_seed,
-    deterministic=True
+    deterministic=deterministic
 )
 poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
+
+test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, testset, poisoned_testset, 2)
 
 defense = core.MCR(
     start_model,
@@ -755,6 +867,7 @@ defense = core.MCR(
     fix_start=fix_start,
     fix_end=fix_end,
     init_linear=True,
+    # pretrained="/data/zhonghaoxiang/BackdoorBox/experiments/MCR/ResNet-18_GTSRB_LabelConsistent_MCR_Bezier_p0.1_2022-05-03_20:22:37/ckpt_epoch_100.pth",
     seed=global_seed,
     deterministic=deterministic
 )
@@ -782,7 +895,7 @@ schedule = {
     'test_epoch_interval': 10,
     'save_epoch_interval': 10,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}'
 }
 
@@ -793,6 +906,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 
 # 4. WaNet
 attack_name = 'WaNet'
+print(f"===> Running {defense_name} on {dataset_name}, {attack_name}, {model_name}")
 
 start_model = core.models.ResNet(18, 43)
 start_model_path = '/data/zhonghaoxiang/BackdoorBox/experiments/ResNet-18_GTSRB_WaNet_2022-04-29_15:30:11/ckpt_epoch_200.pth'
@@ -848,6 +962,8 @@ attack = core.WaNet(
 )
 poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
 
+test_model_without_defense(start_model, end_model, model_name, dataset_name, attack_name, testset, poisoned_testset, 0)
+
 defense = core.MCR(
     start_model,
     end_model,
@@ -858,6 +974,7 @@ defense = core.MCR(
     fix_start=fix_start,
     fix_end=fix_end,
     init_linear=True,
+    # pretrained="/data/zhonghaoxiang/BackdoorBox/experiments/MCR/ResNet-18_GTSRB_WaNet_MCR_Bezier_p0.1_2022-05-03_20:35:03/ckpt_epoch_100.pth",
     seed=global_seed,
     deterministic=deterministic
 )
@@ -885,7 +1002,7 @@ schedule = {
     'test_epoch_interval': 10,
     'save_epoch_interval': 10,
 
-    'save_dir': 'experiments',
+    'save_dir': 'experiments/MCR-defense',
     'experiment_name': f'{model_name}_{dataset_name}_{attack_name}_{defense_name}_{curve_type}_p{portion}'
 }
 
