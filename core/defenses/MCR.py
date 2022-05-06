@@ -81,10 +81,14 @@ class MCR(Base):
     Args:
         start_point (nn.Module): Start point model of connection curve.
         end_point (nn.Module): End point model of connection curve.
-        model (nn.Module): Repaired curve model. 
-        num_bends (int): 
+        base_model (nn.Module): Repaired curve model. (ResNetCurve or VGGCurve)
+        num_bends (int): Number of bends in the curve, num_bends>=3.
         curve_type (str): Type of connection curve. (Only support 'Bezier' or 'PolyChain')
-        schedule (dict): Training schedule for training the repaired curve model.
+        loss (nn.Module): Loss for repaired model training.
+        fix_start (bool): Sets whether params of start model are fixed. Default: True.
+        fix_end (bool): Sets whether params of end model are fixed. Default: True.
+        init_linear (bool): Sets whether to initialize the linear layer of the base_model. Default: True.
+        pretrained (str): Path of pretrained MCR repaired model. If provided, repair training process will be skipped. Default: ''.
         seed (int): Global seed for random numbers. Default: 0.
         deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
             That is, algorithms which, given the same input, and when run on the same software and hardware,
@@ -368,7 +372,8 @@ class MCR(Base):
 
         if isinstance(coeffs_t, float):
             coeffs_t = [coeffs_t]
-        assert isinstance(coeffs_t, (list,np.ndarray)), f'coeffs_t is a type of {type(coeffs_t)}, list or np.ndarray supported.'
+        assert isinstance(coeffs_t, (list, np.ndarray)), f'coeffs_t is a type of {type(coeffs_t)}, list or np.ndarray supported.'
+        assert self.train_loader is not None, "MCR.repair() should be called before MCR.test()."
 
         for t in coeffs_t:
             print(f'===> Update BN for t={t}')
