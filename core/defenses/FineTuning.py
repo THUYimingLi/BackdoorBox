@@ -1,5 +1,7 @@
 '''
-This is the implement of finetuning.
+This is the implement of fine-tuning proposed in [1].
+
+[1] Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks. RAID, 2018.
 '''
 
 
