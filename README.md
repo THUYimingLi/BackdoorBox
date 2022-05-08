@@ -32,13 +32,13 @@ This project is still under development and therefore there is no user manual ye
 ### Backdoor Defenses
 - [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py) (**Key Properties**: Pre-processing-based Defense)
 - [FineTuning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FineTuning.py) (**Key Properties**: Model Repairing)
+- [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py) (**Key Properties**: Model Repairing)
 
 ## Methods Under Development
 - TUAP (basic version)
 - Sleeper Agent
 - NAD
 - Pruning
-- MCR
 - DBD
 - SS
 - ABL
