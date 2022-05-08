@@ -269,7 +269,7 @@ schedule = {
 
 # 'settings' could be ignored. Only for logging purpose.
 defense.repair(dataset=trainset, portion=portion, schedule=schedule, settings=settings)
-
+repaired_model = defense.get_model()
 test(model_name, dataset_name, attack_name, defense_name, testset, testset, defense, None, portion, coeffs_t)
 
 
@@ -351,7 +351,7 @@ schedule = {
 }
 
 defense.repair(dataset=trainset, portion=portion, schedule=schedule, settings=settings)
-
+repaired_model = defense.get_model()
 test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, 1, portion, coeffs_t)
 
 
@@ -497,7 +497,7 @@ schedule = {
 }
 
 defense.repair(dataset=trainset, portion=portion, schedule=schedule, settings=settings)
-
+repaired_model = defense.get_model()
 test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, 2, portion, coeffs_t)
 
 
@@ -576,7 +576,7 @@ schedule = {
 }
 
 defense.repair(dataset=trainset, portion=portion, schedule=schedule, settings=settings)
-
+repaired_model = defense.get_model()
 test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, 0, portion, coeffs_t)
 
 
@@ -668,7 +668,7 @@ schedule = {
 }
 
 defense.repair(dataset=trainset, portion=portion, schedule=schedule)
-
+repaired_model = defense.get_model()
 test(model_name, dataset_name, attack_name, defense_name, testset, testset, defense, None, portion, coeffs_t)
 
 
@@ -752,6 +752,7 @@ schedule = {
 }
 
 defense.repair(dataset=trainset, portion=portion, schedule=schedule)
+repaired_model = defense.get_model()
 test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, 1, portion, coeffs_t)
 
 
@@ -900,7 +901,7 @@ schedule = {
 }
 
 defense.repair(dataset=trainset, portion=portion, schedule=schedule, settings=settings)
-
+repaired_model = defense.get_model()
 test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, 2, portion, coeffs_t)
 
 
@@ -1007,6 +1008,6 @@ schedule = {
 }
 
 defense.repair(dataset=trainset, portion=portion, schedule=schedule, settings=settings)
-
+repaired_model = defense.get_model()
 test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, 0, portion, coeffs_t)
 

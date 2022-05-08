@@ -390,7 +390,6 @@ class MCR(Base):
                     f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num} time: {time.time()-last_time}\n"
             log(msg)
 
-
-
-
+    def get_model(self):
+        return self.model
 
