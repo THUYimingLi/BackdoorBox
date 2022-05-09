@@ -1,6 +1,9 @@
 '''
 This is the implement of fine-tuning proposed in [1].
+<<<<<<< HEAD
+=======
 
+>>>>>>> ab0408d5f5ca825e794553111d501948a40f8dff
 [1] Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks. RAID, 2018.
 '''
 
@@ -34,7 +37,6 @@ def adjust_learning_rate(lr, optimizer, epoch):
 
 class FineTuning(Base):
     """FineTuning process.
-
     Args:
         train_dataset (types in support_list): Benign training dataset.
         test_dataset (types in support_list): Benign testing dataset.
@@ -70,7 +72,6 @@ class FineTuning(Base):
 
     def frozen(self):
         """Frozen the layers which don't need to fine tuning.
-
         """
         if self.layer==None or self.layer[0]=="full layers":
             return
@@ -80,9 +81,8 @@ class FineTuning(Base):
                     for param in child.parameters():
                         param.requires_grad = False
 
-    def finetuning(self,schedule=None):
+    def repair(self,schedule=None):
         """Finetuning.
-
         Args:
             schedule (dict): Schedule for testing.
         """
@@ -106,7 +106,7 @@ class FineTuning(Base):
                 device = torch.device("cuda:0")
             else:
                 gpus = list(range(current_schedule['GPU_num']))
-                model = nn.DataParallel(self.model.cuda(), device_ids=gpus, output_device=gpus[0])
+                self.model = nn.DataParallel(self.model.cuda(), device_ids=gpus, output_device=gpus[0])
                 # TODO: DDP training
                 pass
         # Use CPU
@@ -162,7 +162,6 @@ class FineTuning(Base):
 
     def test(self,schedule=None):
         """Test the finetuning model.
-
         Args:
             schedule (dict): Schedule for testing.
         """
@@ -172,8 +171,5 @@ class FineTuning(Base):
             raise AttributeError("Test set is None, please check your setting.")
         test(self.model,self.test_dataset,schedule)
 
-
-
-
-
-
+    def get_model(self):
+        return self.model

@@ -1,7 +1,5 @@
 '''
 This is the test code of Finetuning.
-
-
 '''
 
 import torch
@@ -15,6 +13,7 @@ import os
 from copy import deepcopy
 from torchvision.datasets import DatasetFolder
 import cv2
+from core.utils import test
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
@@ -43,7 +42,7 @@ def gen_grid(height, k):
 
 
 
-def test(model,p,trainset,testset,poisoned_testset,layer,y_target):
+def test_finetuning(model,p,trainset,testset,poisoned_testset,layer,y_target):
     num1=int(len(trainset)*p)
     num2=int(len(trainset)-num1)
     fttrainset, fttestset = random_split(trainset, [num1, num2])
@@ -76,7 +75,7 @@ def test(model,p,trainset,testset,poisoned_testset,layer,y_target):
         'epochs': 10,
         'log_iteration_interval': 100,
     }
-    finetuning.finetuning(schedule)
+    finetuning.repair(schedule)
 
     test_schedule = {
         'device': 'GPU',
@@ -108,6 +107,12 @@ def test(model,p,trainset,testset,poisoned_testset,layer,y_target):
         'experiment_name': 'finetuning_CIFAR10_BadNets'
     }
     finetuning.test(test_schedule2)
+
+    #test the get_model
+    repair_model=finetuning.get_model()
+    test(repair_model,mypoisoned_testset,test_schedule2)
+
+
     del finetuning
 
 
@@ -155,7 +160,7 @@ def test(model,p,trainset,testset,poisoned_testset,layer,y_target):
 #
 #
 #
-# test(model,0.1,testset,testset,poisoned_test_dataset,["full layers"],1)
+# test_finetuning(model,0.1,testset,testset,poisoned_test_dataset,["full layers"],1)
 #
 #
 # # ========== ResNet-18_CIFAR-10_Benign_Finetuing ==========
@@ -190,7 +195,7 @@ def test(model,p,trainset,testset,poisoned_testset,layer,y_target):
 # #set the target label
 # y_target=1
 # # test2(model,p,testset,testset,testset,layer,y_target)
-# test(model,p,testset,testset,testset,layer,y_target)
+# test_finetuning(model,p,testset,testset,testset,layer,y_target)
 #
 #
 # # ========== ResNet-18_CIFAR-10_Badnets_Finetuing ==========
@@ -229,7 +234,7 @@ def test(model,p,trainset,testset,poisoned_testset,layer,y_target):
 #
 #
 # # test2(model,p,testset,testset,poisoned_testset,layer,y_target)
-# test(model,p,testset,testset,poisoned_testset,layer,y_target)
+# test_finetuning(model,p,testset,testset,poisoned_testset,layer,y_target)
 #
 #
 #
@@ -335,7 +340,7 @@ def test(model,p,trainset,testset,poisoned_testset,layer,y_target):
 # model.load_state_dict(torch.load(model_path))
 #
 # # test2(model,p,testset,testset,poisoned_testset,layer,y_target)
-# test(model,p,testset,testset,poisoned_testset,layer,y_target)
+# test_finetuning(model,p,testset,testset,poisoned_testset,layer,y_target)
 
 
 # ========== ResNet-18_GTSRB_Wanet_Finetuing ==========
@@ -422,7 +427,7 @@ model=core.models.ResNet(18,43)
 model.load_state_dict(torch.load("Wanet_Resnet18_GTSRB_666.pth.tar"))
 
 
-test(model,0.1,testset,testset,poisoned_test_dataset,["full layers"],0)
+test_finetuning(model,0.1,testset,testset,poisoned_test_dataset,["full layers"],0)
 
 
 # ========== ResNet-18_GTSRB_Benign_Finetuing ==========
@@ -469,7 +474,7 @@ layer=["full layers"]
 #set the target label
 y_target=1
 # test2(model,p,testset,testset,testset,layer,y_target)
-test(model,p,testset,testset,testset,layer,y_target)
+test_finetuning(model,p,testset,testset,testset,layer,y_target)
 
 
 # ========== ResNet-18_GTSRB_Badnets_Finetuing ==========
@@ -536,7 +541,7 @@ model.load_state_dict(torch.load(model_path))
 
 
 # test2(model,p,testset,testset,poisoned_testset,layer,y_target)
-test(model,p,testset,testset,poisoned_testset,layer,y_target)
+test_finetuning(model,p,testset,testset,poisoned_testset,layer,y_target)
 
 
 
@@ -694,4 +699,4 @@ y_target=2
 model.load_state_dict(torch.load(model_path))
 
 # test2(model,p,testset,testset,poisoned_testset,layer,y_target)
-test(model,p,testset,testset,poisoned_testset,layer,y_target)
+test_finetuning(model,p,testset,testset,poisoned_testset,layer,y_target)
