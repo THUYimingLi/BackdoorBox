@@ -1,9 +1,6 @@
 '''
 This is the implement of fine-tuning proposed in [1].
-<<<<<<< HEAD
-=======
 
->>>>>>> ab0408d5f5ca825e794553111d501948a40f8dff
 [1] Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks. RAID, 2018.
 '''
 
