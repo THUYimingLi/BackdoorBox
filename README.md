@@ -1,4 +1,4 @@
-# Welcome to BackdoorBox (Under Development)
+# Welcome to BackdoorBox
 ![Python 3.8](https://img.shields.io/badge/python-3.8-DodgerBlue.svg?style=plastic)
 ![Pytorch 1.8.0](https://img.shields.io/badge/pytorch-1.8.0-DodgerBlue.svg?style=plastic)
 ![torchvision 0.9.0](https://img.shields.io/badge/torchvision-0.9.0-DodgerBlue.svg?style=plastic)
@@ -7,7 +7,7 @@
 
 BackdoorBox is a Python toolbox for backdoor attacks and defenses.  
 
-This project is still under development and therefore there is no user manual yet. Please refer to the 'tests' sub-folder to get more insights about how to use our implemented methods.
+This toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, you can easily implement our provided methods by refering to the `tests` sub-folder to see the example codes about how use our implemented methods.
 
 
 # Current Status
