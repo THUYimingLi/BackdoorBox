@@ -1,4 +1,4 @@
-# BackdoorBox: A Python Toolbox for Backdoor Learning
+# BackdoorBox: A Python Toolbox for Backdoor Attacks and Defenses
 ![Python 3.8](https://img.shields.io/badge/python-3.8-DodgerBlue.svg?style=plastic)
 ![Pytorch 1.8.0](https://img.shields.io/badge/pytorch-1.8.0-DodgerBlue.svg?style=plastic)
 ![torchvision 0.9.0](https://img.shields.io/badge/torchvision-0.9.0-DodgerBlue.svg?style=plastic)
