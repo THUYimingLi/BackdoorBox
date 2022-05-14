@@ -9,7 +9,7 @@ Backdoor attacks are emerging yet critical threats in the training process of de
 
 **BackdoorBox** is a Python toolbox aiming to implement representative and advanced backdoor attacks and defenses under a unified framework that can be used in a flexible manner. 
 
-This toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, you can easily implement our provided methods by refering to the `tests` sub-folder to see the example codes about how use our implemented methods.
+This toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, you can easily implement our provided methods by referring to the `tests` sub-folder to see the example codes about how to use our implemented methods. Besides, you are welcome to contribute your attacks or defenses by pull request.
 
 
 # Current Status
