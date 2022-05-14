@@ -18,10 +18,10 @@ Currently, this toolbox is still under development (but the attack parts are alm
 - **Flexibility**: We allow users to easily obtain important intermediate outputs and components of each method (*e.g.*, poisoned dataset and attacked/repaired model), use their local samples and model structure for attacks and defenses, and interact with their local codes. The attack and defense modules can be used jointly or separately.
 - **Co-development**: All codes and developments are hosted on Github to facilitate collaboration. Currently, there are more than seven contributors have helped develop the code base and others have contributed to the code test. The co-development mode facilitates rapid and comprehensive development and bug finding.
 
-# Current Status
+## Current Status
 
-## Developed Methods
-### Backdoor Attacks
+### Developed Methods
+#### Backdoor Attacks
 |                                                    **Method**                                                   |       **Source**      | **Key Properties**                                         | **Note**                                                    |
 |:---------------------------------------------------------------------------------------------------------------:|:---------------------:|------------------------------------------------------------|-------------------------------------------------------------|
 |             [BadNets](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BadNets.py)             |   IEEE ACCESS, 2019   | poison-only                                                | first backdoor attack                                       |
@@ -37,12 +37,12 @@ Currently, this toolbox is still under development (but the attack parts are alm
 
 **Note**: For the convenience of users, all our implemented attacks support obtaining poisoned dataset (via `.get_poisoned_dataset()`), obtaining infected model (via `.get_model()`), and training with your own local samples (loaded via `torchvision.datasets.DatasetFolder`). Please refer to [base.py](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/base.py) and the attack's codes for more details.
 
-### Backdoor Defenses
+#### Backdoor Defenses
 - [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py) (**Key Properties**: Pre-processing-based Defense)
 - [FineTuning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FineTuning.py) (**Key Properties**: Model Repairing)
 - [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py) (**Key Properties**: Model Repairing)
 
-## Methods Under Development
+### Methods Under Development
 - TUAP (basic version)
 - Sleeper Agent
 - NAD
@@ -53,14 +53,14 @@ Currently, this toolbox is still under development (but the attack parts are alm
 
 
 
-# Contributors
+## Contributors
 
 | Organization        | Contributors                                                 |
 | ------------------- | ------------------------------------------------------------ |
 | Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Guanhao Gan](https://github.com/GuanhaoGan), [Kuofeng Gao](https://github.com/KuofengGao), [Xin Yan](https://scholar.google.com/citations?hl=zh-CN&user=08WTTPMAAAAJ), [Jia Xu](https://www.researchgate.net/profile/Xu-Jia-10), [Tong Xu](https://github.com/spicy1007), [Sheng Yang](https://github.com/20000yshust), [Haoxiang Zhong](https://scholar.google.com/citations?user=VOw9qmYAAAAJ&hl=zh-CN&oi=ao), [Linghui Zhu](https://github.com/zlh-thu), [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN) |
 
 
-# Citation
+## Citation
 If our toolbox is useful for your research, please cite our paper(s) as follows:
 ```
 @article{li2022backdoorbox,
