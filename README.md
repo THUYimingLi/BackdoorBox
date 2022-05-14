@@ -12,6 +12,12 @@ Backdoor attacks are emerging yet critical threats in the training process of de
 This toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, you can easily implement our provided methods by referring to the `tests` sub-folder to see the example codes about how to use our implemented methods. Besides, you are welcome to contribute your attacks or defenses by pull request.
 
 
+# Toolbox Characteristics
+- **Consistency**: Instead of implementing each method separately, we develop all methods in a unified manner. Specifically, variables having the same function have a consistent name. Similar methods inherit the same base class for further development, have a unified workflow, and have the same core sub-functions (*e.g.*, `get_model()`.
+- **Simplicity**: We provide code examples for each implemented backdoor attack and defense to explain how to use them, the definitions and default settings of all required attributes, and the necessary code comments. Users can easily implement and develop our toolbox.
+- **Flexibility**: We allow users to easily obtain important intermediate outputs and components of each method (*e.g.*, poisoned dataset and attacked/repaired model), use their local samples and model structure for attacks and defenses, and interact with their local codes. The attack and defense modules can be used jointly or separately.
+- **Co-development**: All codes and developments are hosted on Github to facilitate collaboration. Currently, there are more than seven contributors have helped develop the code base and others have contributed to the code test. The co-development mode facilitates rapid and comprehensive development and bug finding.
+
 # Current Status
 
 ## Developed Methods
