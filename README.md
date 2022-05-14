@@ -7,7 +7,7 @@
 
 Backdoor attacks are emerging yet critical threats in the training process of deep neural networks (DNNs), where the adversary intends to embed specific hidden backdoor into the models. The attacked DNNs will behave normally in predicting benign samples, whereas the predictions will be maliciously changed whenever the adversary-specified trigger patterns appear. Currently, there were many existing backdoor attacks and defenses. Although most of them were open-sourced, there is still no toolbox that can easily and flexibly implement and compare them simultaneously.
 
-`BackdoorBox` is a Python toolbox aiming to implement representative and advanced backdoor attacks and defenses under a unified framework that can be used in a flexible manner. 
+**BackdoorBox** is a Python toolbox aiming to implement representative and advanced backdoor attacks and defenses under a unified framework that can be used in a flexible manner. 
 
 This toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, you can easily implement our provided methods by refering to the `tests` sub-folder to see the example codes about how use our implemented methods.
 
