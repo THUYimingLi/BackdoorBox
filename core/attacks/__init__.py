@@ -9,7 +9,8 @@ from .IAD import IAD
 from .LIRA import LIRA
 from .PhysicalBA import PhysicalBA
 from .ISSBA import ISSBA
+from .TUAP import TUAP
 
 __all__ = [
-    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA', 'ISSBA'
+    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA', 'ISSBA','TUAP'
 ]
