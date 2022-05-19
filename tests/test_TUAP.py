@@ -269,7 +269,7 @@ p_norm = np.inf
 num_classes = 10
 overshoot = 0.02
 max_iter_df = 50
-p_samples = 1000
+p_samples = 0.02
 mask = np.ones((3, 32, 32))
 
 
