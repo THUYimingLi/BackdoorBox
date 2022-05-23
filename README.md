@@ -44,7 +44,6 @@ Currently, this toolbox is still under development (but the attack parts are alm
 - [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py) (**Key Properties**: Model Repairing)
 
 ### Methods Under Development
-- TUAP (basic version)
 - Sleeper Agent
 - NAD
 - Pruning
