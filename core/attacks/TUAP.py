@@ -1,6 +1,7 @@
 '''
 This is the implement of TUAP [1].
 
+[1] Clean-Label Backdoor Attacks on Video Recognition Models. CVPR, 2020.
 '''
 
 import copy
