@@ -50,6 +50,10 @@ Currently, this toolbox is still under development (but the attack parts are alm
 - DBD
 - SS
 - ABL
+- AutoEncoder
+- Neural Cleanse
+- DP
+- CutMix
 
 
 
