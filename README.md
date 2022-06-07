@@ -36,9 +36,14 @@ Currently, this toolbox is still under development (but the attack parts are alm
 **Note**: For the convenience of users, all our implemented attacks support obtaining poisoned dataset (via `.get_poisoned_dataset()`), obtaining infected model (via `.get_model()`), and training with your own local samples (loaded via `torchvision.datasets.DatasetFolder`). Please refer to [base.py](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/base.py) and the attack's codes for more details.
 
 ## Backdoor Defenses
-- [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py) (**Key Properties**: Pre-processing-based Defense)
-- [FineTuning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FineTuning.py) (**Key Properties**: Model Repairing)
-- [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py) (**Key Properties**: Model Repairing)
+|                                                    **Method**                                                   |       **Source**      | **Defense Type**                                         | **Note**                                                    |
+|:---------------------------------------------------------------------------------------------------------------:|:---------------------:|------------------------------------------------------------|-------------------------------------------------------------|
+|             [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py)             |   ICLR Workshop, 2021   | Sample Pre-processing                                                | efficient defense                                     |
+|          [FineTuning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FineTuning.py)         |      RAID, 2018     | Model Repairing                                     | first defense based on model repairing                                      |
+|          [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py)         |      ICLR, 2020     | Model Repairing                                     |                                     |
+
+
+
 
 ## Methods Under Development
 - Sleeper Agent
@@ -54,7 +59,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 
 
 ## Attack & Defense Benchmark
-coming soon.
+The benchmark is coming soon.
 
 
 ## Contributors
