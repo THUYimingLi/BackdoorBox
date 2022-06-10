@@ -25,6 +25,7 @@ from torchvision.datasets import CIFAR10, MNIST, DatasetFolder
 
 from ..utils.accuracy import accuracy
 from ..utils.log import Log
+from ..utils import test
 
 
 class AT(nn.Module):
@@ -58,9 +59,10 @@ class NAD(Base):
         model (nn.Module): Repaired model.
         loss (nn.Module): Loss for repaired model training.
         power (float): The hyper-parameter for the attention loss.
-        beta1 (float): The hyper-parameter for the attention loss.
-        beta2 (float): The hyper-parameter for the attention loss.
-        beta3 (float): The hyper-parameter for the attention loss.
+        beta (list): The hyper-parameter for the attention loss.
+        target_layers (list): The target layers for the attention loss. 
+                              Note that the coefficient of the attention loss for one layer in target_layers
+                              is the value in beta in the same index as the layer.
         seed (int): Global seed for random numbers. Default: 0.
         deterministic (bool): Sets whether PyTorch operations must use "deterministic" algorithms.
             That is, algorithms which, given the same input, and when run on the same software and hardware,
@@ -73,19 +75,18 @@ class NAD(Base):
                  model,
                  loss, 
                  power, 
-                 beta1, 
-                 beta2, 
-                 beta3,
+                 beta=[],
+                 target_layers=[],
                  seed=0,
                  deterministic=False):
         super(NAD, self).__init__(seed, deterministic)
 
+        assert len(beta)==len(target_layers), 'The length of beta must equal to the length of target_layers!'
         self.model = model
         self.loss = loss
         self.power = power
-        self.beta1 = beta1
-        self.beta2 = beta2
-        self.beta3 = beta3
+        self.beta = beta
+        self.target_layers = target_layers
         self.seed = seed
 
     def get_model(self):
@@ -222,14 +223,30 @@ class NAD(Base):
                 batch_label = batch_label.to(device)
                 optimizer.zero_grad()
 
-                activation1_s, activation2_s, activation3_s, output_s = self.model(batch_img, requires_attn=True)
-                activation1_t, activation2_t, activation3_t, _ = teacher_model(batch_img, requires_attn=True)
+                container = []
+                def forward_hook(module, input, output):
+                    container.append(output)
+                
+                hook_list = []
+                for name, module in self.model._modules.items():
+                    if name in self.target_layers:
+                        hk = module.register_forward_hook(forward_hook)
+                        hook_list.append(hk)
 
-                cls_loss = self.loss(output_s, batch_label)
-                at3_loss = criterionAT(activation3_s, activation3_t) * self.beta3
-                at2_loss = criterionAT(activation2_s, activation2_t) * self.beta2
-                at1_loss = criterionAT(activation1_s, activation1_t) * self.beta1
-                loss = at1_loss + at2_loss + at3_loss + cls_loss
+                for name, module in teacher_model._modules.items():
+                    if name in self.target_layers:
+                        hk = module.register_forward_hook(forward_hook)
+                        hook_list.append(hk)
+
+                output_s = self.model(batch_img)
+                _ = teacher_model(batch_img)
+
+                for hk in hook_list:
+                    hk.remove()
+
+                loss = self.loss(output_s, batch_label)
+                for idx in range(len(self.beta)):
+                    loss = loss + criterionAT(container[idx], container[idx+len(self.beta)]) * self.beta[idx]   
 
                 loss.backward()
                 optimizer.step()
@@ -304,69 +321,4 @@ class NAD(Base):
             schedule (dict): Schedule for testing.
         """
         model = self.model
-        # Use GPU
-        if 'device' in schedule and schedule['device'] == 'GPU':
-            if 'CUDA_VISIBLE_DEVICES' in schedule:
-                os.environ['CUDA_VISIBLE_DEVICES'] = schedule['CUDA_VISIBLE_DEVICES']
-
-            assert torch.cuda.device_count() > 0, 'This machine has no cuda devices!'
-            assert schedule['GPU_num'] >0, 'GPU_num should be a positive integer'
-            print(f"This machine has {torch.cuda.device_count()} cuda devices, and use {schedule['GPU_num']} of them to train.")
-
-            if schedule['GPU_num'] == 1:
-                device = torch.device("cuda:0")
-            else:
-                gpus = list(range(schedule['GPU_num']))
-                model = nn.DataParallel(model.cuda(), device_ids=gpus, output_device=gpus[0])
-                # TODO: DDP training
-                pass
-        # Use CPU
-        else:
-            device = torch.device("cpu")
-
-        if schedule['metric'] == 'ASR_NoTarget':
-            if isinstance(dataset, CIFAR10):
-                data = []
-                targets = []
-                for i, target in enumerate(dataset.targets):
-                    if target != schedule['y_target']:
-                        data.append(dataset.data[i])
-                        targets.append(target)
-                data = np.stack(data, axis=0)
-                dataset.data = data
-                dataset.targets = targets
-            elif isinstance(dataset, MNIST):
-                data = []
-                targets = []
-                for i, target in enumerate(dataset.targets):
-                    if int(target) != schedule['y_target']:
-                        data.append(dataset.data[i])
-                        targets.append(target)
-                data = torch.stack(data, dim=0)
-                dataset.data = data
-                dataset.targets = targets
-            elif isinstance(dataset, DatasetFolder):
-                samples = []
-                for sample in dataset.samples:
-                    if sample[1] != schedule['y_target']:
-                        samples.append(sample)
-                dataset.samples = samples
-            else:
-                raise NotImplementedError
-
-        work_dir = osp.join(schedule['save_dir'], schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
-        os.makedirs(work_dir, exist_ok=True)
-        log = Log(osp.join(work_dir, 'log.txt'))
-
-        last_time = time.time()
-        predict_digits, labels = self._test(model, dataset, device, schedule['batch_size'], schedule['num_workers'])
-
-        total_num = labels.size(0)
-        prec1, prec5 = accuracy(predict_digits, labels, topk=(1, 5))
-        top1_correct = int(round(prec1.item() / 100.0 * total_num))
-        top5_correct = int(round(prec5.item() / 100.0 * total_num))
-        msg = f"==========Test result on {schedule['metric']} ==========\n" + \
-                time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + \
-                f"Top-1 correct / Total: {top1_correct}/{total_num}, Top-1 accuracy: {top1_correct/total_num}, Top-5 correct / Total: {top5_correct}/{total_num}, Top-5 accuracy: {top5_correct/total_num} time: {time.time()-last_time}\n"
-        log(msg)
-
+        test(model, dataset, schedule)
