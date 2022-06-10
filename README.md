@@ -80,10 +80,10 @@ If our toolbox is useful for your research, please cite our paper(s) as follows:
 ```
 
 ```
-@article{li2020backdoor,
-  title={Backdoor Learning: A Survey},
+@article{li2022backdoor,
+  title={Backdoor learning: A survey},
   author={Li, Yiming and Jiang, Yong and Li, Zhifeng and Xia, Shu-Tao},
-  journal={arXiv preprint arXiv:2007.08745},
-  year={2020}
+  journal={IEEE Transactions on Neural Networks and Learning Systems},
+  year={2022}
 }
 ```
