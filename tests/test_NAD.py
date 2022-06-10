@@ -25,7 +25,7 @@ global_seed = 666
 deterministic = True
 torch.manual_seed(global_seed)
 datasets_root_dir = '../datasets'
-CUDA_VISIBLE_DEVICES = '2'
+CUDA_VISIBLE_DEVICES = '0'
 portion = 0.05
 batch_size = 128
 num_workers = 4
@@ -69,113 +69,6 @@ class Cutout(object):
         img = img * mask
 
         return img
-
-
-class BasicBlock(nn.Module):
-    expansion = 1
-
-    def __init__(self, in_planes, planes, stride=1):
-        super(BasicBlock, self).__init__()
-        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes)
-
-        self.shortcut = nn.Sequential()
-        if stride != 1 or in_planes != self.expansion*planes:
-            self.shortcut = nn.Sequential(
-                nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(self.expansion*planes)
-            )
-
-    def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
-        out += self.shortcut(x)
-        out = F.relu(out)
-        return out
-
-
-class Bottleneck(nn.Module):
-    expansion = 4
-
-    def __init__(self, in_planes, planes, stride=1):
-        super(Bottleneck, self).__init__()
-        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes)
-        self.conv3 = nn.Conv2d(planes, self.expansion*planes, kernel_size=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(self.expansion*planes)
-
-        self.shortcut = nn.Sequential()
-        if stride != 1 or in_planes != self.expansion*planes:
-            self.shortcut = nn.Sequential(
-                nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(self.expansion*planes)
-            )
-
-    def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = F.relu(self.bn2(self.conv2(out)))
-        out = self.bn3(self.conv3(out))
-        out += self.shortcut(x)
-        out = F.relu(out)
-        return out
-
-
-class _ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
-        super(_ResNet, self).__init__()
-        self.in_planes = 64
-
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512*block.expansion, num_classes)
-
-    def _make_layer(self, block, planes, num_blocks, stride):
-        strides = [stride] + [1]*(num_blocks-1)
-        layers = []
-        for stride in strides:
-            layers.append(block(self.in_planes, planes, stride))
-            self.in_planes = planes * block.expansion
-        return nn.Sequential(*layers)
-
-    def forward(self, x, requires_attn=False):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.layer1(out)
-        out = self.layer2(out)
-        activation1 = out
-        out = self.layer3(out)
-        activation2 = out
-        out = self.layer4(out)
-        activation3 = out
-        out = F.avg_pool2d(out, 4)
-        out = out.view(out.size(0), -1)
-        out = self.linear(out)
-        if requires_attn:
-            return activation1, activation2, activation3, out
-        else:
-            return out
-        
-
-def ResNet(num, num_classes=10):
-    if num == 18:
-        return _ResNet(BasicBlock, [2,2,2,2], num_classes)
-    elif num == 34:
-        return _ResNet(BasicBlock, [3,4,6,3], num_classes)
-    elif num == 50:
-        return _ResNet(Bottleneck, [3,4,6,3], num_classes)
-    elif num == 101:
-        return _ResNet(Bottleneck, [3,4,23,3], num_classes)
-    elif num == 152:
-        return _ResNet(Bottleneck, [3,8,36,3], num_classes)
-    else:
-        raise NotImplementedError
 
 
 def test_without_defense(model_name, dataset_name, attack_name, defense_name, benign_dataset, attacked_dataset, defense, y_target):
@@ -260,7 +153,7 @@ def test(model_name, dataset_name, attack_name, defense_name, benign_dataset, at
 # ===================== Benign ======================
 model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'CIFAR-10', 'Benign', 'NAD'
 
-model = ResNet(18, num_classes=10)
+model = core.models.ResNet(18, num_classes=10)
 model_path = '/data/gaokuofeng/Backdoor/experiments/ResNet-18_CIFAR-10_Benign_2022-03-29_16:27:15/ckpt_epoch_200.pth'
 model.load_state_dict(torch.load(model_path), strict=False)
 
@@ -281,9 +174,8 @@ defense = core.NAD(
     model=model,
     loss=nn.CrossEntropyLoss(),
     power=2.0, 
-    beta1=500, 
-    beta2=500, 
-    beta3=500,
+    beta=[500, 500, 500],
+    target_layers=['layer2', 'layer3', 'layer4'],
     seed=global_seed,
     deterministic=deterministic
 )
@@ -323,7 +215,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, testset, defe
 
 # ===================== BadNets ======================
 attack_name = 'BadNets'
-model = ResNet(18, num_classes=10)
+model = core.models.ResNet(18, num_classes=10)
 model_path = '/data/gaokuofeng/Backdoor/experiments/ResNet-18_CIFAR-10_BadNets_2022-03-29_16:27:40/ckpt_epoch_200.pth'
 model.load_state_dict(torch.load(model_path), strict=False)
 
@@ -350,9 +242,8 @@ defense = core.NAD(
     model=model,
     loss=nn.CrossEntropyLoss(),
     power=2.0, 
-    beta1=500, 
-    beta2=500, 
-    beta3=500,
+    beta=[500, 500, 500],
+    target_layers=['layer2', 'layer3', 'layer4'],
     seed=global_seed,
     deterministic=deterministic
 )
@@ -393,7 +284,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 
 # ===================== WaNet ======================
 attack_name = 'WaNet'
-model = ResNet(18, num_classes=10)
+model = core.models.ResNet(18, num_classes=10)
 model_path = '/data/gaokuofeng/Backdoor/experiments/ResNet-18_CIFAR-10_WaNet_2022-03-29_19:18:08/ckpt_epoch_200.pth'
 model.load_state_dict(torch.load(model_path), strict=False)
 
@@ -417,9 +308,8 @@ defense = core.NAD(
     model=model,
     loss=nn.CrossEntropyLoss(),
     power=2.0, 
-    beta1=500, 
-    beta2=500, 
-    beta3=500,
+    beta=[500, 500, 500],
+    target_layers=['layer2', 'layer3', 'layer4'],
     seed=global_seed,
     deterministic=deterministic
 )
@@ -459,7 +349,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 
 # ===================== LabelConsistent ======================
 attack_name = 'LabelConsistent'
-model = ResNet(18, num_classes=10)
+model = core.models.ResNet(18, num_classes=10)
 model_path = '/data/gaokuofeng/Backdoor/experiments/ResNet-18_CIFAR-10_LabelConsistent_2022-03-30_01:20:03/ckpt_epoch_200.pth'
 model.load_state_dict(torch.load(model_path), strict=False)
 
@@ -553,9 +443,8 @@ defense = core.NAD(
     model=model,
     loss=nn.CrossEntropyLoss(),
     power=2.0, 
-    beta1=500, 
-    beta2=500, 
-    beta3=500,
+    beta=[500, 500, 500],
+    target_layers=['layer2', 'layer3', 'layer4'],
     seed=global_seed,
     deterministic=deterministic
 )
@@ -597,7 +486,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 # ===================== Benign ======================
 model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'GTSRB', 'Benign', 'NAD'
 
-model = ResNet(18, 43)
+model = core.models.ResNet(18, 43)
 model_path = '/data/gaokuofeng/Backdoor/experiments/ResNet-18_GTSRB_Benign_2022-03-29_19:59:05/ckpt_epoch_30.pth'
 model.load_state_dict(torch.load(model_path), strict=False)
 
@@ -631,9 +520,8 @@ defense = core.NAD(
     model=model,
     loss=nn.CrossEntropyLoss(),
     power=2.0, 
-    beta1=500, 
-    beta2=500, 
-    beta3=500,
+    beta=[500, 500, 500],
+    target_layers=['layer2', 'layer3', 'layer4'],
     seed=global_seed,
     deterministic=deterministic
 )
@@ -674,7 +562,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, testset, defe
 # ===================== BadNets ======================
 attack_name = 'BadNets'
 
-model = ResNet(18, 43)
+model = core.models.ResNet(18, 43)
 model_path = '/data/gaokuofeng/Backdoor/experiments/ResNet-18_GTSRB_BadNets_2022-03-29_19:57:40/ckpt_epoch_30.pth'
 model.load_state_dict(torch.load(model_path), strict=False)
 
@@ -703,9 +591,8 @@ defense = core.NAD(
     model=model,
     loss=nn.CrossEntropyLoss(),
     power=2.0, 
-    beta1=500, 
-    beta2=500, 
-    beta3=500,
+    beta=[500, 500, 500],
+    target_layers=['layer2', 'layer3', 'layer4'],
     seed=global_seed,
     deterministic=deterministic
 )
@@ -746,7 +633,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 # ===================== WaNet ======================
 attack_name = 'WaNet'
 
-model = ResNet(18, 43)
+model = core.models.ResNet(18, 43)
 model_path = '/data/gaokuofeng/Backdoor/experiments/ResNet-18_GTSRB_WaNet_2022-03-29_16:18:05/ckpt_epoch_200.pth'
 model.load_state_dict(torch.load(model_path), strict=False)
 
@@ -798,9 +685,8 @@ defense = core.NAD(
     model=model,
     loss=nn.CrossEntropyLoss(),
     power=2.0, 
-    beta1=500, 
-    beta2=500, 
-    beta3=500,
+    beta=[500, 500, 500],
+    target_layers=['layer2', 'layer3', 'layer4'],
     seed=global_seed,
     deterministic=deterministic
 )
@@ -841,7 +727,7 @@ test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_test
 # ===================== LabelConsistent ======================
 attack_name = 'LabelConsistent'
 
-model = ResNet(18, 43)
+model = core.models.ResNet(18, 43)
 model_path = '/data/gaokuofeng/Backdoor/experiments/ResNet-18_GTSRB_LabelConsistent_2022-03-30_06:05:46/ckpt_epoch_50.pth'
 model.load_state_dict(torch.load(model_path), strict=False)
 
@@ -963,9 +849,8 @@ defense = core.NAD(
     model=model,
     loss=nn.CrossEntropyLoss(),
     power=2.0, 
-    beta1=500, 
-    beta2=500, 
-    beta3=500,
+    beta=[500, 500, 500],
+    target_layers=['layer2', 'layer3', 'layer4'],
     seed=global_seed,
     deterministic=deterministic
 )
