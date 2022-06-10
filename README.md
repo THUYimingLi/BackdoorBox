@@ -9,7 +9,7 @@ Backdoor attacks are emerging yet critical threats in the training process of de
 
 [BackdoorBox](https://www.researchgate.net/publication/359439455_BackdoorBox_A_Python_Toolbox_for_Backdoor_Learning) is an open-sourced Python toolbox, aiming to implement representative and advanced backdoor attacks and defenses under a unified framework that can be used in a flexible manner. We will keep updating this toolbox to track the latest backdoor attacks and defenses. 
 
-Currently, this toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, you can easily implement our provided methods by referring to the `tests` sub-folder to see the example codes of each implemented method. In particular, you are always welcome to contribute your backdoor attacks or defenses by pull requests!
+Currently, this toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, **users can easily implement our provided methods by referring to the `tests` sub-folder to see the example codes of each implemented method**. In particular, you are always welcome to contribute your backdoor attacks or defenses by pull requests!
 
 
 ## Toolbox Characteristics
