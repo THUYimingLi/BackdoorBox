@@ -29,7 +29,7 @@ class BaselineMNISTNetwork(nn.Module):
         x = self.relu(x)
         x = self.avg_pool(x)
 
-        x = x.view(-1, 512)
+        x = x.contiguous().view(-1, 512)
 
         x = self.fc1(x)
         x = self.relu(x)
