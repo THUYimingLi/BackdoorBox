@@ -15,6 +15,8 @@ from ..utils import test
 from torch.utils.data import DataLoader
 import random
 import time
+import os.path as osp
+from ..utils import Log
 
 
 def _seed_worker(worker_id):
@@ -127,6 +129,9 @@ class FineTuning(Base):
         optimizer = torch.optim.SGD(model.parameters(), lr=current_schedule['lr'],
                                     momentum=current_schedule['momentum'],
                                     weight_decay=current_schedule['weight_decay'])
+        work_dir = osp.join(self.current_schedule['save_dir'], self.current_schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
+        os.makedirs(work_dir, exist_ok=True)
+        log = Log(osp.join(work_dir, 'log.txt'))
 
         # log and output:
         # 1. ouput loss and time
@@ -154,9 +159,18 @@ class FineTuning(Base):
                     msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ",
                                         time.localtime()) + f"Epoch:{i + 1}/{current_schedule['epochs']}, iteration:{batch_id + 1}/{len(self.train_dataset) // current_schedule['batch_size']}, lr: {current_schedule['lr']}, loss: {float(loss)}, time: {time.time() - last_time}\n"
                     last_time = time.time()
-                    print(msg)
+                    log(msg)
 
-    def test(self,schedule=None):
+            if (i + 1) % self.current_schedule['save_epoch_interval'] == 0:
+                self.model.eval()
+                self.model = self.model.cpu()
+                ckpt_model_filename = "ckpt_epoch_" + str(i+1) + ".pth"
+                ckpt_model_path = os.path.join(work_dir, ckpt_model_filename)
+                torch.save(self.model.state_dict(), ckpt_model_path)
+                self.model = self.model.to(device)
+                self.model.train()
+
+    def test(self, schedule=None):
         """Test the finetuning model.
         Args:
             schedule (dict): Schedule for testing.
