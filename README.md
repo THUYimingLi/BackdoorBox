@@ -47,7 +47,6 @@ Currently, this toolbox is still under development (but the attack parts are alm
 
 ## Methods Under Development
 - Sleeper Agent
-- NAD
 - Pruning
 - DBD
 - SS
