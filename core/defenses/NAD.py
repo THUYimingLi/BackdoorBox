@@ -284,35 +284,6 @@ class NAD(Base):
         np.random.seed(worker_seed)
         random.seed(worker_seed)
     
-    def _test(self, model, dataset, device, batch_size=16, num_workers=8):
-        with torch.no_grad():
-            test_loader = DataLoader(
-                dataset,
-                batch_size=batch_size,
-                shuffle=False,
-                num_workers=num_workers,
-                drop_last=False,
-                pin_memory=True,
-                worker_init_fn=self._seed_worker
-            )
-
-            model = model.to(device)
-            model.eval()
-
-            predict_digits = []
-            labels = []
-            for batch in test_loader:
-                batch_img, batch_label = batch
-                batch_img = batch_img.to(device)
-                batch_img = model(batch_img)
-                batch_img = batch_img.cpu()
-                predict_digits.append(batch_img)
-                labels.append(batch_label)
-
-            predict_digits = torch.cat(predict_digits, dim=0)
-            labels = torch.cat(labels, dim=0)
-            return predict_digits, labels
-
     def test(self, dataset, schedule):
         """Test repaired curve model on dataset
 
