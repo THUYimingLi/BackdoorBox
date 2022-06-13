@@ -357,6 +357,17 @@ adv_model = deepcopy(model)
 adv_ckpt = torch.load('/data/gaokuofeng/Backdoor/experiments/ResNet-18_CIFAR-10_Benign_2022-03-29_16:27:15/ckpt_epoch_200.pth')
 adv_model.load_state_dict(adv_ckpt)
 
+atk_dataset = torchvision.datasets.CIFAR10
+atk_transform_train = Compose([
+    RandomHorizontalFlip(),
+    ToTensor()
+])
+atk_trainset = dataset(datasets_root_dir, train=True, transform=atk_transform_train, download=True)
+atk_transform_test = Compose([
+    ToTensor()
+])
+atk_testset = dataset(datasets_root_dir, train=False, transform=atk_transform_test, download=True)
+
 pattern = torch.zeros((32, 32), dtype=torch.uint8)
 pattern[-1, -1] = 255
 pattern[-1, -3] = 255
@@ -416,8 +427,8 @@ max_pixel = 255
 poisoned_rate = 0.25
 
 attack = core.LabelConsistent(
-    train_dataset=trainset,
-    test_dataset=testset,
+    train_dataset=atk_trainset,
+    test_dataset=atk_testset,
     model=model,
     adv_model=adv_model,
     adv_dataset_dir=f'./adv_dataset/CIFAR-10_eps{eps}_alpha{alpha}_steps{steps}_poisoned_rate{poisoned_rate}_seed{global_seed}',
