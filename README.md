@@ -1,4 +1,4 @@
-# BackdoorBox: A Python Toolbox for Backdoor Attacks and Defenses
+# BackdoorBox: An Open-sourced Python Toolbox for Backdoor Attacks and Defenses
 ![Python 3.8](https://img.shields.io/badge/python-3.8-DodgerBlue.svg?style=plastic)
 ![Pytorch 1.8.0](https://img.shields.io/badge/pytorch-1.8.0-DodgerBlue.svg?style=plastic)
 ![torchvision 0.9.0](https://img.shields.io/badge/torchvision-0.9.0-DodgerBlue.svg?style=plastic)
@@ -9,7 +9,7 @@ Backdoor attacks are emerging yet critical threats in the training process of de
 
 [BackdoorBox](https://www.researchgate.net/publication/359439455_BackdoorBox_A_Python_Toolbox_for_Backdoor_Learning) is an open-sourced Python toolbox, aiming to implement representative and advanced backdoor attacks and defenses under a unified framework that can be used in a flexible manner. We will keep updating this toolbox to track the latest backdoor attacks and defenses. 
 
-Currently, this toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, you can easily implement our provided methods by referring to the `tests` sub-folder to see the example codes of each implemented method. In particular, you are always welcome to contribute your backdoor attacks or defenses by pull requests!
+Currently, this toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, **users can easily implement our provided methods by referring to the `tests` sub-folder to see the example codes of each implemented method**. In particular, you are always welcome to contribute your backdoor attacks or defenses by pull requests!
 
 
 ## Toolbox Characteristics
@@ -80,10 +80,10 @@ If our toolbox is useful for your research, please cite our paper(s) as follows:
 ```
 
 ```
-@article{li2020backdoor,
-  title={Backdoor Learning: A Survey},
+@article{li2022backdoor,
+  title={Backdoor learning: A survey},
   author={Li, Yiming and Jiang, Yong and Li, Zhifeng and Xia, Shu-Tao},
-  journal={arXiv preprint arXiv:2007.08745},
-  year={2020}
+  journal={IEEE Transactions on Neural Networks and Learning Systems},
+  year={2022}
 }
 ```
