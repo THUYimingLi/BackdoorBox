@@ -41,7 +41,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |             [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py)             |   ICLR Workshop, 2021   | Sample Pre-processing                                                | efficient defense                                     |
 |          [FineTuning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FineTuning.py)         |      RAID, 2018     | Model Repairing                                     | first defense based on model repairing                                      |
 |          [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py)         |      ICLR, 2020     | Model Repairing                                     |                                     |
-
+|          [NAD](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/NAD.py)         |      ICLR, 2021     | Model Repairing                                     |  first distillation-based defense                                   |
 
 
 
