@@ -10,7 +10,8 @@ from .LIRA import LIRA
 from .PhysicalBA import PhysicalBA
 from .ISSBA import ISSBA
 from .TUAP import TUAP
+from .SleeperAgent import SleeperAgent
 
 __all__ = [
-    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA', 'ISSBA','TUAP'
+    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA', 'ISSBA','TUAP', 'SleeperAgent'
 ]
