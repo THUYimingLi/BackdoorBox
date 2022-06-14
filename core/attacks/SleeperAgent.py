@@ -3,7 +3,7 @@ This is the implement of Sleeper Agent Attack [1].
 This code is developed based on its official codes (https://github.com/hsouri/Sleeper-Agent).
 
 Reference:
-[1] Souri, Hossein, et al. "Sleeper agent: Scalable hidden trigger backdoors for neural networks trained from scratch." arXiv preprint arXiv:2106.08970 (2021).
+[1] Sleeper Agent: Scalable Hidden Trigger Backdoors for Neural Networks Trained from Scratch.arXiv, 2021.
 '''
 
 from cv2 import compare
