@@ -26,6 +26,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |    [Refool (simplified version)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Refool.py)   |       ECCV, 2020      | poison-only, sample-specific                               | first stealthy attack with visible yet natural trigger      |
 | [Label-consistent Attack](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LabelConsistent.py) |      arXiv, 2019      | poison-only, invisible, clean-label                        | first clean-label backdoor attack                           |
 | [TUAP](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/TUAP.py) |      CVPR, 2020      | poison-only, invisible, clean-label                        | first clean-label backdoor attack with optimized trigger pattern                          |
+| [Sleeper Agent](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/SleeperAgent.py) |      arXiv, 2021      | poison-only, invisible, clean-label                        | effective clean-label backdoor attack                         |
 |               [ISSBA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/ISSBA.py)               |       ICCV, 2021      | poison-only, sample-specific, physical                     | first poison-only sample-specific attack                    |
 |               [WaNet](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/WaNet.py)               |       ICLR, 2021      | poison-only, invisible, sample-specific                    |                                                             |
 |   [Blind Backdoor (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py)  | USENIX Security, 2021 | training-controlled                                        | first training-controlled attack targeting loss computation |
@@ -41,13 +42,12 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |             [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py)             |   ICLR Workshop, 2021   | Sample Pre-processing                                                | efficient defense                                     |
 |          [FineTuning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FineTuning.py)         |      RAID, 2018     | Model Repairing                                     | first defense based on model repairing                                      |
 |          [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py)         |      ICLR, 2020     | Model Repairing                                     |                                     |
-
+|          [NAD](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/NAD.py)         |      ICLR, 2021     | Model Repairing                                     |  first distillation-based defense                                   |
 
 
 
 ## Methods Under Development
 - Sleeper Agent
-- NAD
 - Pruning
 - DBD
 - SS
