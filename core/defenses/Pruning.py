@@ -7,6 +7,7 @@ import os
 import torch
 import torch.nn as nn
 
+
 from .base import Base
 from ..utils import test
 from torch.utils.data import DataLoader
@@ -21,6 +22,7 @@ class MaskedLayer(nn.Module):
 
     def forward(self, input):
         return self.base(input) * self.mask
+
 
 
 class Pruning(Base):
@@ -57,14 +59,17 @@ class Pruning(Base):
         self.prune_rate = prune_rate
         self.schedule = schedule
 
+
     def repair(self, schedule=None):
         """pruning.
         Args:
             schedule (dict): Schedule for testing.
         """
+
         if schedule == None:
             raise AttributeError("Schedule is None, please check your schedule setting.")
         current_schedule = schedule
+
 
         # Use GPU
         if 'device' in current_schedule and current_schedule['device'] == 'GPU':
@@ -94,6 +99,7 @@ class Pruning(Base):
                                drop_last=True, pin_memory=True)
         prune_rate = self.prune_rate
 
+
         # prune silent activation
         print("======== pruning... ========")
         with torch.no_grad():
@@ -121,8 +127,10 @@ class Pruning(Base):
         if len(container.shape) == 4:
             mask = mask.reshape(1, -1, 1, 1)
         setattr(model, layer_to_prune, MaskedLayer(getattr(model, layer_to_prune), mask))
+
         self.model = model
         print("======== pruning complete ========")
+
 
     def test(self, schedule=None):
         """Test the pruned model.

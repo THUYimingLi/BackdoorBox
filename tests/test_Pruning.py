@@ -7,6 +7,7 @@ import torch.nn as nn
 import torchvision
 from torchvision import transforms
 from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizontalFlip, ToPILImage, Resize
+
 from torch.utils.data import random_split
 import core
 import os
@@ -39,6 +40,7 @@ def gen_grid(height, k):
     identity_grid = torch.stack((y, x), 2)[None, ...]  # 1*height*height*2
 
     return identity_grid, noise_grid
+
 
 
 def test_pruning(model, p, trainset, testset, poisoned_testset, layer, prune_rate, y_target):
@@ -81,8 +83,10 @@ def test_pruning(model, p, trainset, testset, poisoned_testset, layer, prune_rat
     }
     pruning.test(test_schedule)
 
+
     # change the set
     pruning.test_dataset = mypoisoned_testset
+
     test_schedule2 = {
         'device': 'GPU',
         'CUDA_VISIBLE_DEVICES': '1',
@@ -341,6 +345,7 @@ test_pruning(model, p, trainset, testset, poisoned_testset, layer, prune_rate, y
 
 
 
+
 # ========== ResNet-18_GTSRB_Wanet_Pruning ==========
 print("wanet")
 dataset = torchvision.datasets.DatasetFolder
@@ -353,6 +358,7 @@ transform_train_wanet = Compose([
     transforms.Resize((32, 32)),
     ToTensor()
 ])
+
 transform_test_wanet = Compose([
     ToTensor(),
     transforms.ToPILImage(),
@@ -360,6 +366,7 @@ transform_test_wanet = Compose([
     ToTensor()
 
 ])
+
 
 trainset_wanet = DatasetFolder(
     root='/data/ganguanhao/datasets/GTSRB/train',  # please replace this with path to your training set
@@ -406,8 +413,6 @@ layer = 'layer2'
 prune_rate = 0.2
 y_target = 0
 test_pruning(wanetmodel, p, trainset_wanet, testset_wanet, poisoned_test_dataset_wanet, layer, prune_rate, y_target)
-
-
 
 
 # ========== ResNet-18_GTSRB_Benign_Pruning ==========
@@ -458,7 +463,6 @@ test_pruning(model, p, trainset, testset, testset, layer, prune_rate, y_target)
 # ========== ResNet-18_GTSRB_Badnets_Pruning ==========
 print("badnets")
 model = core.models.ResNet(18, 43)
-
 transform_train = Compose([
     ToPILImage(),
     Resize((32, 32)),
@@ -593,7 +597,6 @@ schedule = {
     'device': 'GPU',
     'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
     'GPU_num': 1,
-
     'benign_training': False,  # Train Attacked Model
     'batch_size': 256,
     'num_workers': 8,
@@ -654,4 +657,3 @@ layer = 'layer2'
 prune_rate = 0.5
 y_target = 2
 test_pruning(model, p, trainset, testset, poisoned_testset, layer, prune_rate, y_target)
-
