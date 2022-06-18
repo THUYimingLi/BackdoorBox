@@ -88,11 +88,11 @@ class Conv2dSame(nn.Module):
     """Manual convolution with same padding
 
     Although PyTorch >= 1.10.0 supports ``padding='same'`` as a keyword
-    argument, this does not export to CoreML as of coremltools 5.1.0, 
-    so we need to implement the internal torch logic manually. 
+    argument, this does not export to CoreML as of coremltools 5.1.0,
+    so we need to implement the internal torch logic manually.
 
     Currently the ``RuntimeError`` is
-    
+
     "PyTorch convert function for op '_convolution_mode' not implemented"
 
     https://discuss.pytorch.org/t/same-padding-equivalent-in-pytorch/85121/6
@@ -107,8 +107,8 @@ class Conv2dSame(nn.Module):
 
     def __init__(
             self,
-            in_channels, 
-            out_channels, 
+            in_channels,
+            out_channels,
             kernel_size,
             stride=1,
             dilation=1,
@@ -133,7 +133,7 @@ class Conv2dSame(nn.Module):
         self._reversed_padding_repeated_twice = [0, 0]*len(kernel_size_)
 
         # Follow the logic from ``nn/modules/conv.py:_ConvNd``
-        for d, k, i in zip(dilation_, kernel_size_, 
+        for d, k, i in zip(dilation_, kernel_size_,
                                 range(len(kernel_size_) - 1, -1, -1)):
             total_padding = d * (k - 1)
             left_pad = total_padding // 2
@@ -173,27 +173,27 @@ class StegaStampEncoder(nn.Module):
         self.secret_dense = nn.Sequential(nn.Linear(in_features=secret_size, out_features=height * width * in_channel), nn.ReLU(inplace=True))
 
         self.conv1 = nn.Sequential(Conv2dSame(in_channels=in_channel*2, out_channels=32, kernel_size=3), nn.ReLU(inplace=True))
-        self.conv2 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=32, kernel_size=3, stride=2), nn.ReLU(inplace=True)) 
-        self.conv3 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=64, kernel_size=3, stride=2), nn.ReLU(inplace=True))  
-        self.conv4 = nn.Sequential(Conv2dSame(in_channels=64, out_channels=128, kernel_size=3, stride=2), nn.ReLU(inplace=True)) 
+        self.conv2 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=32, kernel_size=3, stride=2), nn.ReLU(inplace=True))
+        self.conv3 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=64, kernel_size=3, stride=2), nn.ReLU(inplace=True))
+        self.conv4 = nn.Sequential(Conv2dSame(in_channels=64, out_channels=128, kernel_size=3, stride=2), nn.ReLU(inplace=True))
         self.conv5 = nn.Sequential(Conv2dSame(in_channels=128, out_channels=256, kernel_size=3, stride=2), nn.ReLU(inplace=True))
-        
+
         # merge two branch feature like U-Net architecture
         self.up6 = nn.Sequential(Conv2dSame(in_channels=256, out_channels=128, kernel_size=2), nn.ReLU(inplace=True))
         self.conv6 = nn.Sequential(Conv2dSame(in_channels=256, out_channels=128, kernel_size=3), nn.ReLU(inplace=True))
-        
+
         # merge two branch feature like U-Net architecture
         self.up7 = nn.Sequential(Conv2dSame(in_channels=128, out_channels=64, kernel_size=2), nn.ReLU(inplace=True))
         self.conv7 = nn.Sequential(Conv2dSame(in_channels=128, out_channels=64, kernel_size=3), nn.ReLU(inplace=True))
-        
+
         # merge two branch feature like U-Net architecture
         self.up8 = nn.Sequential(Conv2dSame(in_channels=64, out_channels=32, kernel_size=2), nn.ReLU(inplace=True))
         self.conv8 = nn.Sequential(Conv2dSame(in_channels=64, out_channels=32, kernel_size=3), nn.ReLU(inplace=True))
 
-        # merge two branch feature like U-Net architecture 
+        # merge two branch feature like U-Net architecture
         self.up9 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=32, kernel_size=2), nn.ReLU(inplace=True))
         self.conv9 = nn.Sequential(Conv2dSame(in_channels=64+in_channel*2, out_channels=32, kernel_size=3), nn.ReLU(inplace=True))
-        
+
         self.residual = nn.Sequential(Conv2dSame(in_channels=32, out_channels=in_channel, kernel_size=1))
 
     def forward(self, inputs):
@@ -204,10 +204,10 @@ class StegaStampEncoder(nn.Module):
         secret = self.secret_dense(secret)
         secret = secret.reshape((-1, self.in_channel, self.height, self.width))
         inputs = torch.cat([secret, image], axis=1)
-        
+
         conv1 = self.conv1(inputs)
         conv2 = self.conv2(conv1)
-        conv3 = self.conv3(conv2)        
+        conv3 = self.conv3(conv2)
         conv4 = self.conv4(conv3)
         conv5 = self.conv5(conv4)
 
@@ -225,7 +225,7 @@ class StegaStampEncoder(nn.Module):
 
         up9 = self.up9(nn.Upsample(scale_factor=(2, 2), mode='nearest')(conv8))
         merge9 = torch.cat([conv1,up9,inputs], axis=1)
-        
+
         conv9 = self.conv9(merge9)
         residual = self.residual(conv9)
 
@@ -290,11 +290,11 @@ class StegaStampDecoder(nn.Module):
         stn_params = self.stn_params_later(stn_params)
 
         x = torch.mm(stn_params, self.W_fc1) + self.b_fc1
-        x = x.view(-1, 2, 3) # change it to the 2x3 matrix 
+        x = x.view(-1, 2, 3) # change it to the 2x3 matrix
         affine_grid_points = F.affine_grid(x, torch.Size((x.size(0), self.in_channel, self.height, self.width)))
         transformed_image = F.grid_sample(image, affine_grid_points)
 
-        secret = self.decoder(transformed_image)        
+        secret = self.decoder(transformed_image)
         secret = secret.view(secret.size(0), -1)
         secret = self.decoder_later(secret)
         return secret
@@ -347,9 +347,9 @@ class MNISTStegaStampEncoder(nn.Module):
         self.secret_dense = nn.Sequential(nn.Linear(in_features=secret_size, out_features=height * width * in_channel), nn.ReLU(inplace=True))
 
         self.conv1 = nn.Sequential(Conv2dSame(in_channels=in_channel*2, out_channels=32, kernel_size=3), nn.ReLU(inplace=True))
-        self.conv2 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=32, kernel_size=3), nn.ReLU(inplace=True)) 
-        self.conv3 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=64, kernel_size=3, stride=2), nn.ReLU(inplace=True))  
-        self.conv4 = nn.Sequential(Conv2dSame(in_channels=64, out_channels=128, kernel_size=3, stride=2), nn.ReLU(inplace=True)) 
+        self.conv2 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=32, kernel_size=3), nn.ReLU(inplace=True))
+        self.conv3 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=64, kernel_size=3, stride=2), nn.ReLU(inplace=True))
+        self.conv4 = nn.Sequential(Conv2dSame(in_channels=64, out_channels=128, kernel_size=3, stride=2), nn.ReLU(inplace=True))
 
         # merge two branch feature like U-Net architecture
         self.up5 = nn.Sequential(Conv2dSame(in_channels=128, out_channels=64, kernel_size=2), nn.ReLU(inplace=True))
@@ -361,7 +361,7 @@ class MNISTStegaStampEncoder(nn.Module):
 
         # merge two branch feature like U-Net architecture
         self.up7 = nn.Sequential(Conv2dSame(in_channels=32, out_channels=32, kernel_size=2), nn.ReLU(inplace=True))
-        self.conv7 = nn.Sequential(Conv2dSame(in_channels=66, out_channels=32, kernel_size=3), nn.ReLU(inplace=True)) 
+        self.conv7 = nn.Sequential(Conv2dSame(in_channels=66, out_channels=32, kernel_size=3), nn.ReLU(inplace=True))
 
         self.residual = nn.Sequential(Conv2dSame(in_channels=32, out_channels=1, kernel_size=1))
 
@@ -372,7 +372,7 @@ class MNISTStegaStampEncoder(nn.Module):
 
         secret = self.secret_dense(secret)
         secret = secret.reshape((-1, self.in_channel, self.height, self.width))
-        
+
         inputs = torch.cat([secret, image], axis=1)
 
         conv1 = self.conv1(inputs)
@@ -451,7 +451,7 @@ class MNISTStegaStampDecoder(nn.Module):
         stn_params = self.stn_params_later(stn_params)
 
         x = torch.mm(stn_params, self.W_fc1) + self.b_fc1
-        x = x.view(-1, 2, 3) # change it to the 2x3 matrix 
+        x = x.view(-1, 2, 3) # change it to the 2x3 matrix
         affine_grid_points = F.affine_grid(x, torch.Size((x.size(0), self.in_channel, self.height, self.width)))
         transformed_image = F.grid_sample(image, affine_grid_points)
 
@@ -505,10 +505,10 @@ def get_secret_acc(secret_true, secret_pred):
 
 class ProbTransform(torch.nn.Module):
     """The data augmentation transform by the probability.
-    
+
     Args:
         f (nn.Module): the data augmentation transform operation.
-        p (float): the probability of the data augmentation transform. 
+        p (float): the probability of the data augmentation transform.
     """
     def __init__(self, f, p=1):
         super(ProbTransform, self).__init__()
@@ -524,7 +524,7 @@ class ProbTransform(torch.nn.Module):
 
 class PostTensorTransform(torch.nn.Module):
     """The data augmentation transform.
-    
+
     Args:
         dataset_name (str): the name of the dataset.
     """
@@ -574,13 +574,13 @@ class ISSBA(Base):
             always produce the same output. When enabled, operations will use deterministic algorithms when available,
             and if only nondeterministic algorithms are available they will throw a RuntimeError when called. Default: False.
     """
-    def __init__(self, 
+    def __init__(self,
                  dataset_name,
-                 train_dataset, 
-                 test_dataset, 
+                 train_dataset,
+                 test_dataset,
                  train_steg_set,
-                 model, 
-                 loss, 
+                 model,
+                 loss,
                  y_target,
                  poisoned_rate,
                  secret_size,
@@ -591,8 +591,8 @@ class ISSBA(Base):
                  enc_secret_only_epoch,
                  enc_use_dis=False,
                  encoder=None,
-                 schedule=None, 
-                 seed=0, 
+                 schedule=None,
+                 seed=0,
                  deterministic=False,
                  ):
         super(ISSBA, self).__init__(
@@ -641,7 +641,7 @@ class ISSBA(Base):
             self.normalizer = None
             self.enc_height = enc_height
             self.enc_width = enc_width
-            self.enc_in_channel = enc_in_channel         
+            self.enc_in_channel = enc_in_channel
 
     def get_model(self):
         return self.model
@@ -676,16 +676,16 @@ class ISSBA(Base):
         optimizer.zero_grad()
         d_optimizer.zero_grad()
 
-    def train_encoder_decoder(self, train_only=False):  
+    def train_encoder_decoder(self, train_only=False):
         """Train the image steganography encoder and decoder.
 
         Args:
             train_only (bool): Whether to only train the image steganography encoder and decoder.
         """
         if train_only:
-            device = torch.device("cuda:0")      
+            device = torch.device("cuda:0")
         else:
-            device = self.device if self.device else torch.device("cuda:0")  
+            device = self.device if self.device else torch.device("cuda:0")
         if self.dataset_name == 'mnist':
             self.encoder = MNISTStegaStampEncoder(secret_size=self.secret_size, height=self.enc_height, width=self.enc_width, in_channel=self.enc_in_channel).to(device)
             self.decoder = MNISTStegaStampDecoder(secret_size=self.secret_size, height=self.enc_height, width=self.enc_width, in_channel=self.enc_in_channel).to(device)
@@ -694,15 +694,15 @@ class ISSBA(Base):
             self.encoder = StegaStampEncoder(secret_size=self.secret_size, height=self.enc_height, width=self.enc_width, in_channel=self.enc_in_channel).to(device)
             self.decoder = StegaStampDecoder(secret_size=self.secret_size, height=self.enc_height, width=self.enc_width, in_channel=self.enc_in_channel).to(device)
             self.discriminator = Discriminator(in_channel=self.enc_in_channel).to(device)
-        train_dl = DataLoader(            
+        train_dl = DataLoader(
             self.train_steg_set,
             batch_size=32,
             shuffle=True,
             num_workers=8,
             worker_init_fn=self._seed_worker)
 
-        enc_total_epoch = self.enc_total_epoch 
-        enc_secret_only_epoch = self.enc_secret_only_epoch 
+        enc_total_epoch = self.enc_total_epoch
+        enc_secret_only_epoch = self.enc_secret_only_epoch
         optimizer = torch.optim.Adam([{'params': self.encoder.parameters()}, {'params': self.decoder.parameters()}], lr=0.0001)
         d_optimizer = torch.optim.RMSprop(self.discriminator.parameters(), lr=0.00001)
         loss_fn_alex = lpips.LPIPS(net='alex').cuda()
@@ -735,14 +735,14 @@ class ISSBA(Base):
                 else:
                     total_loss = 2.0 * l2_loss + 1.5 * lpips_loss_op.mean() + 1.5 * secret_loss_op + 0.5 * G_loss
                 loss_list.append(total_loss.item())
-                
+
                 bit_acc = get_secret_acc(secret_input, decoded_secret)
                 bit_acc_list.append(bit_acc.item())
-                
+
                 total_loss.backward()
                 optimizer.step()
                 self.reset_grad(optimizer, d_optimizer)
-                
+
                 if epoch >= enc_secret_only_epoch and self.enc_use_dis:
                     residual = self.encoder([secret_input, image_input])
                     encoded_image = image_input + residual
@@ -754,8 +754,8 @@ class ISSBA(Base):
                     D_loss.backward()
                     for p in self.discriminator.parameters():
                         p.grad.data = torch.clamp(p.grad.data, min=-0.01, max=0.01)
-                    d_optimizer.step()  
-                    self.reset_grad(optimizer, d_optimizer)              
+                    d_optimizer.step()
+                    self.reset_grad(optimizer, d_optimizer)
             if train_only:
                 msg = f'Epoch [{epoch + 1}] total loss: {np.mean(loss_list)}, bit acc: {np.mean(bit_acc_list)}\n'
                 print(msg)
@@ -780,7 +780,7 @@ class ISSBA(Base):
             self.current_schedule = deepcopy(self.global_schedule)
         elif schedule is not None and self.global_schedule is not None:
             self.current_schedule = deepcopy(schedule)
-        
+
         if 'pretrain' in self.current_schedule:
             self.model.load_state_dict(torch.load(self.current_schedule['pretrain']), strict=False)
 
@@ -818,13 +818,13 @@ class ISSBA(Base):
         self.get_img()
 
         trainset, testset = self.train_dataset, self.test_dataset
-        train_dl = DataLoader(            
+        train_dl = DataLoader(
             trainset,
             batch_size=1,
             shuffle=False,
             num_workers=8,
             worker_init_fn=self._seed_worker)
-        test_dl = DataLoader(            
+        test_dl = DataLoader(
             testset,
             batch_size=1,
             shuffle=False,
@@ -852,8 +852,8 @@ class ISSBA(Base):
         cln_train_dl = GetPoisonedDataset(cln_train_dataset, cln_train_labset)
         bd_train_dl = GetPoisonedDataset(bd_train_dataset, bd_train_labset)
 
-        self.train_poisoned_data = cln_train_dataset + bd_train_dataset
-        self.train_poisoned_label = cln_train_labset + bd_train_labset
+        # self.train_poisoned_data = cln_train_dataset + bd_train_dataset
+        # self.train_poisoned_label = cln_train_labset + bd_train_labset
 
         bd_test_dataset, bd_test_labset = [], []
         for idx, (img, lab) in enumerate(test_dl):
@@ -867,24 +867,24 @@ class ISSBA(Base):
         cln_test_dl = testset
         bd_test_dl = GetPoisonedDataset(bd_test_dataset, bd_test_labset)
 
-        self.test_poisoned_data, self.test_poisoned_label = bd_test_dataset, bd_test_labset
+        # self.test_poisoned_data, self.test_poisoned_label = bd_test_dataset, bd_test_labset
 
         bd_bs = int(self.current_schedule['batch_size'] * self.poisoned_rate)
         cln_bs = int(self.current_schedule['batch_size'] - bd_bs)
-        cln_train_dl = DataLoader(            
+        cln_train_dl = DataLoader(
             cln_train_dl,
             batch_size=cln_bs,
             shuffle=True,
             num_workers=self.current_schedule['num_workers'],
             worker_init_fn=self._seed_worker)
-        
-        bd_train_dl = DataLoader(            
+
+        bd_train_dl = DataLoader(
             bd_train_dl,
             batch_size=bd_bs,
             shuffle=True,
             num_workers=self.current_schedule['num_workers'],
             worker_init_fn=self._seed_worker)
-        
+
 
         self.model = self.model.to(device)
         self.model.train()
@@ -904,6 +904,7 @@ class ISSBA(Base):
         for i in range(self.current_schedule['epochs']):
             self.adjust_learning_rate(optimizer, i)
             loss_list = []
+            self.train_poisoned_data, self.train_poisoned_label = [], []
             for (inputs, targets), (inputs_trigger, targets_trigger) in zip(cln_train_dl, bd_train_dl):
                 inputs = torch.cat((inputs, inputs_trigger), 0)
                 targets = torch.cat((targets, targets_trigger), 0)
@@ -914,6 +915,9 @@ class ISSBA(Base):
 
                 inputs = inputs.to(device)
                 targets = targets.to(device)
+
+                self.train_poisoned_data += inputs.cpu().detach().numpy().tolist()
+                self.train_poisoned_label += targets.cpu().detach().numpy().tolist()
 
                 optimizer.zero_grad()
                 predict_digits = self.model(inputs)
@@ -959,6 +963,23 @@ class ISSBA(Base):
                 torch.save(self.model.state_dict(), ckpt_model_path)
                 self.model = self.model.to(device)
                 self.model.train()
+
+        self.test_poisoned_data, self.test_poisoned_label = [], []
+        bd_test_dl = DataLoader(
+            bd_test_dl,
+            batch_size=16,
+            shuffle=False,
+            num_workers=8,
+            drop_last=False,
+            pin_memory=True
+        )
+        for batch in bd_test_dl:
+            batch_img, batch_label = batch
+            if self.normalizer:
+                batch_img = self.normalizer(batch_img)
+
+            self.test_poisoned_data += batch_img.cpu().detach().numpy().tolist()
+            self.test_poisoned_label += batch_label.cpu().detach().numpy().tolist()
 
     def _test(self, dataset, device, batch_size=16, num_workers=8, model=None):
         if model is None:
@@ -1085,7 +1106,7 @@ class ISSBA(Base):
             decoder = self.decoder
         encoder = encoder.eval()
         decoder = decoder.eval()
-        train_dl = DataLoader(            
+        train_dl = DataLoader(
             self.train_steg_set,
             batch_size=1,
             shuffle=True,
