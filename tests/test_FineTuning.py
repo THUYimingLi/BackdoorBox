@@ -74,6 +74,10 @@ def test_finetuning(model,p,trainset,testset,poisoned_testset,layer,y_target):
 
         'epochs': 10,
         'log_iteration_interval': 100,
+        'save_epoch_interval': 10,
+
+        'save_dir': 'experiments',
+        'experiment_name': 'finetuning_GTSRB_BadNets'
     }
     finetuning.repair(schedule)
 
