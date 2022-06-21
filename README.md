@@ -43,11 +43,10 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |          [FineTuning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FineTuning.py)         |      Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks. [RAID, 2018](https://arxiv.org/pdf/1805.12185.pdf).     | Model Repairing                                     | first defense based on model repairing                                      |
 |          [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py)         |      Bridging Mode Connectivity in Loss Landscapes and Adversarial Robustness. [ICLR, 2020](https://arxiv.org/pdf/2005.00060.pdf).     | Model Repairing                                     |                                     |
 |          [NAD](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/NAD.py)         |      Neural Attention Distillation: Erasing Backdoor Triggers from Deep Neural Networks. [ICLR, 2021](https://openreview.net/pdf?id=9l0K4OM-oXE).     | Model Repairing                                     |  first distillation-based defense                                   |
-
+|          [Pruning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/Pruning.py)         |      Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks. [RAID, 2018](https://arxiv.org/pdf/1805.12185.pdf).     | Model Repairing                                     |                                     |
 
 
 ## Methods Under Development
-- Pruning
 - DBD
 - SS
 - ABL
