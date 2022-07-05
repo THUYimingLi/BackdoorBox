@@ -3,7 +3,7 @@ This is the implement of ABL [1].
 This code is developed based on its official codes. (https://github.com/bboylyg/ABL)
 
 Reference:
-[1] Li, Yige, et al. "Anti-backdoor learning: Training clean models on poisoned data." Advances in Neural Information Processing Systems 34 (2021): 14900-14912.
+[1] Anti-backdoor Learning: Training Clean Models on Poisoned Data. NeurIPS, 2021.
 '''
 
 
