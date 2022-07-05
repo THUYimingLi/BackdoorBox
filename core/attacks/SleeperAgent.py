@@ -154,7 +154,6 @@ def clip_deltas(poison_deltas, imgs, eps):
     poison_deltas.data = torch.clamp(poison_deltas, min=0-imgs, max=1-imgs)
     return poison_deltas
 
-
 def get_gradient(model, train_loader, criterion, device):
     """Compute the gradient of criterion(model) w.r.t to given data."""
     model.eval()
@@ -214,18 +213,7 @@ def batched_step(model, inputs, labels, poison_delta, poison_slices, criterion, 
 
 def generate_poisoned_trainset(trainset, poison_set, poison_deltas, y_target, poison_ids):
     poisoned_trainset = []
-    print(poison_deltas.max(), poison_deltas.min())
-    # for i in range(len(trainset)):
-    #     poisoned_trainset.append(trainset[i])
-    # for psample, pdelta in zip(poison_set, poison_deltas.cpu()):
-    #     poisoned_trainset.append((psample[0]+pdelta, y_target))
 
-    # for i in range(len(trainset)):
-    #     if i not in poison_ids:
-    #         poisoned_trainset.append(trainset[i])
-    #     else:
-    #         idx = np.argwhere(poison_ids==i)[0]
-    #         poisoned_trainset.append((trainset[i][0]+poison_deltas[idx].cpu(), y_target))
     for i in range(len(trainset)):
         if i not in poison_ids:
             poisoned_trainset.append(trainset[i])
@@ -235,30 +223,8 @@ def generate_poisoned_trainset(trainset, poison_set, poison_deltas, y_target, po
 
 def prepare_poisonset(model, trainset, target_class, poison_num, device):
     """Add poison_deltas to poisoned_samples"""
-    # for debug 
-    # if os.path.exists('ids.npy'):
-    #     poison_ids=np.load('ids.npy')
-    # else:
-    #     poison_ids = select_poison_ids(model, trainset, target_class, poison_num, device)
-    #     np.save('ids.npy', poison_ids)
-
-
-    # !!!!!!!!!!!!!!!!!!!!!!! for quick dev
-    # if os.path.exists('fast_dev_idx.npy'):
-    #     poison_ids = np.load('fast_dev_idx.npy')
-    # else:
-    #     poison_ids = select_poison_ids(model, trainset, target_class, poison_num, device)
-    #     print("poison_selection done")
-    #     np.save('fast_dev_idx.npy', poison_ids)
-
     print("selecting poisons...")
     poison_ids = select_poison_ids(model, trainset, target_class, poison_num, device)
-
-
-
-
-
-
 
     if poison_num <= len(poison_ids): # enough sample in poison set
         poison_set = [deepcopy(trainset[i]) for i in poison_ids]
@@ -271,7 +237,7 @@ def prepare_poisonset(model, trainset, target_class, poison_num, device):
     return poison_set, poison_ids
 
 def extend_source(source_set, source_num):
-    # extend source_set to #source_num samples
+    "Extend source_set to #source_num samples, allowing more samples to poison"
     if source_num==0: # if source num is set to 0, means doesn't need extend source set
         return source_set
     else:
@@ -280,6 +246,19 @@ def extend_source(source_set, source_num):
             new_source_set.extend(source_set)
         return new_source_set[:source_num]
 
+def prepare_dataset(source_num, trainset, testset, y_target, y_source, patch, random_patch):
+    """ prepare benign datasets and source datasets and patched(poisoned) datasets"""
+    if random_patch:
+        print("Adding patch randomly...")
+    else:
+        print("Adding patch to bottom right...")
+    base_source_trainset = [data for data in trainset if data[1]==y_source]
+    source_testset = [data for data in testset if data[1]==y_source]
+    source_trainset = extend_source(base_source_trainset, source_num)
+    patch_source_trainset = patch_source(source_trainset, patch, y_target, random_patch)
+    patch_source_testset = patch_source(source_testset, patch, y_target, random_patch)
+    full_patch_testset = patch_source(testset, patch, y_target, random_patch)
+    return source_trainset, source_testset, patch_source_trainset, patch_source_testset, full_patch_testset
 
 class SleeperAgent(Base):
     """class for SleeperAgent backdoor training and testing.
@@ -330,20 +309,6 @@ class SleeperAgent(Base):
             raise ValueError("Poisoned trainset has not been crafted yet, please call SleeperAgent.train() first")
         else:
             return self.poisoned_train_dataset, self.poisoned_test_dataset
-    
-    def prepare_dataset(self, trainset, testset, y_target, y_source, patch, random_patch):
-        """ prepare benign datasets and source datasets and patched(poisoned) datasets"""
-        if random_patch:
-            print("Adding patch randomly...")
-        else:
-            print("Adding patch to bottom right...")
-        base_source_trainset = [data for data in trainset if data[1]==y_source]
-        source_testset = [data for data in testset if data[1]==y_source]
-        source_trainset = extend_source(base_source_trainset, self.source_num)
-        patch_source_trainset = patch_source(source_trainset, patch, y_target, random_patch)
-        patch_source_testset = patch_source(source_testset, patch, y_target, random_patch)
-        full_patch_testset = patch_source(testset, patch, y_target, random_patch)
-        return source_trainset, source_testset, patch_source_trainset, patch_source_testset, full_patch_testset
 
     def _train_model(self, model, log, trainset, testset, poison_sourceset, poison_testset, augment, device, schedule):
         "train model using given schedule and test with given datasets"
@@ -401,7 +366,7 @@ class SleeperAgent(Base):
         """ craft poison dataset """
         # prepare dataset and patched dataset
         _, source_testset, patch_source_trainset, patch_source_testset, full_patch_testset = \
-            self.prepare_dataset(trainset, testset, y_target, y_source, self.patch, self.random_patch)
+            prepare_dataset(self.source_num, trainset, testset, y_target, y_source, self.patch, self.random_patch)
         print(patch_source_trainset[0][0].mean().item())
         # prepare poison dataset
         poison_set, poison_ids = prepare_poisonset(model, trainset, y_target, poison_num, device)
@@ -559,7 +524,7 @@ class SleeperAgent(Base):
             self.current_schedule['milestones']=self.current_schedule['schedule']  
             self._train_model(self.model, log, self.train_dataset, self.test_dataset, None, None ,augment, device, self.current_schedule)
         elif self.current_schedule['benign_training'] is False:
-            _, _, _, patch_source_testset, patch_testset = self.prepare_dataset(self.train_dataset, self.test_dataset, self.y_target, self.y_source, self.patch, self.random_patch)
+            _, _, _, patch_source_testset, patch_testset = prepare_dataset(self.source_num, self.train_dataset, self.test_dataset, self.y_target, self.y_source, self.patch, self.random_patch)
             log("******pretraining*********\n")
             if ('pretrain' not in self.current_schedule) or ('pretrain' in self.current_schedule and not os.path.exists(self.current_schedule['pretrain'])):
                 self._train_model(model=self.model, 
