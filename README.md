@@ -44,12 +44,11 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |          [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py)         |      Bridging Mode Connectivity in Loss Landscapes and Adversarial Robustness. [ICLR, 2020](https://arxiv.org/pdf/2005.00060.pdf).     | Model Repairing                                     |                                     |
 |          [NAD](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/NAD.py)         |      Neural Attention Distillation: Erasing Backdoor Triggers from Deep Neural Networks. [ICLR, 2021](https://openreview.net/pdf?id=9l0K4OM-oXE).     | Model Repairing                                     |  first distillation-based defense                                   |
 |          [Pruning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/Pruning.py)         |      Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks. [RAID, 2018](https://arxiv.org/pdf/1805.12185.pdf).     | Model Repairing                                     |                                     |
-
+|          [ABL](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ABL.py)         |      Anti-Backdoor Learning: Training Clean Models on Poisoned Data. [NeurIPS, 2021](https://arxiv.org/pdf/2110.11571.pdf).     | Poison Suppression                                     |                                     |
 
 ## Methods Under Development
 - DBD
 - SS
-- ABL
 - AutoEncoder
 - Neural Cleanse
 - DP
