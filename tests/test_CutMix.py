@@ -1,5 +1,5 @@
 '''
-This is the test code of NAD defense.
+This is the test code of CutMix defense.
 '''
 
 
