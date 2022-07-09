@@ -1,5 +1,5 @@
 '''
-This is the test code of ShrinkPad defense.
+This is the test code of AutoEncoder defense.
 '''
 
 
@@ -24,18 +24,17 @@ global_seed = 666
 deterministic = True
 torch.manual_seed(global_seed)
 datasets_root_dir = '../datasets'
-CUDA_VISIBLE_DEVICES = '4'
-size_map = 32
-pad = 4
+CUDA_VISIBLE_DEVICES = '1'
 batch_size = 128
 num_workers = 4
+autoencoder_model_path = '/data/yamengxi/Backdoor/BackdoorBox/experiments/AutoEncoder3x32x32_CIFAR-10_train_2022-07-07_21:17:42/ckpt_epoch_100.pth'
 
 
 def test(model_name, dataset_name, attack_name, defense_name, model, model_path, benign_dataset, attacked_dataset, defense, y_target):
     if dataset_name == 'CIFAR-10':
         data = any2tensor(benign_dataset.data)
         data = data.permute((0, 3, 1, 2))
-        data = defense.preprocess(data, size_map=size_map, pad=pad)
+        data = defense.preprocess(data.float() / 255)
 
         schedule = {
             'device': 'GPU',
@@ -46,7 +45,7 @@ def test(model_name, dataset_name, attack_name, defense_name, model, model_path,
             'batch_size': batch_size,
             'num_workers': num_workers,
         }
-        res = defense.predict(model, data.float() / 255, schedule, size_map=size_map, pad=pad)
+        res = defense.predict(model, data.float() / 255, schedule)
 
     schedule = {
         'device': 'GPU',
@@ -88,8 +87,8 @@ def test(model_name, dataset_name, attack_name, defense_name, model, model_path,
     defense.test(model, attacked_dataset, schedule)
 
 
-# ========== ResNet-18_CIFAR-10_Attack_ShrinkPad ==========
-model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'CIFAR-10', 'Benign', 'ShrinkPad'
+# ========== ResNet-18_CIFAR-10_Attack_AutoEncoder ==========
+model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'CIFAR-10', 'Benign', 'AutoEncoder'
 
 model = core.models.ResNet(18)
 
@@ -106,9 +105,9 @@ transform_test = Compose([
 ])
 testset = dataset(datasets_root_dir, train=False, transform=transform_test, download=True)
 
-defense = core.ShrinkPad(
-    size_map=size_map,
-    pad=pad,
+defense = core.AutoEncoderDefense(
+    autoencoder=core.models.AutoEncoder(img_size=(3, 32, 32)),
+    pretrain=autoencoder_model_path,
     seed=global_seed,
     deterministic=deterministic
 )
@@ -251,8 +250,8 @@ poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
 test(model_name, dataset_name, attack_name, defense_name, model, model_path, testset, poisoned_testset, defense, 2)
 
 
-# ========== ResNet-18_GTSRB_Attack_ShrinkPad ==========
-model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'GTSRB', 'Benign', 'ShrinkPad'
+# ========== ResNet-18_GTSRB_Attack_AutoEncoder ==========
+model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'GTSRB', 'Benign', 'AutoEncoder'
 
 model = core.models.ResNet(18, 43)
 
@@ -284,9 +283,9 @@ testset = DatasetFolder(
     target_transform=None,
     is_valid_file=None)
 
-defense = core.ShrinkPad(
-    size_map=size_map,
-    pad=pad,
+defense = core.AutoEncoderDefense(
+    autoencoder=core.models.AutoEncoder(img_size=(3, 32, 32)),
+    pretrain=autoencoder_model_path,
     seed=global_seed,
     deterministic=deterministic
 )
