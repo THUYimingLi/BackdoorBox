@@ -1,3 +1,13 @@
+
+
+'''
+This is the implement of pre-processing-based backdoor defense with auto-encoder [1].
+
+Reference:
+[1] Neural Trojans. ICCD, 2017.
+'''
+
+
 from copy import deepcopy
 import os
 import os.path as osp

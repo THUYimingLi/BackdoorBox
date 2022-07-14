@@ -39,6 +39,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 ## Backdoor Defenses
 |                                                    **Method**                                                   |       **Source**      | **Defense Type**                                         | **Additional Notes**                                                    |
 |:---------------------------------------------------------------------------------------------------------------:|:---------------------:|------------------------------------------------------------|-------------------------------------------------------------|
+|             [AutoEncoderDefense](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/AutoEncoderDefense.py)             |   Neural Trojans. [ICCD, 2017](https://arxiv.org/pdf/1710.00942.pdf).    | Sample Pre-processing                                                | first pre-processing-based defense                                     |
 |             [ShrinkPad](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ShrinkPad.py)             |   Backdoor Attack in the Physical World. [ICLR Workshop, 2021](https://arxiv.org/pdf/2104.02361.pdf).    | Sample Pre-processing                                                | efficient defense                                     |
 |          [FineTuning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FineTuning.py)         |      Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks. [RAID, 2018](https://arxiv.org/pdf/1805.12185.pdf).     | Model Repairing                                     | first defense based on model repairing                                      |
 |          [Pruning](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/Pruning.py)         |      Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks. [RAID, 2018](https://arxiv.org/pdf/1805.12185.pdf).     | Model Repairing                                     |                                     |
@@ -49,7 +50,6 @@ Currently, this toolbox is still under development (but the attack parts are alm
 ## Methods Under Development
 - DBD
 - SS
-- AutoEncoder
 - Neural Cleanse
 - DP
 - CutMix
