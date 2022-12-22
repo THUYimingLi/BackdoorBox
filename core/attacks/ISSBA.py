@@ -19,6 +19,7 @@ import lpips
 from torch.utils.data import DataLoader
 import imageio
 from torchvision import transforms
+from torchvision.datasets import CIFAR10
 
 
 class Normalize:
@@ -45,23 +46,23 @@ class Normalize:
         return x_clone
 
 
-class GetPoisonedDataset(torch.utils.data.Dataset):
+class GetPoisonedDataset(CIFAR10):
     """Construct a dataset.
 
     Args:
         data_list (list): the list of data.
         labels (list): the list of label.
     """
-    def __init__(self, data_list, labels):
-        self.data_list = data_list
-        self.labels = labels
+    def __init__(self, data, targets):
+        self.data = data
+        self.targets = targets
 
     def __len__(self):
-        return len(self.data_list)
+        return len(self.targets)
 
     def __getitem__(self, index):
-        img = torch.tensor(self.data_list[index])
-        label = torch.tensor(self.labels[index])
+        img = torch.tensor(self.data[index])
+        label = torch.tensor(self.targets[index])
         return img, label
 
 
@@ -583,13 +584,7 @@ class ISSBA(Base):
                  loss,
                  y_target,
                  poisoned_rate,
-                 secret_size,
-                 enc_height,
-                 enc_width,
-                 enc_in_channel,
-                 enc_total_epoch,
-                 enc_secret_only_epoch,
-                 enc_use_dis=False,
+                 encoder_schedule,
                  encoder=None,
                  schedule=None,
                  seed=0,
@@ -605,11 +600,8 @@ class ISSBA(Base):
             deterministic=deterministic)
         self.dataset_name = dataset_name
         self.train_steg_set = train_steg_set
-        self.secret_size = secret_size
-        self.enc_total_epoch = enc_total_epoch
-        self.enc_secret_only_epoch = enc_secret_only_epoch
-        self.enc_use_dis = enc_use_dis
         self.encoder = encoder
+        self.encoder_schedule = encoder_schedule
 
         total_num = len(train_dataset)
         poisoned_num = int(total_num * poisoned_rate)
@@ -624,24 +616,12 @@ class ISSBA(Base):
 
         if dataset_name == "cifar10":
             self.normalizer = Normalize(dataset_name, [0.4914, 0.4822, 0.4465], [0.247, 0.243, 0.261])
-            self.enc_height = 32
-            self.enc_width = 32
-            self.enc_in_channel = 3
         elif dataset_name == "mnist":
             self.normalizer = Normalize(dataset_name, [0.5], [0.5])
-            self.enc_height = 28
-            self.enc_width = 28
-            self.enc_in_channel = 1
         elif dataset_name == "gtsrb":
             self.normalizer = None
-            self.enc_height = 32
-            self.enc_width = 32
-            self.enc_in_channel = 3
         else:
             self.normalizer = None
-            self.enc_height = enc_height
-            self.enc_width = enc_width
-            self.enc_in_channel = enc_in_channel
 
     def get_model(self):
         return self.model
@@ -687,13 +667,29 @@ class ISSBA(Base):
         else:
             device = self.device if self.device else torch.device("cuda:0")
         if self.dataset_name == 'mnist':
-            self.encoder = MNISTStegaStampEncoder(secret_size=self.secret_size, height=self.enc_height, width=self.enc_width, in_channel=self.enc_in_channel).to(device)
-            self.decoder = MNISTStegaStampDecoder(secret_size=self.secret_size, height=self.enc_height, width=self.enc_width, in_channel=self.enc_in_channel).to(device)
-            self.discriminator = MNISTDiscriminator(in_channel=self.enc_in_channel).to(device)
+            self.encoder = MNISTStegaStampEncoder(
+                secret_size=self.encoder_schedule['secret_size'], 
+                height=self.encoder_schedule['enc_height'], 
+                width=self.encoder_schedule['enc_width'],
+                in_channel=self.encoder_schedule['enc_in_channel']).to(self.device)
+            self.decoder = MNISTStegaStampDecoder(
+                secret_size=self.encoder_schedule['secret_size'], 
+                height=self.encoder_schedule['enc_height'], 
+                width=self.encoder_schedule['enc_width'],
+                in_channel=self.encoder_schedule['enc_in_channel']).to(self.device)
+            self.discriminator = MNISTDiscriminator(in_channel=self.encoder_schedule['enc_in_channel']).to(device)
         else:
-            self.encoder = StegaStampEncoder(secret_size=self.secret_size, height=self.enc_height, width=self.enc_width, in_channel=self.enc_in_channel).to(device)
-            self.decoder = StegaStampDecoder(secret_size=self.secret_size, height=self.enc_height, width=self.enc_width, in_channel=self.enc_in_channel).to(device)
-            self.discriminator = Discriminator(in_channel=self.enc_in_channel).to(device)
+            self.encoder = StegaStampEncoder(
+                secret_size=self.encoder_schedule['secret_size'], 
+                height=self.encoder_schedule['enc_height'], 
+                width=self.encoder_schedule['enc_width'],
+                in_channel=self.encoder_schedule['enc_in_channel']).to(self.device)
+            self.decoder = StegaStampDecoder(
+                secret_size=self.encoder_schedule['secret_size'], 
+                height=self.encoder_schedule['enc_height'], 
+                width=self.encoder_schedule['enc_width'],
+                in_channel=self.encoder_schedule['enc_in_channel']).to(self.device)
+            self.discriminator = Discriminator(in_channel=self.encoder_schedule['enc_in_channel']).to(device)
         train_dl = DataLoader(
             self.train_steg_set,
             batch_size=32,
@@ -701,8 +697,8 @@ class ISSBA(Base):
             num_workers=8,
             worker_init_fn=self._seed_worker)
 
-        enc_total_epoch = self.enc_total_epoch
-        enc_secret_only_epoch = self.enc_secret_only_epoch
+        enc_total_epoch = self.encoder_schedule['enc_total_epoch']
+        enc_secret_only_epoch = self.encoder_schedule['enc_secret_only_epoch']
         optimizer = torch.optim.Adam([{'params': self.encoder.parameters()}, {'params': self.decoder.parameters()}], lr=0.0001)
         d_optimizer = torch.optim.RMSprop(self.discriminator.parameters(), lr=0.00001)
         loss_fn_alex = lpips.LPIPS(net='alex').cuda()
@@ -743,7 +739,7 @@ class ISSBA(Base):
                 optimizer.step()
                 self.reset_grad(optimizer, d_optimizer)
 
-                if epoch >= enc_secret_only_epoch and self.enc_use_dis:
+                if epoch >= enc_secret_only_epoch and self.encoder_schedule['enc_use_dis']:
                     residual = self.encoder([secret_input, image_input])
                     encoded_image = image_input + residual
                     encoded_image = encoded_image.clamp(0, 1)
@@ -764,7 +760,7 @@ class ISSBA(Base):
                 msg = f'Epoch [{epoch + 1}] total loss: {np.mean(loss_list)}, bit acc: {np.mean(bit_acc_list)}\n'
                 self.log(msg)
 
-        savepath = os.path.join(self.work_dir, 'best_model.pth')
+        savepath = os.path.join(self.work_dir, 'encoder_decoder.pth')
         state = {
             'encoder_state_dict': self.encoder.state_dict(),
             'decoder_state_dict': self.decoder.state_dict(),
@@ -814,8 +810,10 @@ class ISSBA(Base):
         self.log = Log(osp.join(self.work_dir, 'log.txt'))
 
         if self.encoder is None:
+            assert self.encoder_schedule is not None
             self.train_encoder_decoder(train_only=False)
         self.get_img()
+        del self.train_steg_set
 
         trainset, testset = self.train_dataset, self.test_dataset
         train_dl = DataLoader(
@@ -834,7 +832,7 @@ class ISSBA(Base):
         encoder = self.encoder
         encoder = encoder.eval()
 
-        secret = torch.FloatTensor(np.random.binomial(1, .5, self.secret_size).tolist()).to(self.device)
+        secret = torch.FloatTensor(np.random.binomial(1, .5, self.encoder_schedule['secret_size']).tolist()).to(self.device)
 
         cln_train_dataset, cln_train_labset, bd_train_dataset, bd_train_labset = [], [], [], []
         for idx, (img, lab) in enumerate(train_dl):
@@ -904,7 +902,6 @@ class ISSBA(Base):
         for i in range(self.current_schedule['epochs']):
             self.adjust_learning_rate(optimizer, i)
             loss_list = []
-            self.train_poisoned_data, self.train_poisoned_label = [], []
             for (inputs, targets), (inputs_trigger, targets_trigger) in zip(cln_train_dl, bd_train_dl):
                 inputs = torch.cat((inputs, inputs_trigger), 0)
                 targets = torch.cat((targets, targets_trigger), 0)
@@ -915,9 +912,6 @@ class ISSBA(Base):
 
                 inputs = inputs.to(device)
                 targets = targets.to(device)
-
-                self.train_poisoned_data += inputs.cpu().detach().numpy().tolist()
-                self.train_poisoned_label += targets.cpu().detach().numpy().tolist()
 
                 optimizer.zero_grad()
                 predict_digits = self.model(inputs)
@@ -963,6 +957,21 @@ class ISSBA(Base):
                 torch.save(self.model.state_dict(), ckpt_model_path)
                 self.model = self.model.to(device)
                 self.model.train()
+
+        self.train_poisoned_data, self.train_poisoned_label = [], []
+        for (inputs, targets), (inputs_trigger, targets_trigger) in zip(cln_train_dl, bd_train_dl):
+            inputs = torch.cat((inputs, inputs_trigger), 0)
+            targets = torch.cat((targets, targets_trigger), 0)
+            if self.normalizer:
+                inputs = self.normalizer(inputs)
+            if self.post_transforms:
+                inputs = self.post_transforms(inputs)
+
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+
+            self.train_poisoned_data += inputs.cpu().detach().numpy().tolist()
+            self.train_poisoned_label += targets.cpu().detach().numpy().tolist()
 
         self.test_poisoned_data, self.test_poisoned_label = [], []
         bd_test_dl = DataLoader(
@@ -1093,14 +1102,24 @@ class ISSBA(Base):
         Args:
             path (str): The path of the saved image steganography encoder.
         """
+        
+    
         if path is not None:
             device = torch.device("cuda:0")
             if self.device is None:
                 self.device = device
-            encoder = StegaStampEncoder(secret_size=20, height=32, width=32, in_channel=3).to(self.device)
-            decoder = StegaStampDecoder(secret_size=20, height=32, width=32, in_channel=3).to(self.device)
-            encoder.load_state_dict(torch.load(os.path.join(path, 'best_model.pth'))['encoder_state_dict'])
-            decoder.load_state_dict(torch.load(os.path.join(path, 'best_model.pth'))['decoder_state_dict'])
+            encoder = StegaStampEncoder(
+                secret_size=self.encoder_schedule['secret_size'], 
+                height=self.encoder_schedule['enc_height'], 
+                width=self.encoder_schedule['enc_width'], 
+                in_channel=self.encoder_schedule['enc_in_channel']).to(self.device)
+            decoder = StegaStampDecoder(
+                secret_size=self.encoder_schedule['secret_size'], 
+                height=self.encoder_schedule['enc_height'], 
+                width=self.encoder_schedule['enc_width'],
+                in_channel=self.encoder_schedule['enc_in_channel']).to(self.device)
+            encoder.load_state_dict(torch.load(os.path.join(path, 'encoder_decoder.pth'))['encoder_state_dict'])
+            decoder.load_state_dict(torch.load(os.path.join(path, 'encoder_decoder.pth'))['decoder_state_dict'])
         else:
             encoder = self.encoder
             decoder = self.decoder
