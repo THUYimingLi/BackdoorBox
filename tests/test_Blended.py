@@ -123,6 +123,7 @@ schedule = {
 blended.train(schedule)
 benign_model = blended.get_model()
 
+
 # Test Benign Model
 test_schedule = {
     'device': 'GPU',
@@ -137,7 +138,6 @@ test_schedule = {
     'experiment_name': 'test_benign_MNIST_Blended'
 }
 blended.test(test_schedule)
-
 
 blended.model = core.models.BaselineMNISTNetwork()
 # Train Infected Model
@@ -169,6 +169,7 @@ schedule = {
 
 blended.train(schedule)
 infected_model = blended.get_model()
+
 
 # Test Infected Model
 test_schedule = {
