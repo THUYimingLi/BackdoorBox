@@ -129,6 +129,15 @@ schedule = {
     'experiment_name': 'train_poison_DataFolder_GTSRB_ISSBA'
 }
 
+encoder_schedule = {
+    'secret_size': secret_size,
+    'enc_height': 32,
+    'enc_width': 32,
+    'enc_in_channel': 3,
+    'enc_total_epoch': 20,
+    'enc_secret_only_epoch': 2,
+    'enc_use_dis': False,
+}
 
 # Configure the attack scheme
 ISSBA = core.ISSBA(
@@ -140,13 +149,7 @@ ISSBA = core.ISSBA(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,      # follow the default configure in the original paper
-    secret_size=secret_size,
-    enc_height=32,
-    enc_width=32,
-    enc_in_channel=3,
-    enc_total_epoch=20,
-    enc_secret_only_epoch=2,
-    enc_use_dis=False,
+    encoder_schedule=encoder_schedule,
     encoder=None,
     schedule=schedule,
     seed=global_seed,
@@ -229,6 +232,15 @@ schedule = {
     'experiment_name': 'train_poison_DataFolder_CIFAR10_ISSBA'
 }
 
+encoder_schedule = {
+    'secret_size': secret_size,
+    'enc_height': 32,
+    'enc_width': 32,
+    'enc_in_channel': 3,
+    'enc_total_epoch': 20,
+    'enc_secret_only_epoch': 2,
+    'enc_use_dis': False,
+}
 
 # Configure the attack scheme
 ISSBA = core.ISSBA(
@@ -240,13 +252,7 @@ ISSBA = core.ISSBA(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,      # follow the default configure in the original paper
-    secret_size=secret_size,
-    enc_height=32,
-    enc_width=32,
-    enc_in_channel=3,
-    enc_total_epoch=20,
-    enc_secret_only_epoch=2,
-    enc_use_dis=False,
+    encoder_schedule=encoder_schedule,
     encoder=None,
     schedule=schedule,
     seed=global_seed,
@@ -327,6 +333,15 @@ schedule = {
     'experiment_name': 'train_poison_DataFolder_MNIST_ISSBA'
 }
 
+encoder_schedule = {
+    'secret_size': secret_size,
+    'enc_height': 28,
+    'enc_width': 28,
+    'enc_in_channel': 1,
+    'enc_total_epoch': 20,
+    'enc_secret_only_epoch': 2,
+    'enc_use_dis': False,
+}
 
 # Configure the attack scheme
 ISSBA = core.ISSBA(
@@ -337,14 +352,8 @@ ISSBA = core.ISSBA(
     model=core.models.BaselineMNISTNetwork(),
     loss=nn.CrossEntropyLoss(),
     y_target=1,
-    poisoned_rate=0.1,      # follow the default configure in the original paper
-    secret_size=secret_size,
-    enc_height=28,
-    enc_width=28,
-    enc_in_channel=1,
-    enc_total_epoch=20,
-    enc_secret_only_epoch=2,
-    enc_use_dis=False,
+    poisoned_rate=0.2,      # follow the default configure in the original paper
+    encoder_schedule=encoder_schedule,
     encoder=None,
     schedule=schedule,
     seed=global_seed,
@@ -416,6 +425,15 @@ schedule = {
     'experiment_name': 'train_poison_DataFolder_Other_ISSBA'
 }
 
+encoder_schedule = {
+    'secret_size': secret_size,
+    'enc_height': 224,
+    'enc_width': 224,
+    'enc_in_channel': 3,
+    'enc_total_epoch': 20,
+    'enc_secret_only_epoch': 2,
+    'enc_use_dis': False,
+}
 
 # Configure the attack scheme
 ISSBA = core.ISSBA(
@@ -427,13 +445,6 @@ ISSBA = core.ISSBA(
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,      # follow the default configure in the original paper
-    secret_size=secret_size,
-    enc_height=224,
-    enc_width=224,
-    enc_in_channel=3,
-    enc_total_epoch=20,
-    enc_secret_only_epoch=2,
-    enc_use_dis=False,
     encoder=None,
     schedule=schedule,
     seed=global_seed,
