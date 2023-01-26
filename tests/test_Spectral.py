@@ -510,7 +510,7 @@ test_spectral(defense=defense,
 
 torch.manual_seed(global_seed)
 adv_model = core.models.ResNet(18, 43)
-adv_ckpt = torch.load('/data/ganguanhao/BackdoorBox/experiments/train_GTSRB_Benign_2022-07-04_10:34:40/ckpt_epoch_100.pth')
+adv_ckpt = torch.load('/data/xutong/BackdoorBox/experiments/train_GTSRB_Benign_2022-07-04_10:34:40/ckpt_epoch_100.pth')
 adv_model.load_state_dict(adv_ckpt)
 
 pattern = torch.zeros((32, 32), dtype=torch.uint8)
