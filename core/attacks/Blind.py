@@ -629,7 +629,7 @@ class Blind(Base):
                 self.nc_model = self.nc_model.cpu()
                 ckpt_model_filename = "ckpt_epoch_" + str(i+1) + ".pth"
                 ckpt_model_path = os.path.join(work_dir, ckpt_model_filename)
-                ckpt = {'model':self.model.state_dict(), 'nc_model':self.nc_model}
+                ckpt = {'model':self.model.state_dict(), 'nc_model':self.nc_model.state_dict()}
                 torch.save(ckpt, ckpt_model_path)
                 self.model = self.model.to(device)
                 self.model.train()
@@ -683,7 +683,7 @@ class Blind(Base):
         if model is None:
             model = self.model
         if nc_model is None:
-            model = self.nc_model
+            nc_model = self.nc_model
 
         if 'test_model' in self.current_schedule:
             ckpt = torch.load(self.current_schedule['test_model'])
