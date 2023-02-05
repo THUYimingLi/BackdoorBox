@@ -65,6 +65,7 @@ The benchmark is coming soon.
 | ------------------- | ------------------------------------------------------------ |
 | Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Guanhao Gan](https://github.com/GuanhaoGan), [Kuofeng Gao](https://github.com/KuofengGao), [Xin Yan](https://scholar.google.com/citations?hl=zh-CN&user=08WTTPMAAAAJ), [Jia Xu](https://www.researchgate.net/profile/Xu-Jia-10), [Tong Xu](https://github.com/spicy1007), [Sheng Yang](https://github.com/20000yshust), [Haoxiang Zhong](https://scholar.google.com/citations?user=VOw9qmYAAAAJ&hl=zh-CN&oi=ao), [Linghui Zhu](https://github.com/zlh-thu)
 | Tencent Security Zhuque Lab | [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN) |
+| ShanghaiTech University | [Zhe Zhao](https://s3l.shanghaitech.edu.cn/people/zhezhao/) |
 
 ## Citation
 If our toolbox is useful for your research, please cite our paper(s) as follows:
