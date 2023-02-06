@@ -70,10 +70,11 @@ The benchmark is coming soon.
 ## Citation
 If our toolbox is useful for your research, please cite our paper(s) as follows:
 ```
-@article{li2022backdoorbox,
+@article{li2023backdoorbox,
   title={{BackdoorBox}: A Python Toolbox for Backdoor Learning},
   author={Li, Yiming and Ya, Mengxi and Bai, Yang and Jiang, Yong and Xia, Shu-Tao},
-  year={2022}
+  journal={arXiv preprint arXiv:2302.01762},
+  year={2023}
 }
 ```
 
