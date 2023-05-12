@@ -158,7 +158,7 @@ class AddMNISTTrigger(AddTrigger):
 
 
 class AddCIFAR10Trigger(AddTrigger):
-    """Add watermarked trigger to MNIST image.
+    """Add watermarked trigger to CIFAR10 image.
 
     Args:
         pattern (None | torch.Tensor): shape (3, 32, 32) or (32, 32).
