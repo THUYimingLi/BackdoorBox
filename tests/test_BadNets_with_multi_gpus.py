@@ -19,8 +19,8 @@ import core
 global_seed = 666
 deterministic = True
 torch.manual_seed(global_seed)
-# CUDA_SELECTED_DEVICES = '0,3'
-CUDA_SELECTED_DEVICES = '0'
+CUDA_SELECTED_DEVICES = '0,3'
+# CUDA_SELECTED_DEVICES = '0'
 datasets_root_dir = '../datasets'
 
 
