@@ -4,15 +4,15 @@ This is the test code of benign training and poisoned training under BadNets.
 
 
 import os
-import sys
+
 import cv2
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
 import torchvision
-from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizontalFlip, ColorJitter, RandomAffine
+from torchvision.transforms import Compose, ToTensor
 import torchvision.transforms as transforms
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import core
 
 global_seed = 666
