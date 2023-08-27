@@ -148,6 +148,123 @@ class PoisonedTestDatasetFolder(DatasetFolder):
 
         return sample, target
 
+class PoisonedTrainMNIST(MNIST):
+    def __init__(self,
+                 benign_dataset,
+                 y_target,
+                 poisoned_rate,
+                 poisoned_transform_index,
+                 poisoned_target_transform_index):
+        super(PoisonedTrainMNIST, self).__init__(
+            benign_dataset.root,
+            benign_dataset.train,
+            benign_dataset.transform,
+            benign_dataset.target_transform,
+            download=True)
+        total_num = len(benign_dataset)
+        poisoned_num = int(total_num * poisoned_rate)
+        assert poisoned_num >= 0, 'poisoned_num should greater than or equal to zero.'
+        tmp_list = list(range(total_num))
+        random.shuffle(tmp_list)
+        self.poisoned_set = frozenset(tmp_list[:poisoned_num])
+
+        # Add trigger to images
+        if self.transform is None:
+            self.poisoned_transform = Compose([])
+        else:
+            self.poisoned_transform = copy.deepcopy(self.transform)
+    
+        # Modify labels
+        if self.target_transform is None:
+            self.poisoned_target_transform = Compose([])
+        else:
+            self.poisoned_target_transform = copy.deepcopy(self.target_transform)
+        self.poisoned_target_transform.transforms.insert(poisoned_target_transform_index, ModifyTarget(y_target))
+
+    def __getitem__(self, index):
+        img, target = self.data[index], int(self.targets[index])
+
+        # doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+        img = Image.fromarray(img.numpy(), mode='L')
+        transform1 = Compose([RandomAffine(degrees=10)])
+        transform2 = Compose([ToTensor()])
+        transform3 = Compose([ToPILImage()])
+        if index in self.poisoned_set:
+            img = self.poisoned_transform(img)
+            img = transform3(img)
+            img = img.rotate(16)
+            img = transform2(img)
+            target = self.poisoned_target_transform(target)
+        else:
+            if self.transform is not None:
+                img = self.transform(img)
+                img = transform1(img)
+
+            if self.target_transform is not None:
+                target = self.target_transform(target)
+
+        return img, target
+
+class PoisonedTestMNIST(MNIST):
+    def __init__(self,
+                 benign_dataset,
+                 y_target,
+                 poisoned_rate,
+                 poisoned_transform_index,
+                 poisoned_target_transform_index):
+        super(PoisonedTestMNIST, self).__init__(
+            benign_dataset.root,
+            benign_dataset.train,
+            benign_dataset.transform,
+            benign_dataset.target_transform,
+            download=True)
+        total_num = len(benign_dataset)
+        poisoned_num = int(total_num * poisoned_rate)
+        assert poisoned_num >= 0, 'poisoned_num should greater than or equal to zero.'
+        tmp_list = list(range(total_num))
+        random.shuffle(tmp_list)
+        self.poisoned_set = frozenset(tmp_list[:poisoned_num])
+
+        # Add trigger to images
+        if self.transform is None:
+            self.poisoned_transform = Compose([])
+        else:
+            self.poisoned_transform = copy.deepcopy(self.transform)
+
+        # Modify labels
+        if self.target_transform is None:
+            self.poisoned_target_transform = Compose([])
+        else:
+            self.poisoned_target_transform = copy.deepcopy(self.target_transform)
+        self.poisoned_target_transform.transforms.insert(poisoned_target_transform_index, ModifyTarget(y_target))
+
+    def __getitem__(self, index):
+        img, target = self.data[index], int(self.targets[index])
+
+        # doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+        img = Image.fromarray(img.numpy(), mode='L')
+        transform1 = Compose([RandomAffine(degrees=10)])
+        transform2 = Compose([ToTensor()])
+        transform3 = Compose([ToPILImage()])
+        if index in self.poisoned_set:
+            img = self.poisoned_transform(img)
+            img = transform3(img)
+            img = img.rotate(16)
+            img = transform2(img)
+            target = self.poisoned_target_transform(target)
+        else:
+            if self.transform is not None:
+                img = self.transform(img)
+                img = transform1(img)
+
+            if self.target_transform is not None:
+                target = self.target_transform(target)
+
+        return img, target
+
+
 class PoisonedTrainCIFAR10(CIFAR10):
     def __init__(self,
                  benign_dataset,
@@ -272,6 +389,8 @@ def CreatePoisonedTrainDataset(benign_dataset, y_target, poisoned_rate, poisoned
     class_name = type(benign_dataset)
     if class_name == DatasetFolder:
         return PoisonedTrainDatasetFolder(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index)
+    elif class_name == MNIST:
+        return PoisonedTrainMNIST(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index)
     elif class_name == CIFAR10:
         return PoisonedTrainCIFAR10(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index)
     else:
@@ -281,13 +400,15 @@ def CreatePoisonedTestDataset(benign_dataset, y_target, poisoned_rate, poisoned_
     class_name = type(benign_dataset)
     if class_name == DatasetFolder:
         return PoisonedTestDatasetFolder(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index)
+    elif class_name == MNIST:
+        return PoisonedTestMNIST(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index)
     elif class_name == CIFAR10:
         return PoisonedTestCIFAR10(benign_dataset, y_target, poisoned_rate, poisoned_transform_index, poisoned_target_transform_index)
     else:
         raise NotImplementedError
 
 
-class BATT_R(Base):
+class BATT(Base):
     """Construct poisoned datasets with BadNets method.
 
     Args:
@@ -323,7 +444,7 @@ class BATT_R(Base):
                  deterministic=False,
                  ):
 
-        super(BATT_R, self).__init__(
+        super(BATT, self).__init__(
             train_dataset=train_dataset,
             test_dataset=test_dataset,
             model=model,

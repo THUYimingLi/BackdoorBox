@@ -12,18 +12,73 @@ from torch.utils.data import Dataset
 import torchvision
 from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizontalFlip, ColorJitter, RandomAffine
 import torchvision.transforms as transforms
-#sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import train
-import network
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import core
 
 global_seed = 666
 deterministic = True
 torch.manual_seed(global_seed)
 
-# ============== cifar10 ==============
+# # ============== cifar10 ==============
+# # Define Benign Training and Testing Dataset
+# dataset = torchvision.datasets.CIFAR10
+
+# transform_train = Compose([
+#     ToTensor(),
+# ])
+# trainset = dataset('data', train=True, transform=transform_train, download=True)
+
+# transform_test = Compose([
+#     ToTensor()
+# ])
+# testset = dataset('data', train=False, transform=transform_test, download=True)
+
+# badnets = core.BATT(
+#     train_dataset=trainset,
+#     test_dataset=testset,
+#     model=core.models.ResNet(18),
+#     loss=nn.CrossEntropyLoss(),
+#     y_target=1,
+#     poisoned_rate=0.05,
+#     seed=global_seed,
+#     deterministic=deterministic
+# )
+
+# poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
+
+# # Train Infected Model
+# schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': '0',
+#     'GPU_num': 1,
+
+#     'benign_training': False, # Train Infected Model
+#     'batch_size': 128,
+#     'num_workers': 8,
+
+#     'lr': 0.1,
+#     'momentum': 0.9,
+#     'weight_decay': 5e-4,
+#     'gamma': 0.1,
+#     'schedule': [150, 180],
+
+#     'epochs': 200,
+
+#     'log_iteration_interval': 100,
+#     'test_epoch_interval': 10,
+#     'save_epoch_interval': 10,
+
+#     'save_dir': './result/',
+#     'experiment_name': 'batt_cifar10'
+# }
+
+# badnets.train(schedule)
+# infected_model = badnets.get_model()
+
+
+# ============== mnist ==============
 # Define Benign Training and Testing Dataset
-dataset = torchvision.datasets.CIFAR10
-#dataset = torchvision.datasets.MNIST
+dataset = torchvision.datasets.MNIST
 
 
 transform_train = Compose([
@@ -36,10 +91,10 @@ transform_test = Compose([
 ])
 testset = dataset('data', train=False, transform=transform_test, download=True)
 
-badnets = train.BATT_R(
+badnets = core.BATT(
     train_dataset=trainset,
     test_dataset=testset,
-    model=network.ResNet(18),
+    model=core.models.BaselineMNISTNetwork(),
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
@@ -72,11 +127,12 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': './result/',
-    'experiment_name': 'batt_r_cifar10'
+    'experiment_name': 'batt_mnist'
 }
 
 badnets.train(schedule)
 infected_model = badnets.get_model()
+
 
 
 # ============== GTSRB ==============
@@ -109,10 +165,10 @@ testset = dataset(
     target_transform=None,
     is_valid_file=None)
 
-badnets = train.BATT_R(
+badnets = core.BATT(
     train_dataset=trainset,
     test_dataset=testset,
-    model=network.ResNet(18,43),
+    model=core.models.ResNet(18,43),
     loss=nn.CrossEntropyLoss(),
     y_target=1,
     poisoned_rate=0.05,
@@ -147,7 +203,7 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': './result/',
-    'experiment_name': 'batt_r_gtsrb'
+    'experiment_name': 'batt_gtsrb'
 }
 
 badnets.train(schedule)
