@@ -127,7 +127,7 @@ def test(defense, defend, model_name, dataset_name, attack_name, defense_name, s
         'test_schedule': test_schedule,
     }
 
-    defense.repair(split_ratio=split_ratio, 
+    defense.train(split_ratio=split_ratio, 
                    isolation_criterion = isolation_criterion,
                    gamma = gamma, 
                    schedule=schedule,

@@ -111,13 +111,17 @@ class ABL(Base):
         return 
 
     def get_filtered_poisoned_dataset(self):
-        "Return filtered poisoned dataset. Must call ABL.repair() first to filter out poisoned samples."
+        "Return filtered poisoned dataset. Must call ABL.train() first to filter out poisoned samples."
         if hasattr(self, "poisoned_dataset"):
             return self.poisoned_dataset
         else:
-            raise ValueError("Must call ABL.repair() first to filter out poisoned samples")
+            raise ValueError("Must call ABL.train() first to filter out poisoned samples")
+        
+    def get_model(self):
+        """Return trained model. Should call ABL.train() first to train model. """
+        return self.model
 
-    def repair(self, split_ratio, isolation_criterion, gamma, schedule, transform, selection_criterion):
+    def train(self, split_ratio, isolation_criterion, gamma, schedule, transform, selection_criterion):
         """Perform ABL defense method based on attacked models. 
         The repaired model will be stored in self.model
         

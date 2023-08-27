@@ -22,5 +22,3 @@ def compute_indexes(tp, fp, tn, fn):
     recall = tp / (tp+fn)                  # 召回率
     F1 = (2*precision*recall) / (precision+recall)    # F1
     return accuracy, precision, recall, F1
-
-

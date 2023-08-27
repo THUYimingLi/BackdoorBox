@@ -9,7 +9,7 @@ Backdoor attacks are emerging yet critical threats in the training process of de
 
 [BackdoorBox](https://www.researchgate.net/publication/359439455_BackdoorBox_A_Python_Toolbox_for_Backdoor_Learning) is an open-sourced Python toolbox, aiming to implement representative and advanced backdoor attacks and defenses under a unified framework that can be used in a flexible manner. We will keep updating this toolbox to track the latest backdoor attacks and defenses. 
 
-Currently, this toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, **users can easily implement our provided methods by referring to the `tests` sub-folder to see the example codes of each implemented method**. In particular, you are always welcome to contribute your backdoor attacks or defenses by pull requests!
+Currently, this toolbox is still under development (but the attack parts are almost done) and there is no user manual yet. However, **users can easily implement our provided methods by referring to the `tests` sub-folder to see the example codes of each implemented method**. Please refer to [our paper](https://www.researchgate.net/publication/359439455_BackdoorBox_A_Python_Toolbox_for_Backdoor_Learning) for more details! In particular, you are always welcome to contribute your backdoor attacks or defenses by pull requests!
 
 
 ## Toolbox Characteristics
@@ -65,14 +65,16 @@ The benchmark is coming soon.
 | ------------------- | ------------------------------------------------------------ |
 | Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Guanhao Gan](https://github.com/GuanhaoGan), [Kuofeng Gao](https://github.com/KuofengGao), [Xin Yan](https://scholar.google.com/citations?hl=zh-CN&user=08WTTPMAAAAJ), [Jia Xu](https://www.researchgate.net/profile/Xu-Jia-10), [Tong Xu](https://github.com/spicy1007), [Sheng Yang](https://github.com/20000yshust), [Haoxiang Zhong](https://scholar.google.com/citations?user=VOw9qmYAAAAJ&hl=zh-CN&oi=ao), [Linghui Zhu](https://github.com/zlh-thu)
 | Tencent Security Zhuque Lab | [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN) |
+| ShanghaiTech University | [Zhe Zhao](https://s3l.shanghaitech.edu.cn/people/zhezhao/) |
 
 ## Citation
 If our toolbox is useful for your research, please cite our paper(s) as follows:
 ```
-@article{li2022backdoorbox,
+@inproceedings{li2023backdoorbox,
   title={{BackdoorBox}: A Python Toolbox for Backdoor Learning},
   author={Li, Yiming and Ya, Mengxi and Bai, Yang and Jiang, Yong and Xia, Shu-Tao},
-  year={2022}
+  booktitle={ICLR Workshop},
+  year={2023}
 }
 ```
 
