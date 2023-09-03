@@ -44,7 +44,7 @@ batt = core.BATT(
     deterministic=deterministic
 )
 
-poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
+poisoned_train_dataset, poisoned_test_dataset = batt.get_poisoned_dataset()
 
 # Train Infected Model
 schedule = {
@@ -73,7 +73,7 @@ schedule = {
 }
 
 batt.train(schedule)
-infected_model = badnets.get_model()
+infected_model = batt.get_model()
 
 
 # ============== mnist ==============
@@ -102,7 +102,7 @@ batt = core.BATT(
     deterministic=deterministic
 )
 
-poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
+poisoned_train_dataset, poisoned_test_dataset = batt.get_poisoned_dataset()
 
 # Train Infected Model
 schedule = {
@@ -131,7 +131,7 @@ schedule = {
 }
 
 batt.train(schedule)
-infected_model = badnets.get_model()
+infected_model = batt.get_model()
 
 
 
@@ -178,7 +178,7 @@ batt = core.BATT(
     seed=666,
 )
 
-poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
+poisoned_train_dataset, poisoned_test_dataset = batt.get_poisoned_dataset()
 
 # Train Infected Model
 schedule = {
@@ -207,4 +207,4 @@ schedule = {
 }
 
 batt.train(schedule)
-infected_model = badnets.get_model()
+infected_model = batt.get_model()
