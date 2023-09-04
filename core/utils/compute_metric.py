@@ -12,11 +12,7 @@ def compute_confusion_matrix(precited,expected):
     tp = tp_list.count(1)                  # 统计TP的个数
     fp = fp_list.count(1)                  # 统计FP的个数
     tn = pcount[0] - tp                    # 统计TN的个数
-    fn = pcount[1] - fp
-    print('tp'+str(tp))  
-    print('fp'+str(fp))     
-    print('tn'+str(tn)) 
-    print('fn'+str(fn))                   # 统计FN的个数
+    fn = pcount[1] - fp                    # 统计FN的个数
     return tp, fp, tn, fn
 
 # 计算常用指标

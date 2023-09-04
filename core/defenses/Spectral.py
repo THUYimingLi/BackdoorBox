@@ -211,6 +211,9 @@ class Spectral(Base):
         expected = [ int(x) for x in expected.tolist() ]
         
         tp, fp, tn, fn = compute_confusion_matrix(precited, expected)
+        
+        print('tp :' + str(tp) + ', fp :' + str(fp) + ', tn : ' + str(tn) + ', fn :' + str(fn))
+
 
         accuracy, precision, recall, F1 = compute_indexes(tp, fp, tn, fn)
         
