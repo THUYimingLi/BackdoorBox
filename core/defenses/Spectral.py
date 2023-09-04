@@ -55,9 +55,7 @@ class Spectral(Base):
                  deterministic=False,
                  poisoned_trainset=None, 
                  clean_trainset=None,
-                #  filtered_poisoned_dataset=None,
                  filtered_poisoned_id=None,
-                #  filtered_benign_dataset=None,
                  filtered_benign_id=None,
                  ):
         super(Spectral, self).__init__(seed, deterministic)
@@ -69,16 +67,13 @@ class Spectral(Base):
         self.percentile = percentile
         self.poisoned_trainset = poisoned_trainset
         self.clean_trainset = clean_trainset
-        # self.filtered_poisoned_dataset=filtered_poisoned_dataset
         self.filtered_poisoned_id=filtered_poisoned_id
-        # self.filtered_benign_dataset=filtered_benign_dataset
         self.filtered_benign_id=filtered_benign_id
 
     def filter(self, schedule):
         """filter out poisoned samples from poisoned dataset. 
         
         Args:
-            dataset (torch.utils.data.Dataset): The dataset to filter.
             schedule (dict): schedule for spliting the dataset.            
         """
 
@@ -112,25 +107,20 @@ class Spectral(Base):
 
         ### a. prepare the model and dataset
         model = self.model
-        filtered_poisoned_id = self.filtered_poisoned_id
         poisoned_trainset = self.poisoned_trainset
-        # self.filtered_benign_dataset=filtered_benign_dataset
+        filtered_poisoned_id = self.filtered_poisoned_id
         filtered_benign_id = self.filtered_benign_id
 
         lbl = self.target_label
-        # label of poisoned_dataset
+
         poisoned_label = []
 
         for i in range(len(poisoned_trainset)):
             poisoned_label.append(poisoned_trainset[i][1])
-        print('poisoned_label_length:'+str(len(poisoned_label)))
-        print(poisoned_label)
-        # same with target_label
-        cur_indices = [i for i,v in enumerate(poisoned_label) if v==lbl]
-        print('cur_indices_length:'+str(len(cur_indices)))
-        print(cur_indices)       
+
+        cur_indices = [i for i,v in enumerate(poisoned_label) if v==lbl]    
         cur_examples = len(cur_indices)
-        print('Label, num ex: ', lbl, cur_examples)
+        #print('Target_label, num: ', lbl, cur_examples)
         model.eval()
 
         ### b. get the activation as representation for each data
@@ -166,60 +156,49 @@ class Spectral(Base):
         print('Length Scores:'+str(len(scores)) )
         p_score = np.percentile(scores, p)
         top_scores = np.where(scores>p_score)[0]
-        # top scores
-        print(top_scores)
+        #print(top_scores)
     
+        #remove
         filtered_poisoned_id = np.copy(top_scores)
-        # remove
-        print('removed:'+str(len(filtered_poisoned_id)))
         print('removed_inds_length:'+str(len(filtered_poisoned_id)))
         print(filtered_poisoned_id)
 
+        #left
         re = [cur_indices[v] for i,v in enumerate(filtered_poisoned_id)]
         filtered_benign_id = np.delete(range(len(poisoned_trainset)), re)
-        # left
-        print('left:'+str(len(filtered_benign_id)))       
-        print('left_inds_length:'+str(len(filtered_benign_id)))
+        print('left_inds_length:'+str(len(filtered_benign_id)))       
         print(filtered_benign_id)
+
         return filtered_poisoned_id, filtered_benign_id
+    
+    
+    def test(self,poisoned_location,schedule):
+        """compute metrics: accuracy, precision, recall, F1. 
 
-    def test(self,schedule):
-
-        #compute metrics
+            Args:
+            poisoned_location (frozenset): poisoned id in clean_dataset
+            schedule (dict): schedule for spliting the dataset.            
+        """
+        # prepare dataset
         filtered_poisoned_id, filtered_benign_id = self.filter(schedule)
         poisoned_id = filtered_poisoned_id
         benign_id = filtered_benign_id
         poisoned_trainset = self.poisoned_trainset
-        #clean_trainset = self.clean_trainset
 
-        # # original label
-        # clean_label = []
-
-        # for i in range(len(clean_trainset)):
-        #     clean_label.append(clean_trainset[i][1])
-
-        # print('clean_label_length:'+str(len(clean_label)))
-        # print(clean_label)
-
-        lbl = self.target_label
-        # label of poisoned_dataset
+        # tolist
         poisoned_label = []
-        # label of clean_dataset
-        # clean_label = []
-        # poisoned_label_location=[]
-
-        for i in range(len(poisoned_trainset)):
-            poisoned_label.append(poisoned_trainset[i][1])
-        print('poisoned_label_length:'+str(len(poisoned_label)))
-        print(poisoned_label)
-
+        for m in poisoned_location:
+             poisoned_label.append(m)
+        
+        # set parameters
         precited = np.zeros(len(poisoned_trainset))
         expected = np.zeros(len(poisoned_trainset))
 
-        for i,v in enumerate(poisoned_label):
-            if v==lbl:
+        # get precited and expected
+        for i in range(len(expected)):
+            if i in poisoned_label:
                 expected[i] = 1
-            elif v!=lbl:
+            else:
                 expected[i] = 0
 
         for i in range(len(poisoned_trainset)):
@@ -230,13 +209,11 @@ class Spectral(Base):
 
         precited = [ int(x) for x in precited.tolist() ]
         expected = [ int(x) for x in expected.tolist() ]
-        print('predicted')
-        print(precited)
-        print('expected')
-        print(expected)
         
         tp, fp, tn, fn = compute_confusion_matrix(precited, expected)
 
         accuracy, precision, recall, F1 = compute_indexes(tp, fp, tn, fn)
         
         print('accuracy :' + str(accuracy) + ', precision :' + str(precision) + ', recall : ' + str(recall) + ', F1 :' + str(F1))
+
+    

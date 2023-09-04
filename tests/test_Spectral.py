@@ -25,7 +25,7 @@ import core
 global_seed = 666
 deterministic = True
 torch.manual_seed(global_seed)
-datasets_root_dir = '../datasets'
+datasets_root_dir = '/data1/xutong/dataset'
 CUDA_VISIBLE_DEVICES = '1'
 portion = 0.05
 batch_size = 128
@@ -55,7 +55,7 @@ def gen_grid(height, k):
 identity_grid, noise_grid = gen_grid(32, 4)
 
 
-# ========== ResNet-18_CIFAR-10_Attack_Spectral ==========
+# # ========== ResNet-18_CIFAR-10_Attack_Spectral ==========
 
 # CIFAR-10 dataset
 dataset = torchvision.datasets.CIFAR10
@@ -72,125 +72,122 @@ transform_test = Compose([
 ])
 testset = dataset(datasets_root_dir, train=False, transform=transform_test, download=True)
 
-# ===================== BadNets ======================
+# # ===================== BadNets ======================
 
-torch.manual_seed(global_seed)
+# torch.manual_seed(global_seed)
 
-model = core.models.ResNet(18)
+# model = core.models.ResNet(18)
 
-# Get BadNets poisoned dataset
-attack = core.BadNets(
-    train_dataset = trainset, 
-    test_dataset = testset,
-    # model = None,
-    # loss = None,
-    model=core.models.ResNet(18),
-    loss=nn.CrossEntropyLoss(),
-    y_target = 1,
-    poisoned_rate=0.05,
-    pattern=pattern, 
-    weight=weight,   
-)
-poisoned_train_dataset, poisoned_test_dataset = attack.get_poisoned_dataset()
-print('poisoned_trainset_length:')
-print(len(poisoned_train_dataset))
-# defend against BadNets attack
-defense = core.Spectral(
-    model=model,
-    loss=nn.CrossEntropyLoss(),
-    poisoned_trainset=poisoned_train_dataset,
-    clean_trainset=trainset,
-    seed=global_seed,
-    deterministic=deterministic
-)
-schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
+# # Get BadNets poisoned dataset
+# badnets = core.BadNets(
+#     train_dataset = trainset, 
+#     test_dataset = testset,
+#     model=core.models.ResNet(18),
+#     loss=nn.CrossEntropyLoss(),
+#     y_target = 1,
+#     poisoned_rate=0.05,
+#     pattern=pattern, 
+#     weight=weight,   
+# )
 
-    'benign_training': False, # Train Infected Model
-    'batch_size': 128,
-    'num_workers': 8,
+# poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
 
-    'lr': 0.1,
-    'momentum': 0.9,
-    'weight_decay': 5e-4,
-    'gamma': 0.1,
-    'schedule': [150, 180],
+# # defend against BadNets attack
+# defense = core.Spectral(
+#     model=model,
+#     loss=nn.CrossEntropyLoss(),
+#     poisoned_trainset=poisoned_train_dataset,
+#     clean_trainset=trainset,
+#     seed=global_seed,
+#     deterministic=deterministic
+# )
+# schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': '0',
+#     'GPU_num': 1,
 
-    'epochs': 200,
+#     'benign_training': False, # Train Infected Model
+#     'batch_size': 128,
+#     'num_workers': 8,
 
-    'log_iteration_interval': 100,
-    'test_epoch_interval': 10,
-    'save_epoch_interval': 10,
+#     'lr': 0.1,
+#     'momentum': 0.9,
+#     'weight_decay': 5e-4,
+#     'gamma': 0.1,
+#     'schedule': [150, 180],
 
-    'save_dir': './result/',
-    'experiment_name': 'spectral_badnets_cifar10'
-}
+#     'epochs': 200,
 
-defense.test(schedule = schedule)
+#     'log_iteration_interval': 100,
+#     'test_epoch_interval': 10,
+#     'save_epoch_interval': 10,
 
-# # # ===================== WaNet ======================
+#     'save_dir': './result/',
+#     'experiment_name': 'spectral_badnets_cifar10'
+# }
 
-torch.manual_seed(global_seed)
+# defense.test(poisoned_location = badnets.poisoned_train_dataset.poisoned_set, schedule = schedule)
 
-model = core.models.ResNet(18)
+# # # # # ===================== WaNet ======================
 
-# Get BadNets poisoned dataset
-attack = core.WaNet(
-    train_dataset = trainset, 
-    test_dataset = testset,
-    model = None,
-    loss = None,
-    y_target = 0,
-    poisoned_rate=0.1,
-    identity_grid=identity_grid,
-    noise_grid=noise_grid,
-    noise=True,
-)
-poisoned_train_dataset, poisoned_test_dataset = attack.get_poisoned_dataset()
-print('poisoned_trainset_length:')
-print(len(poisoned_train_dataset))
-# defend against BadNets attack
-defense = core.Spectral(
-    model=model,
-    loss=nn.CrossEntropyLoss(),
-    poisoned_trainset=poisoned_train_dataset,
-    clean_trainset=trainset,
-    seed=global_seed,
-    deterministic=deterministic
-)
-schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
+# torch.manual_seed(global_seed)
 
-    'benign_training': False, # Train Infected Model
-    'batch_size': 128,
-    'num_workers': 8,
+# model = core.models.ResNet(18)
 
-    'lr': 0.1,
-    'momentum': 0.9,
-    'weight_decay': 5e-4,
-    'gamma': 0.1,
-    'schedule': [150, 180],
+# # Get BadNets poisoned dataset
+# wanet = core.WaNet(
+#     train_dataset = trainset, 
+#     test_dataset = testset,
+#     model=core.models.ResNet(18),
+#     loss=nn.CrossEntropyLoss(),
+#     y_target = 1,
+#     poisoned_rate=0.05,
+#     identity_grid=identity_grid,
+#     noise_grid=noise_grid,
+#     noise=True,
+# )
+# poisoned_train_dataset, poisoned_test_dataset = wanet.get_poisoned_dataset()
+ 
+# # defend against BadNets attack
+# defense = core.Spectral(
+#     model=model,
+#     loss=nn.CrossEntropyLoss(),
+#     poisoned_trainset=poisoned_train_dataset,
+#     clean_trainset=trainset,
+#     seed=global_seed,
+#     deterministic=deterministic
+# )
+# schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': '0',
+#     'GPU_num': 1,
 
-    'epochs': 200,
+#     'benign_training': False, # Train Infected Model
+#     'batch_size': 128,
+#     'num_workers': 8,
 
-    'log_iteration_interval': 100,
-    'test_epoch_interval': 10,
-    'save_epoch_interval': 10,
+#     'lr': 0.1,
+#     'momentum': 0.9,
+#     'weight_decay': 5e-4,
+#     'gamma': 0.1,
+#     'schedule': [150, 180],
 
-    'save_dir': './result/',
-    'experiment_name': 'spectral_wanet_cifar10'
-}
+#     'epochs': 200,
 
-defense.test(schedule = schedule)
+#     'log_iteration_interval': 100,
+#     'test_epoch_interval': 10,
+#     'save_epoch_interval': 10,
+
+#     'save_dir': './result/',
+#     'experiment_name': 'spectral_wanet_cifar10'
+# }
+
+# defense.test(poisoned_location = wanet.poisoned_train_dataset.poisoned_set, schedule = schedule)
 
 # ===================== Label Consistent ======================
 
 adv_model = core.models.ResNet(18)
-adv_ckpt = torch.load('/data/xutong/BackdoorBox/experiments/train_CIFAR10_Benign_2022-07-02_18:52:00/ckpt_epoch_100.pth')
+adv_ckpt = torch.load('/data1/xutong/BackdoorBox/tests/experiments/ResNet-18_CIFAR-10_Benign_2023-02-26_22:33:37/ckpt_epoch_200.pth')
 adv_model.load_state_dict(adv_ckpt)
 
 pattern = torch.zeros((32, 32), dtype=torch.uint8)
@@ -220,11 +217,6 @@ weight[:3,-3:] = 1.0
 weight[-3:,:3] = 1.0
 weight[-3:,-3:] = 1.0
 
-eps = 8
-alpha = 1.5
-steps = 100
-max_pixel = 255
-poisoned_rate = 0.25
 
 schedule = {
     'device': 'GPU',
@@ -248,22 +240,24 @@ schedule = {
     'save_epoch_interval': 10,
 
     'save_dir': 'experiments',
-    'experiment_name': 'spectral_lc_cifar10'
+    'experiment_name': 'ResNet-18_CIFAR-10_LabelConsistent'
 }
 
-trainset.transform = transform_train = Compose([
-    ToTensor(),
-    RandomHorizontalFlip()
-])
-attack = core.LabelConsistent(
+
+eps = 8
+alpha = 1.5
+steps = 100
+max_pixel = 255
+poisoned_rate = 0.25
+
+label_consistent = core.LabelConsistent(
     train_dataset=trainset,
     test_dataset=testset,
     model=core.models.ResNet(18),
     adv_model=adv_model,
     adv_dataset_dir=f'./adv_dataset/CIFAR-10_eps{eps}_alpha{alpha}_steps{steps}_poisoned_rate{poisoned_rate}_seed{global_seed}',
-    # adv_dataset_dir=f'./adv_dataset/adv_CIFAR-10_eps{eps}_alpha{alpha}_steps{steps}_poisoned_rate{poisoned_rate}_seed{global_seed}',
     loss=nn.CrossEntropyLoss(),
-    y_target=2,
+    y_target=1,
     poisoned_rate=poisoned_rate,
     pattern=pattern,
     weight=weight,
@@ -278,15 +272,14 @@ attack = core.LabelConsistent(
     seed=global_seed,
     deterministic=True
 )
-trainset.transform = transform_train
 
+poisoned_train_dataset, poisoned_test_dataset = label_consistent.get_poisoned_dataset()
 
-poisoned_train_dataset, poisoned_test_dataset = attack.get_poisoned_dataset()
-print('poisoned_trainset_length:')
-print(len(poisoned_train_dataset))
+model = core.models.ResNet(18)
+
 # defend against BadNets attack
 defense = core.Spectral(
-    model=model,
+    model = model,
     loss=nn.CrossEntropyLoss(),
     poisoned_trainset=poisoned_train_dataset,
     clean_trainset=trainset,
@@ -294,265 +287,255 @@ defense = core.Spectral(
     deterministic=deterministic
 )
 
-
-defense.test(schedule = schedule)
-
-
-# ========== ResNet-18_GTSRB_Attack_Spectral ==========
-
-# GTSRB dataset
-
-transform_train = Compose([
-    ToPILImage(),
-    Resize((32, 32)),
-    ToTensor()
-])
-trainset = DatasetFolder(
-    root=osp.join(datasets_root_dir, 'GTSRB', 'train'), # please replace this with path to your training set
-    loader=cv2.imread,
-    extensions=('png',),
-    transform=transform_train,
-    target_transform=None,
-    is_valid_file=None)
-
-transform_test = Compose([
-    ToPILImage(),
-    Resize((32, 32)),
-    ToTensor()
-])
-testset = DatasetFolder(
-    root=osp.join(datasets_root_dir, 'GTSRB', 'testset'), # please replace this with path to your test set
-    loader=cv2.imread,
-    extensions=('png',),
-    transform=transform_test,
-    target_transform=None,
-    is_valid_file=None)
+defense.test(poisoned_location = label_consistent.poisoned_train_dataset.poisoned_set, schedule = schedule)
 
 
-# ===================== BadNets ======================
+# # ========== ResNet-18_GTSRB_Attack_Spectral ==========
 
-model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'GTSRB', 'BadNets', 'Spectral'
+# # GTSRB dataset
+
+# transform_train = Compose([
+#     ToPILImage(),
+#     Resize((32, 32)),
+#     ToTensor()
+# ])
+# trainset = DatasetFolder(
+#     root=osp.join(datasets_root_dir, 'GTSRB', 'Train'), # please replace this with path to your training set
+#     loader=cv2.imread,
+#     extensions=('png',),
+#     transform=transform_train,
+#     target_transform=None,
+#     is_valid_file=None)
+
+# transform_test = Compose([
+#     ToPILImage(),
+#     Resize((32, 32)),
+#     ToTensor()
+# ])
+# testset = DatasetFolder(
+#     root=osp.join(datasets_root_dir, 'GTSRB', 'testset'), # please replace this with path to your test set
+#     loader=cv2.imread,
+#     extensions=('png',),
+#     transform=transform_test,
+#     target_transform=None,
+#     is_valid_file=None)
+
+# # # ===================== BadNets ======================
+
+# torch.manual_seed(global_seed)
+# model = core.models.ResNet(18,43)
+
+# # Get BadNets poisoned dataset
+# badnets = core.BadNets(
+#     train_dataset = trainset, 
+#     test_dataset = testset,
+#     model=core.models.ResNet(18,43),
+#     loss=nn.CrossEntropyLoss(),
+#     y_target = 1,
+#     poisoned_rate=0.05,
+#     pattern=pattern, 
+#     weight=weight, 
+#     poisoned_transform_train_index=2,  
+#     poisoned_transform_test_index=2,  
+# )
+# poisoned_train_dataset, poisoned_test_dataset = badnets.get_poisoned_dataset()
+ 
+# # defend against BadNets attack
+# defense = core.Spectral(
+#     model=model,
+#     loss=nn.CrossEntropyLoss(),
+#     poisoned_trainset=poisoned_train_dataset,
+#     clean_trainset=trainset,
+#     seed=global_seed,
+#     deterministic=deterministic
+# )
+# schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': '0',
+#     'GPU_num': 1,
+
+#     'benign_training': False, # Train Infected Model
+#     'batch_size': 64,
+#     'num_workers': 8,
+
+#     'lr': 0.1,
+#     'momentum': 0.9,
+#     'weight_decay': 5e-4,
+#     'gamma': 0.1,
+#     'schedule': [150, 180],
+
+#     'epochs': 30,
+
+#     'log_iteration_interval': 100,
+#     'test_epoch_interval': 10,
+#     'save_epoch_interval': 10,
+
+#     'save_dir': './result/',
+#     'experiment_name': 'spectral_badnets_gtsrb'
+# }
+
+# defense.test(poisoned_location = badnets.poisoned_train_dataset.poisoned_set, schedule = schedule)
+
+# # ===================== WaNet ======================
+
+# torch.manual_seed(global_seed)
+# model = core.models.ResNet(18,43)
+
+# # Get BadNets poisoned dataset
+# wanet = core.WaNet(
+#     train_dataset = trainset, 
+#     test_dataset = testset,
+#     model = None,
+#     loss = None,
+#     y_target = 1,
+#     poisoned_rate=0.05,
+#     identity_grid=identity_grid,
+#     noise_grid=noise_grid,
+#     noise=True,
+#     poisoned_transform_train_index=2,  
+#     poisoned_transform_test_index=2,  
+# )
+# poisoned_train_dataset, poisoned_test_dataset = wanet.get_poisoned_dataset()
+ 
+# # defend against BadNets attack
+# defense = core.Spectral(
+#     model=model,
+#     loss=nn.CrossEntropyLoss(),
+#     poisoned_trainset=poisoned_train_dataset,
+#     clean_trainset=trainset,
+#     seed=global_seed,
+#     deterministic=deterministic
+# )
+# schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': '0',
+#     'GPU_num': 1,
+
+#     'benign_training': False, # Train Infected Model
+#     'batch_size': 64,
+#     'num_workers': 8,
+
+#     'lr': 0.1,
+#     'momentum': 0.9,
+#     'weight_decay': 5e-4,
+#     'gamma': 0.1,
+#     'schedule': [150, 180],
+
+#     'epochs': 30,
+
+#     'log_iteration_interval': 100,
+#     'test_epoch_interval': 10,
+#     'save_epoch_interval': 10,
+
+#     'save_dir': './result/',
+#     'experiment_name': 'spectral_wanet_gtsrb'
+# }
+
+# defense.test(poisoned_location = wanet.poisoned_train_dataset.poisoned_set, schedule = schedule)
 
 
-torch.manual_seed(global_seed)
-model = core.models.ResNet(18,43)
+# # # ===================== Label Consistent ======================
 
-# Get BadNets poisoned dataset
-attack = core.BadNets(
-    train_dataset = trainset, 
-    test_dataset = testset,
-    model = None,
-    loss = None,
-    y_target = 0,
-    poisoned_rate=0.05,
-    pattern=pattern, 
-    weight=weight, 
-    poisoned_transform_train_index=2,  
-    poisoned_transform_test_index=2,  
-)
-poisoned_train_dataset, poisoned_test_dataset = attack.get_poisoned_dataset()
-print('poisoned_trainset_length:')
-print(len(poisoned_train_dataset))
-# defend against BadNets attack
-defense = core.Spectral(
-    model=model,
-    loss=nn.CrossEntropyLoss(),
-    poisoned_trainset=poisoned_train_dataset,
-    clean_trainset=trainset,
-    seed=global_seed,
-    deterministic=deterministic
-)
-schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
+# torch.manual_seed(global_seed)
+# adv_model = core.models.ResNet(18, 43)
+# adv_ckpt = torch.load('/data1/xutong/BackdoorBox/tests/experiments/ResNet-18_GTSRB_BadNets_2023-03-20_01:40:11/ckpt_epoch_30.pth')
+# adv_model.load_state_dict(adv_ckpt)
 
-    'benign_training': False, # Train Infected Model
-    'batch_size': 64,
-    'num_workers': 8,
+# pattern = torch.zeros((32, 32), dtype=torch.uint8)
+# pattern[-1, -1] = 255
+# pattern[-1, -3] = 255
+# pattern[-3, -1] = 255
+# pattern[-2, -2] = 255
 
-    'lr': 0.1,
-    'momentum': 0.9,
-    'weight_decay': 5e-4,
-    'gamma': 0.1,
-    'schedule': [150, 180],
+# pattern[0, -1] = 255
+# pattern[1, -2] = 255
+# pattern[2, -3] = 255
+# pattern[2, -1] = 255
 
-    'epochs': 30,
+# pattern[0, 0] = 255
+# pattern[1, 1] = 255
+# pattern[2, 2] = 255
+# pattern[2, 0] = 255
 
-    'log_iteration_interval': 100,
-    'test_epoch_interval': 10,
-    'save_epoch_interval': 10,
+# pattern[-1, 0] = 255
+# pattern[-1, 2] = 255
+# pattern[-2, 1] = 255
+# pattern[-3, 0] = 255
 
-    'save_dir': './result/',
-    'experiment_name': 'spectral_badnets_gtsrb'
-}
+# weight = torch.zeros((32, 32), dtype=torch.float32)
+# weight[:3,:3] = 1.0
+# weight[:3,-3:] = 1.0
+# weight[-3:,:3] = 1.0
+# weight[-3:,-3:] = 1.0
 
-defense.test(schedule = schedule)
+# eps = 8
+# alpha = 1.5
+# steps = 100
+# max_pixel = 255
+# poisoned_rate = 0.25
 
-# ===================== WaNet ======================
+# schedule = {
+#     'device': 'GPU',
+#     'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
+#     'GPU_num': 1,
 
-torch.manual_seed(global_seed)
-model = core.models.ResNet(18,43)
+#     'benign_training': False, # Train Attacked Model
+#     'batch_size': 128,
+#     'num_workers': 8,
 
-# Get BadNets poisoned dataset
-attack = core.WaNet(
-    train_dataset = trainset, 
-    test_dataset = testset,
-    model = None,
-    loss = None,
-    y_target = 0,
-    poisoned_rate=0.1,
-    identity_grid=identity_grid,
-    noise_grid=noise_grid,
-    noise=True,
-    poisoned_transform_train_index=2,  
-    poisoned_transform_test_index=2,  
-)
-poisoned_train_dataset, poisoned_test_dataset = attack.get_poisoned_dataset()
-print('poisoned_trainset_length:')
-print(len(poisoned_train_dataset))
-# defend against BadNets attack
-defense = core.Spectral(
-    model=model,
-    loss=nn.CrossEntropyLoss(),
-    poisoned_trainset=poisoned_train_dataset,
-    clean_trainset=trainset,
-    seed=global_seed,
-    deterministic=deterministic
-)
-schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': '0',
-    'GPU_num': 1,
+#     'lr': 0.1,
+#     'momentum': 0.9,
+#     'weight_decay': 5e-4,
+#     'gamma': 0.1,
+#     'schedule': [150, 180],
 
-    'benign_training': False, # Train Infected Model
-    'batch_size': 64,
-    'num_workers': 8,
+#     'epochs': 200,
 
-    'lr': 0.1,
-    'momentum': 0.9,
-    'weight_decay': 5e-4,
-    'gamma': 0.1,
-    'schedule': [150, 180],
+#     'log_iteration_interval': 100,
+#     'test_epoch_interval': 10,
+#     'save_epoch_interval': 10,
 
-    'epochs': 30,
+#     'save_dir': './result',
+#     'experiment_name': 'spectral_lc_gtsrb'
+# }
 
-    'log_iteration_interval': 100,
-    'test_epoch_interval': 10,
-    'save_epoch_interval': 10,
-
-    'save_dir': './result/',
-    'experiment_name': 'spectral_wanet_gtsrb'
-}
-
-defense.test(schedule = schedule)
-
-
-# ===================== Label Consistent ======================
-
-torch.manual_seed(global_seed)
-adv_model = core.models.ResNet(18, 43)
-adv_ckpt = torch.load('/data/xutong/BackdoorBox/experiments/train_GTSRB_Benign_2022-07-04_10:34:40/ckpt_epoch_100.pth')
-adv_model.load_state_dict(adv_ckpt)
-
-pattern = torch.zeros((32, 32), dtype=torch.uint8)
-pattern[-1, -1] = 255
-pattern[-1, -3] = 255
-pattern[-3, -1] = 255
-pattern[-2, -2] = 255
-
-pattern[0, -1] = 255
-pattern[1, -2] = 255
-pattern[2, -3] = 255
-pattern[2, -1] = 255
-
-pattern[0, 0] = 255
-pattern[1, 1] = 255
-pattern[2, 2] = 255
-pattern[2, 0] = 255
-
-pattern[-1, 0] = 255
-pattern[-1, 2] = 255
-pattern[-2, 1] = 255
-pattern[-3, 0] = 255
-
-weight = torch.zeros((32, 32), dtype=torch.float32)
-weight[:3,:3] = 1.0
-weight[:3,-3:] = 1.0
-weight[-3:,:3] = 1.0
-weight[-3:,-3:] = 1.0
-
-eps = 8
-alpha = 1.5
-steps = 100
-max_pixel = 255
-poisoned_rate = 0.25
-
-schedule = {
-    'device': 'GPU',
-    'CUDA_VISIBLE_DEVICES': CUDA_VISIBLE_DEVICES,
-    'GPU_num': 1,
-
-    'benign_training': False, # Train Attacked Model
-    'batch_size': 128,
-    'num_workers': 8,
-
-    'lr': 0.1,
-    'momentum': 0.9,
-    'weight_decay': 5e-4,
-    'gamma': 0.1,
-    'schedule': [150, 180],
-
-    'epochs': 200,
-
-    'log_iteration_interval': 100,
-    'test_epoch_interval': 10,
-    'save_epoch_interval': 10,
-
-    'save_dir': 'experiments',
-    'experiment_name': 'spectral_lc_gtsrb'
-}
-
-attack = core.LabelConsistent(
-    train_dataset=trainset,
-    test_dataset=testset,
-    model=core.models.ResNet(18, 43),
-    adv_model=adv_model,
-    # adv_dataset_dir=f'./adv_dataset/CIFAR-10_eps{eps}_alpha{alpha}_steps{steps}_poisoned_rate{poisoned_rate}_seed{global_seed}',
-    adv_dataset_dir=f'./adv_dataset/GTSRB_eps{eps}_alpha{alpha}_steps{steps}_poisoned_rate{poisoned_rate}_seed{global_seed}',
-    adv_transform=Compose([transforms.ToPILImage(), transforms.Resize((32, 32)), ToTensor()]),
-    loss=nn.CrossEntropyLoss(),
+# labelconsistent = core.LabelConsistent(
+#     train_dataset=trainset,
+#     test_dataset=testset,
+#     model=core.models.ResNet(18, 43),
+#     adv_model=adv_model,
+#     # adv_dataset_dir=f'./adv_dataset/CIFAR-10_eps{eps}_alpha{alpha}_steps{steps}_poisoned_rate{poisoned_rate}_seed{global_seed}',
+#     adv_dataset_dir=f'./adv_dataset/GTSRB_eps{eps}_alpha{alpha}_steps{steps}_poisoned_rate{poisoned_rate}_seed{global_seed}',
+#     adv_transform=Compose([transforms.ToPILImage(), transforms.Resize((32, 32)), ToTensor()]),
+#     loss=nn.CrossEntropyLoss(),
     
-    y_target=2,
-    poisoned_rate=poisoned_rate,
-    pattern=pattern,
-    weight=weight,
-    eps=eps,
-    alpha=alpha,
-    steps=steps,
-    max_pixel=max_pixel,
-    poisoned_transform_train_index=2,
-    poisoned_transform_test_index=2,
-    # poisoned_target_transform_index=0,
-    schedule=schedule,
-    seed=global_seed,
-    deterministic=True
-)
+#     y_target=1,
+#     poisoned_rate=poisoned_rate,
+#     pattern=pattern,
+#     weight=weight,
+#     eps=eps,
+#     alpha=alpha,
+#     steps=steps,
+#     max_pixel=max_pixel,
+#     poisoned_transform_train_index=2,
+#     poisoned_transform_test_index=2,
+#     # poisoned_target_transform_index=0,
+#     schedule=schedule,
+#     seed=global_seed,
+#     deterministic=True
+# )
 
+# model = core.models.ResNet(18, 43)
+# poisoned_train_dataset, poisoned_test_dataset = labelconsistent.get_poisoned_dataset()
+ 
+# # defend against BadNets attack
+# defense = core.Spectral(
+#     model=model,
+#     loss=nn.CrossEntropyLoss(),
+#     poisoned_trainset=poisoned_train_dataset,
+#     clean_trainset=trainset,
+#     seed=global_seed,
+#     deterministic=deterministic
+# )
 
-
-model = core.models.ResNet(18, 43)
-poisoned_train_dataset, poisoned_test_dataset = attack.get_poisoned_dataset()
-print('poisoned_trainset_length:')
-print(len(poisoned_train_dataset))
-# defend against BadNets attack
-defense = core.Spectral(
-    model=model,
-    loss=nn.CrossEntropyLoss(),
-    poisoned_trainset=poisoned_train_dataset,
-    clean_trainset=trainset,
-    seed=global_seed,
-    deterministic=deterministic
-)
-
-defense.test(schedule = schedule)
+# defense.test(poisoned_location = labelconsistent.poisoned_train_dataset.poisoned_set, schedule = schedule)
