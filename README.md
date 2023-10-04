@@ -53,6 +53,8 @@ Currently, this toolbox is still under development (but the attack parts are alm
 - Neural Cleanse
 - DP
 - CutMix
+- AEVA
+- SCALE-UP
 
 
 ## Attack & Defense Benchmark
