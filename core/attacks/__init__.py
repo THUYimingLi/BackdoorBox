@@ -11,7 +11,8 @@ from .PhysicalBA import PhysicalBA
 from .ISSBA import ISSBA
 from .TUAP import TUAP
 from .SleeperAgent import SleeperAgent
+from .BATT import BATT
 
 __all__ = [
-    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA', 'ISSBA','TUAP', 'SleeperAgent'
+    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA', 'ISSBA','TUAP', 'SleeperAgent','BATT'
 ]
