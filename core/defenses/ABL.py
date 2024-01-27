@@ -20,6 +20,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 from .base import Base
 
 from torch.utils.data import DataLoader, Subset
@@ -48,10 +49,56 @@ class LGALoss(nn.Module):
     
     def forward(self, logits, targets):
         loss = self.loss(logits, targets)
-        loss = torch.sign(loss-self.gamma) * loss
         if self.loss.reduction=='none':
-            return loss.mean()            
+            loss = loss.mean()    
+        loss = torch.sign(loss-self.gamma) * loss  
+        return loss
 
+class TensorsDataset(torch.utils.data.Dataset):
+
+    '''
+    A simple loading dataset - loads the tensor that are passed in input. This is the same as
+    torch.utils.data.TensorDataset except that you can add transformations to your data and target tensor.
+    Target tensor can also be None, in which case it is not returned.
+    '''
+
+    def __init__(self, data_tensor, target_tensor=None, transforms=None, target_transforms=None):
+        if target_tensor is not None:
+            assert data_tensor.size(0) == target_tensor.size(0)
+        self.data_tensor = data_tensor
+        self.target_tensor = target_tensor
+
+        if transforms is None:
+            transforms = []
+        if target_transforms is None:
+            target_transforms = []
+
+        if not isinstance(transforms, list):
+            transforms = [transforms]
+        if not isinstance(target_transforms, list):
+            target_transforms = [target_transforms]
+
+        self.transforms = transforms
+        self.target_transforms = target_transforms
+
+    def __getitem__(self, index):
+
+        data_tensor = self.data_tensor[index]
+        for transform in self.transforms:
+            data_tensor = transform(data_tensor)
+
+        if self.target_tensor is None:
+            return data_tensor
+
+        target_tensor = self.target_tensor[index]
+        for transform in self.target_transforms:
+            target_tensor = transform(target_tensor)
+
+        return data_tensor, target_tensor
+
+    def __len__(self):
+        return self.data_tensor.size(0)
+    
 class ABL(Base):
     """Repair a model via Anti-backdoor Learning (ABL).
 
@@ -150,14 +197,20 @@ class ABL(Base):
 
         # Then, filter out the samples with the lowest loss. These samples are deemed as poisoned samples.
         log("\n\n\n===> Start filtering out the poisoned data from the clean data...")       
-        train_transform = self.poisoned_trainset.transform
-        self.poisoned_trainset.transform = transform # set transform to have no data augmentation
+        # set transform to have no data augmentation
+        self.poisoned_trainset.transform = self.clean_testset.transform 
+        self.poisoned_trainset.poisoned_transform = self.poisoned_testset.poisoned_transform
+        # split dataset
         poisoned_indices, other_indices = self.split_dataset(self.poisoned_trainset, split_ratio, selection_criterion, schedule['split_schedule'])
-        self.poisoned_trainset.transform = train_transform # restore data augmentation
-        poisoned_dataset = Subset(self.poisoned_trainset, poisoned_indices) # select poisoned data
-        other_dataset = Subset(self.poisoned_trainset, other_indices) # select other data
+        images = torch.stack([data[0] for data in self.poisoned_trainset])
+        labels = torch.LongTensor([data[1] for data in self.poisoned_trainset])
         
-        self.poisoned_dataset = poisoned_dataset
+        poisoned_images = images[poisoned_indices]
+        poisoned_labels = labels[poisoned_indices]
+        poisoned_dataset = TensorsDataset(poisoned_images, poisoned_labels, transform)
+        other_images = images[other_indices]
+        other_labels = labels[other_indices]
+        other_dataset = TensorsDataset(other_images, other_labels, transform)
         torch.save(poisoned_dataset, os.path.join(work_dir, "selected_poison.pth"))
         log("\n\n\nSelect %d poisoned data"%len(poisoned_indices))
 
@@ -212,6 +265,8 @@ class ABL(Base):
         self.model = self.model.to(device)
 
         model = self.model
+        model.eval()
+        
         dataloader = DataLoader(dataset, batch_size=schedule['batch_size'], shuffle=False, num_workers=schedule['num_workers'])
         losses = []
         with torch.no_grad():
@@ -372,7 +427,7 @@ class ABL(Base):
                 iteration += 1
 
                 if iteration % self.current_schedule['log_iteration_interval'] == 0:
-                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{self.current_schedule['epochs']}, iteration:{batch_id + 1}/{len(dataset)//self.current_schedule['batch_size']}, lr: {self.current_schedule['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
+                    msg = time.strftime("[%Y-%m-%d_%H:%M:%S] ", time.localtime()) + f"Epoch:{i+1}/{self.current_schedule['epochs']}, iteration:{batch_id + 1}/{len(dataset)//self.current_schedule['batch_size']}, lr: {optimizer.state_dict()['param_groups'][0]['lr']}, loss: {float(loss)}, time: {time.time()-last_time}\n"
                     last_time = time.time()
                     log(msg)
                     model.train()
