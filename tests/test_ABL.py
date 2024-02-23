@@ -178,11 +178,24 @@ testset = dataset(datasets_root_dir, train=False, transform=transform_test, down
 torch.manual_seed(global_seed)
 model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'CIFAR-10', 'No Attack', 'ABL'
 model = core.models.ResNet(18)
+
+attack = core.BadNets(
+    train_dataset = trainset, 
+    test_dataset = testset,
+    model = None,
+    loss = None,
+    y_target = 0,
+    poisoned_rate=0.05,
+    pattern=pattern, 
+    weight=weight,   
+)
+poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
+
 defense = core.ABL(
     model=model,
     loss=nn.CrossEntropyLoss(),
     poisoned_trainset=trainset,
-    poisoned_testset=testset,
+    poisoned_testset=poisoned_testset,
     clean_testset=testset,
     seed=global_seed,
     deterministic=deterministic
@@ -196,7 +209,10 @@ test(defense=defense,
      split_ratio=0.01,
      isolation_criterion=nn.CrossEntropyLoss(reduction='none'),
      gamma=0.5,
-     transform=ToTensor(),
+     transform=Compose(
+         [transforms.RandomCrop(32, padding=4),
+          transforms.RandomHorizontalFlip(),]
+     ),
      selection_criterion=nn.CrossEntropyLoss(reduction='none'))
 
 # ===================== BadNets ======================
@@ -238,7 +254,10 @@ test(defense=defense,
      split_ratio=0.01,
      isolation_criterion=nn.CrossEntropyLoss(reduction='none'),
      gamma=0.5,
-     transform=ToTensor(),
+     transform=Compose(
+         [transforms.RandomCrop(32, padding=4),
+          transforms.RandomHorizontalFlip(),]
+     ),
      selection_criterion=nn.CrossEntropyLoss(reduction='none'))
 
 # # ===================== WaNet ======================
@@ -248,7 +267,7 @@ torch.manual_seed(global_seed)
 
 model = core.models.ResNet(18)
 
-# Get BadNets poisoned dataset
+# Get WaNets poisoned dataset
 attack = core.WaNet(
     train_dataset = trainset, 
     test_dataset = testset,
@@ -262,7 +281,7 @@ attack = core.WaNet(
 )
 poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
 
-# defend against BadNets attack
+# defend against WaNet attack
 defense = core.ABL(
     model=model,
     loss=nn.CrossEntropyLoss(),
@@ -281,7 +300,10 @@ test(defense=defense,
      split_ratio=0.01,
      isolation_criterion=nn.CrossEntropyLoss(reduction='none'),
      gamma=0.5,
-     transform=ToTensor(),
+     transform=Compose(
+         [transforms.RandomCrop(32, padding=4),
+          transforms.RandomHorizontalFlip(),]
+     ),
      selection_criterion=nn.CrossEntropyLoss(reduction='none'))
 
 
@@ -446,7 +468,10 @@ test(defense=defense,
      split_ratio=0.01,
      isolation_criterion=nn.CrossEntropyLoss(reduction='none'),
      gamma=0,
-     transform=ToTensor(),
+     transform=Compose(
+         [transforms.RandomCrop(32, padding=4),
+          transforms.RandomHorizontalFlip(),]
+     ),
      selection_criterion=nn.CrossEntropyLoss(reduction='none'))
 
 
