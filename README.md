@@ -48,6 +48,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |          [ABL](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ABL.py)         |      Anti-Backdoor Learning: Training Clean Models on Poisoned Data. [NeurIPS, 2021](https://arxiv.org/pdf/2110.11571.pdf).     | Poison Suppression                                     |                                     |
 
 ## Methods Under Development
+- IBD-PSC
 - DBD
 - SS
 - Neural Cleanse
