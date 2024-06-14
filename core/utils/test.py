@@ -64,47 +64,49 @@ def test(model, dataset, schedule):
     work_dir = osp.join(schedule['save_dir'], schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
     os.makedirs(work_dir, exist_ok=True)
     log = Log(osp.join(work_dir, 'log.txt'))
+    
+    # # 这里可能有错误，self.current_schedule好像没有出现
+    # # Use GPU
+    # if 'device' in self.current_schedule and self.current_schedule['device'] == 'GPU':
+    #     log('==========Use GPUs to train==========\n')
 
-    # Use GPU
-    if 'device' in self.current_schedule and self.current_schedule['device'] == 'GPU':
-        log('==========Use GPUs to train==========\n')
+    #     CUDA_VISIBLE_DEVICES = ''
+    #     if 'CUDA_VISIBLE_DEVICES' in os.environ:
+    #         CUDA_VISIBLE_DEVICES = os.environ['CUDA_VISIBLE_DEVICES']
+    #     else:
+    #         CUDA_VISIBLE_DEVICES = ','.join([str(i) for i in range(torch.cuda.device_count())])
+    #     log(f'CUDA_VISIBLE_DEVICES={CUDA_VISIBLE_DEVICES}\n')
 
-        CUDA_VISIBLE_DEVICES = ''
-        if 'CUDA_VISIBLE_DEVICES' in os.environ:
-            CUDA_VISIBLE_DEVICES = os.environ['CUDA_VISIBLE_DEVICES']
-        else:
-            CUDA_VISIBLE_DEVICES = ','.join([str(i) for i in range(torch.cuda.device_count())])
-        log(f'CUDA_VISIBLE_DEVICES={CUDA_VISIBLE_DEVICES}\n')
+    #     if CUDA_VISIBLE_DEVICES == '':
+    #         raise ValueError(f'This machine has no visible cuda devices!')
 
-        if CUDA_VISIBLE_DEVICES == '':
-            raise ValueError(f'This machine has no visible cuda devices!')
+    #     CUDA_SELECTED_DEVICES = ''
+    #     if 'CUDA_SELECTED_DEVICES' in self.current_schedule:
+    #         CUDA_SELECTED_DEVICES = self.current_schedule['CUDA_SELECTED_DEVICES']
+    #     else:
+    #         CUDA_SELECTED_DEVICES = CUDA_VISIBLE_DEVICES
+    #     log(f'CUDA_SELECTED_DEVICES={CUDA_SELECTED_DEVICES}\n')
 
-        CUDA_SELECTED_DEVICES = ''
-        if 'CUDA_SELECTED_DEVICES' in self.current_schedule:
-            CUDA_SELECTED_DEVICES = self.current_schedule['CUDA_SELECTED_DEVICES']
-        else:
-            CUDA_SELECTED_DEVICES = CUDA_VISIBLE_DEVICES
-        log(f'CUDA_SELECTED_DEVICES={CUDA_SELECTED_DEVICES}\n')
+    #     CUDA_VISIBLE_DEVICES_LIST = sorted(CUDA_VISIBLE_DEVICES.split(','))
+    #     CUDA_SELECTED_DEVICES_LIST = sorted(CUDA_SELECTED_DEVICES.split(','))
 
-        CUDA_VISIBLE_DEVICES_LIST = sorted(CUDA_VISIBLE_DEVICES.split(','))
-        CUDA_SELECTED_DEVICES_LIST = sorted(CUDA_SELECTED_DEVICES.split(','))
+    #     CUDA_VISIBLE_DEVICES_SET = set(CUDA_VISIBLE_DEVICES_LIST)
+    #     CUDA_SELECTED_DEVICES_SET = set(CUDA_SELECTED_DEVICES_LIST)
+    #     if not (CUDA_SELECTED_DEVICES_SET <= CUDA_VISIBLE_DEVICES_SET):
+    #         raise ValueError(f'CUDA_VISIBLE_DEVICES should be a subset of CUDA_VISIBLE_DEVICES!')
 
-        CUDA_VISIBLE_DEVICES_SET = set(CUDA_VISIBLE_DEVICES_LIST)
-        CUDA_SELECTED_DEVICES_SET = set(CUDA_SELECTED_DEVICES_LIST)
-        if not (CUDA_SELECTED_DEVICES_SET <= CUDA_VISIBLE_DEVICES_SET):
-            raise ValueError(f'CUDA_VISIBLE_DEVICES should be a subset of CUDA_VISIBLE_DEVICES!')
+    #     GPU_num = len(CUDA_SELECTED_DEVICES_SET)
+    #     device_ids = [CUDA_VISIBLE_DEVICES_LIST.index(CUDA_SELECTED_DEVICE) for CUDA_SELECTED_DEVICE in CUDA_SELECTED_DEVICES_LIST]
+    #     device = torch.device(f'cuda:{device_ids[0]}')
+    #     self.model = self.model.to(device)
 
-        GPU_num = len(CUDA_SELECTED_DEVICES_SET)
-        device_ids = [CUDA_VISIBLE_DEVICES_LIST.index(CUDA_SELECTED_DEVICE) for CUDA_SELECTED_DEVICE in CUDA_SELECTED_DEVICES_LIST]
-        device = torch.device(f'cuda:{device_ids[0]}')
-        self.model = self.model.to(device)
-
-        if GPU_num > 1:
-            self.model = nn.DataParallel(self.model, device_ids=device_ids, output_device=device_ids[0])
-    # Use CPU
-    else:
-        device = torch.device("cpu")
-
+    #     if GPU_num > 1:
+    #         self.model = nn.DataParallel(self.model, device_ids=device_ids, output_device=device_ids[0])
+    # # Use CPU
+    # else:
+    #     device = torch.device("cpu")
+    
+    device = torch.device("cuda:0")
     if schedule['metric'] == 'ASR_NoTarget':
         if isinstance(dataset, CIFAR10):
             data = []

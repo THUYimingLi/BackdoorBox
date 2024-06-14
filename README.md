@@ -32,8 +32,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |   [Blind (blended-based)](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/Blind.py)  | Blind Backdoors in Deep Learning Models. [USENIX Security, 2021](https://arxiv.org/pdf/2005.03823.pdf). | training-controlled                                        | first training-controlled attack targeting loss computation |
 |      [IAD](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/IAD.py)     |     Input-Aware Dynamic Backdoor Attack. [NeurIPS, 2020](https://arxiv.org/pdf/2010.08138.pdf).     | training-controlled, optimized, sample-specific            | first training-controlled sample-specific attack            |
 |        [PhysicalBA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/PhysicalBA.py)       |  Backdoor Attack in the Physical World. [ICLR Workshop, 2021](https://arxiv.org/pdf/2104.02361.pdf).  | training-controlled, physical                              | first physical backdoor attack                              |
-|                [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py)                |       LIRA: Learnable, Imperceptible and Robust Backdoor Attacks. [ICCV, 2021](https://openaccess.thecvf.com/content/ICCV2021/papers/Doan_LIRA_Learnable_Imperceptible_and_Robust_Backdoor_Attacks_ICCV_2021_paper.pdf).      | training-controlled, invisible, optimized, sample-specific |                                                             | 
-| [BATT](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BATT.py)                |       BATT: Backdoor Attack with Transformation-based Triggers. [ICASSP, 2023](https://arxiv.org/pdf/2211.01806).      | poison-only, invisible, physical |                                                             |
+|                [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py)                |       LIRA: Learnable, Imperceptible and Robust Backdoor Attacks. [ICCV, 2021](https://openaccess.thecvf.com/content/ICCV2021/papers/Doan_LIRA_Learnable_Imperceptible_and_Robust_Backdoor_Attacks_ICCV_2021_paper.pdf).      | training-controlled, invisible, optimized, sample-specific |                                                             |
 
 **Note**: For the convenience of users, all our implemented attacks support obtaining poisoned dataset (via `.get_poisoned_dataset()`), obtaining infected model (via `.get_model()`), and training with your own local samples (loaded via `torchvision.datasets.DatasetFolder`). Please refer to [base.py](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/base.py) and the attack's codes for more details.
 
@@ -47,16 +46,16 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |          [MCR](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/MCR.py)         |      Bridging Mode Connectivity in Loss Landscapes and Adversarial Robustness. [ICLR, 2020](https://arxiv.org/pdf/2005.00060.pdf).     | Model Repairing                                     |                                     |
 |          [NAD](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/NAD.py)         |      Neural Attention Distillation: Erasing Backdoor Triggers from Deep Neural Networks. [ICLR, 2021](https://openreview.net/pdf?id=9l0K4OM-oXE).     | Model Repairing                                     |  first distillation-based defense                                   |
 |          [ABL](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/ABL.py)         |      Anti-Backdoor Learning: Training Clean Models on Poisoned Data. [NeurIPS, 2021](https://arxiv.org/pdf/2110.11571.pdf).     | Poison Suppression                                     |                                     |
+[SCALE-UP](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/SCALE-UP.py) | SCALE-UP: An Efficient Black-box Input-level Backdoor Detection via Analyzing Scaled Prediction Consistency [ICLR, 2023] (https://arxiv.org/abs/2302.03251). |  Input-level Backdoor Detection|  black-box online detection|
+[IBD-PSC](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/IBD-PSC.py) | IBD-PSC: Input-level Backdoor Detection via Parameter-oriented Scaling Consistency [ICML, 2024] (https://arxiv.org/abs/2405.09786) | Input-level Backdoor Detection |  simple yet effective, safeguarded by theoretical analysis|
 
 ## Methods Under Development
-- IBD-PSC
 - DBD
 - SS
 - Neural Cleanse
 - DP
 - CutMix
 - AEVA
-- SCALE-UP
 
 
 ## Attack & Defense Benchmark
@@ -70,7 +69,7 @@ The benchmark is coming soon.
 | Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Guanhao Gan](https://github.com/GuanhaoGan), [Kuofeng Gao](https://github.com/KuofengGao), [Xin Yan](https://scholar.google.com/citations?hl=zh-CN&user=08WTTPMAAAAJ), [Jia Xu](https://www.researchgate.net/profile/Xu-Jia-10), [Tong Xu](https://github.com/spicy1007), [Sheng Yang](https://github.com/20000yshust), [Haoxiang Zhong](https://scholar.google.com/citations?user=VOw9qmYAAAAJ&hl=zh-CN&oi=ao), [Linghui Zhu](https://github.com/zlh-thu)
 | Tencent Security Zhuque Lab | [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN) |
 | ShanghaiTech University | [Zhe Zhao](https://s3l.shanghaitech.edu.cn/people/zhezhao/) |
-
+| Harbin Institute of Technology, Shenzhen| [Linshan Hou](https://scholar.google.com/citations?user=uHVNhf8AAAAJ&hl=zh-CN&oi=ao)
 ## Citation
 If our toolbox is useful for your research, please cite our paper(s) as follows:
 ```
