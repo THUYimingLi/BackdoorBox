@@ -64,8 +64,7 @@ def test(model, dataset, schedule):
     work_dir = osp.join(schedule['save_dir'], schedule['experiment_name'] + '_' + time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime()))
     os.makedirs(work_dir, exist_ok=True)
     log = Log(osp.join(work_dir, 'log.txt'))
-    
-    # 这里可能有错误，self.current_schedule好像没有出现
+
     # Use GPU
     if 'device' in schedule and schedule['device'] == 'GPU':
         log('==========Use GPUs to train==========\n')
