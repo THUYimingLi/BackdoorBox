@@ -66,7 +66,7 @@ def test(model, dataset, schedule):
     log = Log(osp.join(work_dir, 'log.txt'))
 
     # Use GPU
-    if 'device' in self.current_schedule and self.current_schedule['device'] == 'GPU':
+    if 'device' in schedule and schedule['device'] == 'GPU':
         log('==========Use GPUs to train==========\n')
 
         CUDA_VISIBLE_DEVICES = ''
@@ -80,8 +80,8 @@ def test(model, dataset, schedule):
             raise ValueError(f'This machine has no visible cuda devices!')
 
         CUDA_SELECTED_DEVICES = ''
-        if 'CUDA_SELECTED_DEVICES' in self.current_schedule:
-            CUDA_SELECTED_DEVICES = self.current_schedule['CUDA_SELECTED_DEVICES']
+        if 'CUDA_SELECTED_DEVICES' in schedule:
+            CUDA_SELECTED_DEVICES = schedule['CUDA_SELECTED_DEVICES']
         else:
             CUDA_SELECTED_DEVICES = CUDA_VISIBLE_DEVICES
         log(f'CUDA_SELECTED_DEVICES={CUDA_SELECTED_DEVICES}\n')
@@ -97,14 +97,15 @@ def test(model, dataset, schedule):
         GPU_num = len(CUDA_SELECTED_DEVICES_SET)
         device_ids = [CUDA_VISIBLE_DEVICES_LIST.index(CUDA_SELECTED_DEVICE) for CUDA_SELECTED_DEVICE in CUDA_SELECTED_DEVICES_LIST]
         device = torch.device(f'cuda:{device_ids[0]}')
-        self.model = self.model.to(device)
+        model = model.to(device)
 
         if GPU_num > 1:
-            self.model = nn.DataParallel(self.model, device_ids=device_ids, output_device=device_ids[0])
+            model = nn.DataParallel(model, device_ids=device_ids, output_device=device_ids[0])
     # Use CPU
     else:
         device = torch.device("cpu")
-
+    
+    # device = torch.device("cuda:0")
     if schedule['metric'] == 'ASR_NoTarget':
         if isinstance(dataset, CIFAR10):
             data = []
