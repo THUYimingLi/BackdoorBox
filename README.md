@@ -57,6 +57,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 - DP
 - CutMix
 - AEVA
+- STRIP
 
 
 ## Attack & Defense Benchmark
