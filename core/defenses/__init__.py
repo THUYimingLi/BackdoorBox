@@ -8,7 +8,8 @@ from .Pruning import Pruning
 from .CutMix import CutMix
 from .IBD_PSC import IBD_PSC
 from .SCALE_UP import SCALE_UP
+from .REFINE import REFINE
 
 __all__ = [
-    'AutoEncoderDefense', 'ShrinkPad', 'FineTuning', 'MCR', 'NAD', 'Pruning', 'ABL', 'CutMix', 'IBD_PSC', 'SCALE_UP'
+    'AutoEncoderDefense', 'ShrinkPad', 'FineTuning', 'MCR', 'NAD', 'Pruning', 'ABL', 'CutMix', 'IBD_PSC', 'SCALE_UP', 'REFINE'
 ]
