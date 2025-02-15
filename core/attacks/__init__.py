@@ -12,7 +12,8 @@ from .ISSBA import ISSBA
 from .TUAP import TUAP
 from .SleeperAgent import SleeperAgent
 from .BATT import BATT
+from .AdaptivePatch import AdaptivePatch
 
 __all__ = [
-    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA', 'ISSBA','TUAP', 'SleeperAgent','BATT'
+    'BadNets', 'Blended','Refool', 'WaNet', 'LabelConsistent', 'Blind', 'IAD', 'LIRA', 'PhysicalBA', 'ISSBA','TUAP', 'SleeperAgent','BATT', 'AdaptivePatch'
 ]
