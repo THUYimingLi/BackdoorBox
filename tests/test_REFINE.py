@@ -1,5 +1,6 @@
 '''
 This is the test code of REFINE defense. You need to train an input transformation module before testing.
+You can refer to `train_REFINE.py` for more details.
 '''
 
 import sys
@@ -50,6 +51,9 @@ elif args.dataset == 'ImageNet50':
     size_map = 224
     first_channel = 32
 
+# If you have trained 'unet' and defined 'arr_shuffle' in core.REFINE, you can also get them (instead of loading them directly locally) as follows:
+# unet_trained = defense.unet
+# arr_shuffle_defined = defense.arr_shuffle
 
 defense = core.REFINE(
     unet=core.models.UNetLittle(args=None, n_channels=3, n_classes=3, first_channels=first_channel),

@@ -88,3 +88,6 @@ schedule = {
     'experiment_name': f'REFINE_train'
 }
 defense.train_unet(trainset, testset, schedule)
+
+unet_trained = defense.unet
+arr_shuffle_defined = defense.arr_shuffle
