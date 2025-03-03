@@ -75,7 +75,7 @@ The benchmark is coming soon.
 | Harbin Institute of Technology, Shenzhen| [Linshan Hou](https://scholar.google.com/citations?user=uHVNhf8AAAAJ&hl=zh-CN&oi=ao) |
 | Zhejiang University | [Yukun Chen](https://github.com/WhitolfChen), [Zhiyu Zhang](https://github.com/WoooooZzy), [Haomin Zhang](https://github.com/Aubrey-Alex), [Tongtong Pan](https://github.com/Sylvia123123123)
 
-## Citation
+## References
 If our toolbox is useful for your research, please cite our paper(s) as follows:
 ```
 @inproceedings{li2023backdoorbox,
@@ -94,6 +94,10 @@ If our toolbox is useful for your research, please cite our paper(s) as follows:
   year={2022}
 }
 ```
+
+
+---
+# A Quick Guidance
 
 ## Repository Structure
 
