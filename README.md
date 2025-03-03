@@ -111,7 +111,7 @@ If our toolbox is useful for your research, please cite our paper(s) as follows:
 
 ## Environment configuration
 
-You can run the following script to configure the necessary environment.
+You can run the following script to configure the necessary environment. 
 
 ```
 git clone https://github.com/THUYimingLi/BackdoorBox.git
@@ -123,246 +123,165 @@ pip install -r requirements.txt
 
 ## Quick Start
 
-### Attack
+**Note**: Due to the complexity of attack/defense interfaces and hyperparameter configurations, all test cases are encapsulated in code examples rather than command-line arguments. Modify parameters directly in the provided example files.
 
-#### BadNets
+### Attack Methods
+#### BadNets (CIFAR-10 Example)
 
-This is a example for BadNets.
+**Overview**  
+Implementation of the BadNets attack using a 3×3 white square trigger on CIFAR-10.
 
-Before getting started, you need to obtain the corresponding dataset. We use the [CIFAR-10 Dataset](https://www.cs.toronto.edu/~kriz/cifar.html) as an example here.You should download the CIFAR-10 dataset and place it in the appropriate directory:
-
+**1. Prepare Dataset**  
+Download [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) and organize as:
+```bash
+data/
+└── cifar10/
+    ├── train/
+    └── test/
 ```
-./data/cifar10
+
+**2. Run Attack**  
+Execute the example:
+```bash
+python Attack_BadNets.py
 ```
 
-We provided an example programme `example.py`, you can run the following script to use our example.
-```
-python example.py
-```
-The log of the programme will be stored in `./experiment/Train_benign_DatasetFolder_CIFAR10_*/log.txt` whlie * refers to the date today. This folder also contains the model data(Distinguish between different epochs) we saved during training.
+**Outputs**  
+- Benign logs: `experiments/train_benign_DatasetFolder-CIFAR10_<DATE>/log.txt`
+- Poisoned logs: `experiments/train_poisoned_DatasetFolder-CIFAR10_<DATE>/log.txt`
+- Saved models: Checkpoints per epoch in corresponding folders
 
-##### Change Triggers
+**Configuration**  
+Modify in `Attack_BadNets.py`:
 
-If you want to change the trigger for BadNets, you should do some modifications in `example.py`
-
+*Trigger Settings*:
 ```python
+# 3×3 white square at bottom-right
 pattern = torch.zeros((1, 32, 32), dtype=torch.uint8)
 pattern[0, -3:, -3:] = 255
 weight = torch.zeros((1, 32, 32), dtype=torch.float32)
 weight[0, -3:, -3:] = 1.0
 ```
-The above codes are our triggers generator. Since the CIFAR-10 dataset uses 32x32 images, we use a 32x32 matrix for trigger. The above codes show that we use a 3x3 white matrix as a trigger, placed in the lower right corner of the image.
 
-You could change the place, color and size for our trigger.
-
-##### Change Model
-
-By default, the project uses the ResNet-18 model. You can easily replace it with other models as needed. To do this, modify the following line in your code:
-
-```
-model = core.models.ResNet(18)
-```
-
-You could change `ResNet(18)` to any other model supported by the framework.
-
-##### Change Hyperparameterizations
-
-According to our example, you could change almost every hyperparameterization in our programm.For example:
-
-- **Poisoned Rate**: Adjust the percentage of poisoned samples in the dataset.
-
-	```python
-	poisoned_rate=0.05  # 5% of the dataset will be poisoned
-	```
-
-- **Target Label**: Change the target label for the poisoned samples.
-
-	```python
-	y_target=1  # Poisoned samples will be misclassified as label 1
-	```
-
-- **Training Schedule**: Modify the learning rate, batch size, number of epochs, etc.
-
-	```python
-	schedule = {
-	    'lr': 0.1,
-	    'batch_size': 128,
-	    'epochs': 200,
-	    ...
-	}
-	```
-
-#### Blended
-
-This is a example for Blended.
-
-Before getting started, you need to obtain the corresponding dataset. We use the [ImageNet50 Dataset](https://www.image-net.org/) as an example here.You should download the ImageNet50 dataset and place it in the appropriate directory:
-
-```
-./data/ImageNet50 
-```
-
-We provided an example programm `example2.py`, you can run the following script to use our example.
-
-```
-python example2.py
-```
-
-The log of the programm will be stored in `./experiment/Train_benign_DatasetFolder_ImageNet50_*/log.txt`. Whlie * refers to the date today. This folder also contains the model data(Distinguish between different epochs) we saved during training.
-
-##### Change Triggers
-
-If you want to change the trigger for Blended attack, you should do some modifications in `example.py`
-
+*Model Architecture*:
 ```python
+model = core.models.ResNet(18)  # Change to other supported models
+```
+
+*Hyperparameters*:
+```python
+# Attack parameters
+poisoned_rate = 0.05    # 5% poisoned samples
+y_target = 1            # Target class
+
+# Training schedule
+schedule = {
+    'lr': 0.1,
+    'batch_size': 128,
+    'epochs': 200,
+    # ... other parameters
+}
+```
+---
+
+#### Blended (ImageNet50 Example)
+
+**Overview**  
+Blended attack with alpha=0.2 transparency trigger on ImageNet50.
+
+**1. Prepare Dataset**  
+Download [ImageNet50](https://www.image-net.org/) and organize as:
+```bash
+data/
+└── ImageNet50/
+    ├── train/
+    └── val/
+```
+
+**2. Run Attack**  
+Execute the example:
+```bash
+python Attack_Blended.py
+```
+
+**Outputs**  
+- Benign logs: `experiments/train_benign_ImageNet50_Blended_<DATE>/log.txt`
+- Poisoned logs: `experiments/train_poisoned_ImageNet50_Blended_<DATE>/log.txt`
+- Model checkpoints saved periodically
+
+**Configuration**  
+Modify in `Attack_Blended.py`:
+
+*Trigger Settings*:
+```python
+# Semi-transparent 3×3 trigger
 pattern = torch.zeros((3, 224, 224), dtype=torch.uint8)
 pattern[:, -3:, -3:] = 255
 weight = torch.zeros((3, 224, 224), dtype=torch.float32)
-weight[:, -3:, -3:] = 0.2
+weight[:, -3:, -3:] = 0.2  # Alpha blending
 ```
 
-The above code generates the trigger. Since the ImageNet50 dataset uses 224x224 images, we use a 224x224 matrix for the trigger. The above codes show that we use a 3x3 white matrix as a trigger, placed in the lower right corner of the image.
-
-You could change the place, color and size for our trigger.
-
-##### Change Model
-
-By default, the project uses the ResNet-18 model. You can easily replace it with other models as needed. To do this, modify the following line in your code:
-
-```
-blended.model = core.models.ResNet(18, num_classes=50)
-```
-
-You could change `ResNet(18)` to any other model supported by the framework.
-
-##### Change Hyperparameterizations
-
-According to our example, you could change almost every hyperparameterization in our programm.For example:
-
-- **Poisoned Rate**: Adjust the percentage of poisoned samples in the dataset.
-
-	```python
-	poisoned_rate=0.1  # 10% of the dataset will be poisoned
-	```
-
-- **Target Label**: Change the target label for the poisoned samples.
-
-	```python
-	y_target=1  # Poisoned samples will be misclassified as label 1
-	```
-
-- **Training Schedule**: Modify the learning rate, batch size, number of epochs, etc.
-
-	```python
-	schedule = {
-	    'lr': 0.1,
-	    'batch_size': 128,
-	    'epochs': 100,
-	    ...
-	}
-	```
-
-### Defense
-
-#### ShrinkPad
-
-This is an example for ShrinkPad defense.
-
-ShrinkPad is a sample pre-processing defense that works by shrinking the image and then padding it back to its original size. This effectively removes backdoor triggers that are typically placed at the corners or edges of images.
-
-Before getting started, you need to obtain the corresponding dataset and a poisoned model. We use the [CIFAR-10 Dataset](https://www.cs.toronto.edu/~kriz/cifar.html) as an example here. You should download the CIFAR-10 dataset and place it in the appropriate directory:
-
+*Model Architecture*:
 ```python
-./data/cifar10
+model = core.models.ResNet(18, num_classes=50)  # Adapt for ImageNet50
 ```
 
-We provided an example program `defense1.py`, you can run the following script to use our example.
-
+*Hyperparameters*:
 ```python
-python defense1.py
-```
-
-The log of the program will be stored in `./experiments/CIFAR10_test_*/log.txt` while * refers to the date today. This folder also contains the evaluation results of the defense.
-
-##### Defense Parameters
-
-If you want to configure the ShrinkPad defense, you can modify the following parameters in the `defense1.py` file:
-
-```python
-shrinkpad = core.ShrinkPad(size_map=32, pad=4)
-```
-
-- `size_map`: The target size to which the image will be resized.
-- `pad`: The padding size to be applied after shrinking.
-
-These parameters determine how much of the image edges (where triggers are often placed) will be removed or modified during the defense process.
-
-##### Test Against BadNet Attack
-
-Our example specifically targets a model that was poisoned using BadNet attack with a 3x3 white square trigger in the bottom-right corner of the image:
-
-```python
-pattern = torch.zeros((1, 32, 32), dtype=torch.uint8)
-pattern[0, -3:, -3:] = 255
-```
-
-The ShrinkPad defense is particularly effective against such attacks because it modifies the area where the trigger is located.
-
-##### Evaluation Model
-
-By default, the project uses the ResNet-18 model. The poisoned model is loaded from a specified checkpoint:
-
-```python
-model = core.models.ResNet(18)
-```
-
-You can replace this with other model architectures supported by the framework.
-
-##### Test Configuration
-
-You can modify the testing configuration by changing the following schedule dictionary:
-
-```python
+poisoned_rate = 0.1      # 10% poisoned samples
+y_target = 1             # Target class
 schedule = {
-    'test_model': './experiments/train_poisoned_DatasetFolder-CIFAR10_2025-02-24_18:20:13/ckpt_epoch_50.pth',  # Path to your model file
-    'save_dir': './experiments',  # Directory to save results
-    'CUDA_VISIBLE_DEVICES': '0',  # Which GPU to use
-    'GPU_num': 1,
-    'experiment_name': 'CIFAR10_test',  # Experiment name
-    'device': 'GPU',  # Use GPU for testing
-    'metric': 'ASR_NoTarget',  # Testing metric method
-    'y_target': 0,  # Target class (if applicable)
-    'batch_size': 64,  # Test batch size
-    'num_workers': 4,  # Number of data loading worker threads
+    'lr': 0.1,
+    'batch_size': 128,
+    'epochs': 100,
+    # ... other parameters
 }
 ```
 
-##### Device Settings
+---
 
-You can specify whether to use CPU or GPU for testing, and which GPU to use if multiple GPUs are available:
+### Defense Methods
 
-```python
-'device': 'GPU',
-'CUDA_VISIBLE_DEVICES': '0',  # Use all available GPUs
-'GPU_num': 1  # Number of GPUs to use
+#### ShrinkPad (CIFAR-10 Defense)
+
+**Overview**  
+Preprocessing defense against corner-positioned triggers via image resizing.
+
+**1. Prerequisites**
+- Trained BadNets model (from `Attack_BadNets.py`)
+- CIFAR-10 dataset (same structure as attack)
+
+**2. Run Defense**  
+Execute the defense:
+```bash
+python Defense_ShrinkPad.py
 ```
 
-**Important Note on GPU Indexing**:
+**Outputs**  
+- Defense evaluation: `experiments/CIFAR10_test_<DATE>/log.txt`
+- ASR (Attack Success Rate) metrics
 
-- When setting `'CUDA_VISIBLE_DEVICES': '0'`, the system will use **all available GPUs**.
-- To use only the first GPU, set `'CUDA_VISIBLE_DEVICES': '1'`.
-- For subsequent GPUs, the numbering continues sequentially (e.g., '2' for the second GPU, '3' for the third, and so on).
+**Configuration**  
+Modify in `Defense_ShrinkPad.py`:
 
-From the logs, you can view the following GPU-related information:
+*Defense Parameters*:
+```python
+shrinkpad = core.ShrinkPad(
+    size_map=32,   # Shrink to this size
+    pad=4          # Padding after shrinking
+)
+```
 
-- Visible GPUs:
-  - The log shows which GPUs are visible to the program.
-- Selected GPUs:
-  - The log also shows which GPUs are actually being used.
-- Device Configuration:
-  - The log displays the device configuration used for testing.
-
-
+*Evaluation Settings*:
+```python
+schedule = {
+    'test_model': 'path/to/poisoned_model.pth',
+    'batch_size': 64,
+    'metric': 'ASR_NoTarget',
+    # ... other parameters
+}
+```
+---
 
 
 
