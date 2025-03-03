@@ -17,6 +17,7 @@ from torchvision.transforms import Compose, ToTensor, PILToTensor, RandomHorizon
 import core
 
 
+
 dataset = torchvision.datasets.DatasetFolder
 
 # image file -> cv.imread -> numpy.ndarray (H x W x C) -> ToTensor -> torch.Tensor (C x H x W) -> RandomHorizontalFlip -> torch.Tensor -> network input
@@ -24,6 +25,7 @@ transform_train = Compose([
     ToTensor(),
     RandomHorizontalFlip()
 ])
+
 trainset = dataset(
     root='./data/cifar10/train',
     loader=cv2.imread,
@@ -39,7 +41,7 @@ testset = dataset(
     root='./data/cifar10/test',
     loader=cv2.imread,
     extensions=('png',),
-    transform=transform_train,
+    transform=transform_test,
     target_transform=None,
     is_valid_file=None)
 
@@ -64,12 +66,12 @@ badnets = core.BadNets(
     model=core.models.ResNet(18),
     # model=core.models.BaselineMNISTNetwork(),
     loss=nn.CrossEntropyLoss(),
-    y_target=1,
-    poisoned_rate=0.05,
+    y_target=0,
+    poisoned_rate=0.1,
     pattern=pattern,
     weight=weight,
-    poisoned_transform_index=0,
-    poisoned_target_transform_index=0,
+    # poisoned_transform_index=0,
+    # poisoned_target_transform_index=0,
     schedule=None,
     seed=666
 )
