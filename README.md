@@ -53,6 +53,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |          [REFINE](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/REFINE.py) | REFINE: Inversion-Free Backdoor Defense via Model Reprogramming. [ICLR, 2025](https://openreview.net/pdf?id=4IYdCws9fc). | Sample Pre-processing |  SOTA pre-processing-based defense|
 
 ## Methods Under Development
+- BAAT
 - DBD
 - SS
 - Neural Cleanse
