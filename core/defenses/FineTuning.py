@@ -161,7 +161,7 @@ class FineTuning(Base):
                     last_time = time.time()
                     log(msg)
 
-            if (i + 1) % self.current_schedule['save_epoch_interval'] == 0:
+            if (i + 1) % current_schedule['save_epoch_interval'] == 0:
                 self.model.eval()
                 self.model = self.model.cpu()
                 ckpt_model_filename = "ckpt_epoch_" + str(i+1) + ".pth"
