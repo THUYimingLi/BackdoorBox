@@ -20,3 +20,6 @@ mytest/
 ./test2.py
 ./result
 ./experiments
+
+# macOS
+.DS_Store
