@@ -51,7 +51,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |          [SCALE-UP](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/SCALE_UP.py) | SCALE-UP: An Efficient Black-box Input-level Backdoor Detection via Analyzing Scaled Prediction Consistency. [ICLR, 2023](https://arxiv.org/abs/2302.03251).| Input-level Backdoor Detection|  black-box online detection|
 |          [IBD-PSC](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/IBD_PSC.py) | IBD-PSC: Input-level Backdoor Detection via Parameter-oriented Scaling Consistency. [ICML, 2024](https://arxiv.org/abs/2405.09786). | Input-level Backdoor Detection |  simple yet effective, safeguarded by theoretical analysis|
 |          [REFINE](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/REFINE.py) | REFINE: Inversion-Free Backdoor Defense via Model Reprogramming. [ICLR, 2025](https://openreview.net/pdf?id=4IYdCws9fc). | Sample Pre-processing |  SOTA pre-processing-based defense|
-| [FLARE](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FLARE.py) | FLARE: Towards Universal Dataset Purification against Backdoor Attacks. [TIFS, 2025](https://arxiv.org/abs/2411.19479) | Dataset purification | A universal method effective against all-to-one, all-to-all, and untargeted backdoor attacks |
+| [FLARE](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/defenses/FLARE.py) | FLARE: Towards Universal Dataset Purification against Backdoor Attacks. [TIFS, 2025](https://arxiv.org/abs/2411.19479) | Dataset Purification | An effective and universal purification method against all-to-one, all-to-all, and untargeted backdoor attacks |
 
 
 ## Methods Under Development
