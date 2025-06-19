@@ -9,7 +9,8 @@ from .CutMix import CutMix
 from .IBD_PSC import IBD_PSC
 from .SCALE_UP import SCALE_UP
 from .REFINE import REFINE
+from .FLARE import FLARE
 
 __all__ = [
-    'AutoEncoderDefense', 'ShrinkPad', 'FineTuning', 'MCR', 'NAD', 'Pruning', 'ABL', 'CutMix', 'IBD_PSC', 'SCALE_UP', 'REFINE'
+    'AutoEncoderDefense', 'ShrinkPad', 'FineTuning', 'MCR', 'NAD', 'Pruning', 'ABL', 'CutMix', 'IBD_PSC', 'SCALE_UP', 'REFINE', 'FLARE'
 ]
