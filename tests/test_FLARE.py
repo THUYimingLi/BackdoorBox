@@ -93,9 +93,8 @@ target_label = 1
 # ===================== BadNets ======================
 model_name, dataset_name, attack_name, defense_name = 'ResNet-18', 'CIFAR-10', 'BadNets', 'FLARE'
 badnet_model = core.models.ResNet(18, num_classes=10)
-# model_path = '/home/ay2/data/experiments/CIFAR-10/ResNet-18/BadNets/pratio_0.1/2023-10-19_11:12:59/ckpt_0th_size_3_bottom-right_255_target_0.pth'
-# model_path = '/home/hou/houls/BackdoorBox-main/experiments/ResNet-18_CIFAR-10_BadNets_2024-11-11_10:53:31/ckpt_epoch_200.pth'
-model_path = '/home/hou/data/houls/BackdoorBox-main/experiments/ResNet-18_CIFAR-10_BadNets_2024-11-11_10:53:31/ckpt_epoch_200.pth'
+model_path = '/home/hou/data/houls/BackdoorBox-main/experiments/ResNet-18_CIFAR-10_BadNets_2025-06-18_22:02:44/ckpt_epoch_200.pth'
+
 def load_dict(model_path):
     state_dict = torch.load(model_path)
     # print(state_dict)
@@ -105,9 +104,17 @@ def load_dict(model_path):
         return state_dict
 badnet_model.load_state_dict(load_dict(model_path))
 
+
+trigger = torch.tensor([
+    [0., 0., 1.],
+    [0., 1., 0.],
+    [1., 0., 1.]
+])  # shape: (3, 3)
+
 pattern = torch.zeros((32, 32), dtype=torch.uint8)
-pattern[-3:, -3:] = 255
 weight = torch.zeros((32, 32), dtype=torch.float32)
+
+pattern[-3:, -3:] = (trigger * 255).to(torch.uint8)
 weight[-3:, -3:] = 1.0
 
 # Get BadNets poisoned dataset
@@ -133,9 +140,6 @@ indices = list(range(0, num_img))
 random.shuffle(indices)
 val_budget = 2000
 val_indices = indices[:val_budget]
-# test_indices = indices[val_budget:]
-# # Construct Shift Set for Defensive Purpose
-# sub_testset = Subset(testset, test_indices)
 val_set = Subset(testset, val_indices)
 
 
@@ -145,50 +149,9 @@ all_indices = set(range(train_num))
 y_true = torch.zeros(train_num)
 y_true[list(poison_indices)] = 1
 
-defense = core.FLARE(model=badnet_model, valset=val_set)
+defense = core.FLARE(model=badnet_model)
 print(f'the BA and ASR of the original BadNets model: ............. ')
 test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, None)
-defense.test(poisoned_trainset, y_true)
+defense.detect(poisoned_trainset, y_true)
 
-
-
-
-
-# ===================== WaNet ======================
-# attack_name = 'WaNet'
-# wanet_model = core.models.ResNet(18, num_classes=10)
-# model_path = '/home/ay2/data/experiments/CIFAR-10/ResNet-18/Wanet/ay3_wanet/0th_k_4_s_0.5_target_0_morph.pth.tar'
-# state_dict = torch.load(model_path)
-# wanet_model.load_state_dict(state_dict['netC'])
-# identity_grid, noise_grid = state_dict["identity_grid"].cpu(), state_dict["noise_grid"].cpu()
-# # target_label = state_dict['target']
-
-# attack = core.WaNet(
-#     train_dataset=trainset,
-#     test_dataset=testset,
-#     model=core.models.ResNet(18, num_classes=10),
-#     loss=nn.CrossEntropyLoss(),
-#     y_target=target_label,
-#     poisoned_rate=poisoning_rate,
-#     identity_grid=identity_grid,
-#     noise_grid=noise_grid,
-#     noise=True,
-#     seed=global_seed,
-#     deterministic=deterministic
-# )
-# poisoned_trainset, poisoned_testset = attack.get_poisoned_dataset()
-# defense = core.IBD_PSC(model=wanet_model, valset=val_set)
-# print(f'the BA and ASR of the original WaNet model: ............. ')
-# test(model_name, dataset_name, attack_name, defense_name, testset, poisoned_testset, defense, None)
-# defense.test(testset, poisoned_testset)
-
-# `detect` function is used to check if the first batch of samples in the dataset is poisoned.
-# Users can assemble their data into a batch of shape [num_samples, n, w, h] and call `defense._detect(batch)`
-# for online detection of the input.
-# `preds_benign` contains the detection results for the original test dataset.
-# `preds_poison` contains the detection results for the poisoned test dataset.
-# preds_benign = defense.detect(testset)
-# preds_poison = defense.detect(poisoned_testset)
-# print(f'Is poisoned for real benign batch: {preds_benign}')
-# print(f'Is poisoned for real poisoned batch: {preds_poison}')
 

@@ -94,15 +94,12 @@ def replace_bn_with_ent(model):
     # return model
             
 class FLARE(Base):
-    name: str = 'FLARE'
-    
-    
     """Identify and filter malicious training samples (FLARE: Towards Universal Dataset Purification against Backdoor Attacks. TIFS-2025).
     Args:
         xi (float): The hyper-parameter for the stability threshold.
     """
 
-    def __init__(self, model, xi=0.02, valset=None, seed=666, deterministic=False):
+    def __init__(self, model, xi=0.02, seed=666, deterministic=False):
         super(FLARE, self).__init__(seed, deterministic)
         self.xi = xi
         self.model = model
@@ -111,7 +108,7 @@ class FLARE(Base):
         torch.backends.cudnn.deterministic = True
     
     def test_acc(self, dataset, schedule):
-        """Test repaired curve model on dataset
+        """Test curve model on test dataset
 
         Args:
             dataset (types in support_list): Dataset.
@@ -120,10 +117,13 @@ class FLARE(Base):
         model = self.model
         test(model, dataset, schedule)
     
+    '''
+    Calculate the likelihood of a batch training samples using a deep copy of the model with BatchNorm2d_ent batch normalization
+    '''
     def cal_like(self, copym, imgs, wo_layer_num=1):
         batch_hoods = []
         copym(imgs)
-        # cal the number of BN layers
+        # cal the number of BN layers 
         layer_num = 0
         for (name1, module1) in copym.named_modules():
             if isinstance(module1, torch.nn.BatchNorm2d):
@@ -131,16 +131,35 @@ class FLARE(Base):
                 
         indices = -1           
         for (name1, module1) in copym.named_modules():
+            '''
+            If the module is a BatchNorm2d layer, calculate the likelihood of the input images
+            '''
             if isinstance(module1, torch.nn.BatchNorm2d):
                 indices += 1
                 if indices < layer_num-wo_layer_num:
+                    '''Calculate the likelihood of the input images using the current BatchNorm2d layer'''
                     batch_hoods.append(module1.likehood)
-                    
+        '''
+        Stack the likelihoods of the input images from all BatchNorm2d layers into a tensor
+        The shape of the batch_hoods tensor is [batch_size, num_BN_layers-wo_layer_num], where num_BN_layers is the total number of BatchNorm2d layers in the model, wo_layer_num is the number of BatchNorm2d layers to exclude from the likelihood calculation.
+        '''
         batch_hoods = torch.stack(batch_hoods, dim=1) 
         # print(f'batch_hoods size: {batch_hoods.size()}')
         return batch_hoods      
     
-    
+    '''
+    Computes the likelihood scores of training samples using a modified version of the current model  with BatchNorm2d_ent batch normalization
+
+    This function creates a deep copy of the model, replaces its BatchNorm layers with BatchNorm2d_ent alternatives (via `replace_bn_with_ent`), and obtains the likelihood scores of the training data.
+
+    Args:
+        wo_layer_num (int): The number of BatchNorm layers to exclude from the likelihood calculation
+
+    Returns:
+        Tuple:
+            - likelihoods (Tensor): A tensor of computed likelihood scores for all training samples.
+            - ground_labels (ndarray): A NumPy array of the corresponding ground truth labels.
+    '''
     def get_likehood(self, wo_layer_num): 
         copym = copy.deepcopy(self.model)
         replace_bn_with_ent(copym)
@@ -149,63 +168,124 @@ class FLARE(Base):
 
         likelihoods = []
         y_true = []            
-        gorund_labels = []
         # pred_labels = []
         with torch.no_grad():                     
             for idx, batch in enumerate(self.train_loader):
                 img = batch[0].cuda()  # batch * channels * hight * width
                 labels = batch[1]  # batch
-                # is_poison = batch[3]
-                gorund_labels.append(labels)
                 hoods = self.cal_like(copym, img, wo_layer_num=wo_layer_num)
                 likelihoods.append(hoods)
 
+        '''
+        Stack the likelihoods of the input images from all BatchNorm2d layers into a tensor
+        The shape of the likelihoods tensor is [num_training_ samples, num_BN_layers-wo_layer_num], where num_BN_layers is the total number of BatchNorm2d layers in the model, wo_layer_num is the number of BatchNorm2d layers to exclude from the likelihood calculation.
+        '''
         likelihoods = torch.cat(likelihoods, dim=0).cpu()
-        print(f'likelihoods.size(): {likelihoods.size()}')
+        # print(f'likelihoods.size(): {likelihoods.size()}')
         # torch.save(likelihoods, hood_path)
-        gorund_labels = torch.cat(gorund_labels, dim=0)
         
-        return likelihoods, gorund_labels.numpy()
+        return likelihoods
     
-    def test(self, poisoned_trainset, y_true):
+    '''
+    Identify the poisoned samples from the poisoned training set        
+    Args:   
+        poisoned_trainset (torch.utils.data.Dataset): The poisoned training dataset.
+        y_true (np.ndarray): Ground-truth poison status of the training samples, 1 for poisoned and 0 for clean.
+    '''
+    def detect(self, poisoned_trainset, y_true):
         self.train_loader = torch.utils.data.DataLoader(
                 poisoned_trainset,
                 batch_size=128, shuffle=False)
         self.trainset = poisoned_trainset
-
+        
         bn_num = 0 
         for (name1, module1) in self.model.named_modules():
             if isinstance(module1, torch.nn.BatchNorm2d):
                 bn_num += 1
-       
+        '''
+        depths is the number of layers to traverse down the condensed tree to find the first cluster with a significant drop in lambda value;
+        depths = [3] means that the algorithm will traverse down 3 layers in the condensed tree.
+        dp is the value of "d" in the original paper (line 9 in Algorithm 1 on page 8)
+        '''
         depths = [3]
         for dp in depths:
             print(f'**************************depth: {dp}*****************************************')
+            '''
+           The goal is to find the status (the optimal wo_layer_num) that all benign samples are close to each other and far away from the poisoned samples
+            
+            wo_layer_num is the number of BatchNorm2d layers to exclude from the likelihood calculation.
+            For example, if wo_layer_num = 0, it means that all BatchNorm2d layers are included in the likelihood calculation;
+            if wo_layer_num = 1, it means that the last BatchNorm2d layer is excluded from the likelihood calculation.
+
+            we progressively exclude the last BatchNorm2d layer from the likelihood calculation;
+
+            '''
             for wo_layer_num in range(0, bn_num):
                 print(f'======================= wo_layer_num: {wo_layer_num} =======================')
-                name = 'FLARE'
-
-                likelihoods, gorund_labels = self.get_likehood(wo_layer_num)
+                '''Get the likelihoods of the training samples using the modified model with BatchNorm2d_ent batch normalization'''
+                likelihoods = self.get_likehood(wo_layer_num)
+                '''Perform UMAP dimensionality reduction on the likelihoods'''
                 umap_model = umap.UMAP(n_neighbors=40, min_dist=0, n_components=2, random_state=42)
                 X = umap_model.fit_transform(likelihoods.cpu().numpy())
-                
+                '''HDBSCAN clustering on the UMAP-reduced data'''
                 clusterer = HDBSCAN(min_cluster_size=100, gen_min_span_tree=True, prediction_data=True)
                 clusterer.fit(X)
+                '''Get the condensed tree and linkage tree from the clustering results'''
                 ori_tree = clusterer.condensed_tree_
                 tree = clusterer.condensed_tree_.to_pandas()
                 link_tree = clusterer.single_linkage_tree_
 
-                                
+                '''
+                The condensed tree is a DataFrame with the following columns:
+                - parent: The parent node ID.   
+                - child: The child node ID.
+                - lambda_val: The density level of the child node.
+                - child_size: The size of the child node (number of samples in the cluster).
+                - ...: Other columns may include additional information about the clustering process.
+
+                For example, the condensed tree may look like this:
+                | parent | child | lambda\_val | child\_size | ... |
+                | ------ | ----- | ----------- | ----------- | --- |
+                | 0      | 3     | 0.05        | 42          | ... |
+                | 0      | 4     | 0.05        | 28          | ... |
+                | 3      | 5     | 0.12        | 10          | ... |
+
+                Interpretation:
+
+                    Cluster 0 is a root cluster that splits into clusters 3 and 4 at lambda = 0.05.
+
+                    Cluster 3 later splits again into cluster 5 at lambda = 0.12.
+
+                    Therefore:
+
+                    Cluster 3 is a child of cluster 0.
+
+                    Cluster 0 is a parent of clusters 3 and 4.
+
+                    Cluster 5 is a child of cluster 3.
+
+                '''
+
+
+                '''visualize the clustering results in condensed tree style'''           
                 # tree_path = f'{wo_save_root}/condensed_tree.pdf'
                 # plt.rcParams['font.family'] = 'Times New Roman'
                 # plt.figure(figsize=(15, 12))
                 # if not os.path.exists(tree_path):
-                #     clusterer.condensed_tree_.plot()    
-                #     plt.savefig(tree_path) 
-
+                #     clusterer.condensed_tree_.plot()
+                #     plt.savefig(tree_path)
+                '''Get the node with the maximum child size'''
                 max_node = tree.loc[tree['child_size'].idxmax()]
+                '''the node with the maximum child size is the root node of the condensed tree'''
+                # node_id = max_node['child']
                 node_id = max_node['child']
                 
+
+                '''
+                Find the first cluster with a significant drop in lambda value;
+                A significant drop is defined as the difference in lambda value exceeding a given threshold (xi).
+                A significant increase in lambda values typically indicates that the resulting clusters are more stable and well-separated.
+                '''
                 def find_first_large_drop(tree, node_id, xi=0.02, depth=3):
                     """
                     Starting from a given node, traverse downward through the condensed tree to find the first cluster 
@@ -221,15 +301,28 @@ class FLARE(Base):
                     stack = [node_id] # stack is the "Q" in the original paper (line 6 in Algorithm 1 on page 8 )
                     iterations = 0
                     # max_iterations = 3
+
+                    '''depths is the number of layers to traverse down the condensed tree to find the first cluster with a significant drop in lambda value
+                    If the depth is set to 3, it means that the algorithm will traverse down 3 layers in the condensed tree.'''
                     max_iterations = depth
                     while stack and iterations < max_iterations:
                         current_id = stack.pop()
+                        '''
+                        Get the current data from the tree DataFrame using the current child id
+                        for example, if current_id is 3, it will get the row where child is 3:
+                            | 0      | 3     | 0.05        | 42          | ... |
+                        This row contains the parent id, child id, lambda value, and max child size of the current tree.
+                        
+                        We restrict the traversal to the subtree with the largest child size, which is assumed to represent the benign cluster, since poisoned samples are rare and occupy only a small fraction of the dataset.
+                        
+                        '''
                         current_node = tree[tree['child'] == current_id].iloc[0]
-                        parent_id = current_node['parent']
+
                         # lambda_val is the density level of current_node 
                         lambda_val = current_node['lambda_val']
                         print(f'current_node:\n {current_node}')
 
+                        '''Get all the children of the current node'''
                         children = tree.loc[tree['parent'] == current_id]
                         max_child = tree.loc[children['child_size'].idxmax()]
                         print(f"max child:\n {max_child}")
@@ -238,6 +331,7 @@ class FLARE(Base):
                         lambda_diff = max_child['lambda_val'] - lambda_val
                         print(f'lambda_diff: {lambda_diff}')
                         
+                        '''Given that benign samples are heterogeneous and cover various classes, the stability of the benign cluster indicates that the BN layers identified along this subtree are the appropriate ones to be excluded.'''
                         if lambda_diff > xi:
                             return max_child, lambda_diff
                         
@@ -246,9 +340,7 @@ class FLARE(Base):
 
                     return None, None
                 
-            
                 
-               
                 split_child, lambda_diff = find_first_large_drop(tree, node_id, xi=self.xi, depth=dp)
 
                 print(f'**********************find the best wo_layer_num: {wo_layer_num}**********************')
