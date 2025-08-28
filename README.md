@@ -35,6 +35,7 @@ Currently, this toolbox is still under development (but the attack parts are alm
 |                [LIRA](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/LIRA.py)                |       LIRA: Learnable, Imperceptible and Robust Backdoor Attacks. [ICCV, 2021](https://openaccess.thecvf.com/content/ICCV2021/papers/Doan_LIRA_Learnable_Imperceptible_and_Robust_Backdoor_Attacks_ICCV_2021_paper.pdf).      | training-controlled, invisible, optimized, sample-specific |                                                             |
 | [BATT](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BATT.py)                |       BATT: Backdoor Attack with Transformation-based Triggers. [ICASSP, 2023](https://arxiv.org/pdf/2211.01806).      | poison-only, invisible, physical |                                                                 |
 | [AdaptivePatch](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/AdaptivePatch.py)                |       Revisiting the Assumption of Latent Separability for Backdoor Defenses. [ICLR, 2023](https://openreview.net/pdf?id=_wSHsgrVali).      | poison-only | adaptive attack                                                 |
+| [BAAT](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/BAAT.py)                |       Towards Sample-Specific Backdoor Attack With Clean Labels via Attribute Trigger. [TDSC, 2025](https://ieeexplore.ieee.org/document/10930650/).      | poison-only, sample-specific, clean-label |                                                  |
 
 **Note**: For the convenience of users, all our implemented attacks support obtaining poisoned dataset (via `.get_poisoned_dataset()`), obtaining infected model (via `.get_model()`), and training with your own local samples (loaded via `torchvision.datasets.DatasetFolder`). Please refer to [base.py](https://github.com/THUYimingLi/BackdoorBox/blob/main/core/attacks/base.py) and the attack's codes for more details.
 
@@ -55,7 +56,6 @@ Currently, this toolbox is still under development (but the attack parts are alm
 
 
 ## Methods Under Development
-- BAAT
 - DBD
 - SS
 - Neural Cleanse
@@ -72,7 +72,7 @@ The benchmark is coming soon.
 
 | Organization        | Contributors                                                 |
 | ------------------- | ------------------------------------------------------------ |
-| Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Guanhao Gan](https://github.com/GuanhaoGan), [Kuofeng Gao](https://github.com/KuofengGao), [Xin Yan](https://scholar.google.com/citations?hl=zh-CN&user=08WTTPMAAAAJ), [Jia Xu](https://www.researchgate.net/profile/Xu-Jia-10), [Tong Xu](https://github.com/spicy1007), [Sheng Yang](https://github.com/20000yshust), [Haoxiang Zhong](https://scholar.google.com/citations?user=VOw9qmYAAAAJ&hl=zh-CN&oi=ao), [Linghui Zhu](https://github.com/zlh-thu)|
+| Tsinghua University | [Yiming Li](http://liyiming.tech/), [Mengxi Ya](https://github.com/yamengxi), [Guanhao Gan](https://github.com/GuanhaoGan), [Kuofeng Gao](https://github.com/KuofengGao), [Xin Yan](https://scholar.google.com/citations?hl=zh-CN&user=08WTTPMAAAAJ), [Jia Xu](https://www.researchgate.net/profile/Xu-Jia-10), [Tong Xu](https://github.com/spicy1007), [Sheng Yang](https://github.com/20000yshust), [Haoxiang Zhong](https://scholar.google.com/citations?user=VOw9qmYAAAAJ&hl=zh-CN&oi=ao), [Linghui Zhu](https://github.com/zlh-thu), [Mingyan Zhu](https://github.com/MingyanZHU)|
 | Tencent Security Zhuque Lab | [Yang Bai](https://scholar.google.com/citations?user=wBH_Q1gAAAAJ&hl=zh-CN) |
 | ShanghaiTech University | [Zhe Zhao](https://s3l.shanghaitech.edu.cn/people/zhezhao/) |
 | Harbin Institute of Technology, Shenzhen| [Linshan Hou](https://scholar.google.com/citations?user=uHVNhf8AAAAJ&hl=zh-CN&oi=ao) |
