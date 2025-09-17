@@ -1,6 +1,43 @@
 """
 This is the test code of poisoned training on VGGFace2 and ImageNet, using dataset class of torchvision.datasets.DatasetFolder.
 The attack method is BAAT.
+
+Before using this code, please download the pretrained models.
+- For face dataset, please download the [HairCLIP](https://github.com/wtybest/HairCLIP) and [e4e](https://github.com/omertov/encoder4editing) models. Please put the `encoder4editing` folder and `HairCLIP/mapper, HairCLIP/criteria` folders in the root directory of BackdoorBox.
+  - Please follow the instructions in [HairCLIP](https://github.com/wtybest/HairCLIP) to download the pretrained HairCLIP model and put it in the `pretrained_models` folder.
+- For nature dataset, please download the [ArtFLow](https://github.com/pkuanjie/ArtFlow) and put `ArtFlow/glow_adain.py` in the root directory of BackdoorBox. And we use the official [pretrained model](https://drive.google.com/file/d/1xusus0d8ONO-j5mMQXhXl5Gt9OOMOO0H/view?usp=drive_link) and put it in the `ArtFlow` folder. We also use the official [style image](https://github.com/pkuanjie/ArtFlow/blob/main/data/style/654d10cd803dcdc4469f6fccd236b8c9.jpg) as the trigger image, rename it as `style.jpg` and put it in the `ArtFlow` folder.
+
+We also provide the datasets we used in the experiments, please download from the [Google Drive](https://drive.google.com/drive/folders/1p612Pn1IBiIHBulKbke9o2kuLWDr-8rL?usp=sharing) and put them in the `datasets` folder.
+The final directory structure should be like this:
+
+```text
+BackdoorBox
+├── core/
+├── tests/
+├── Attack_BadNets.py
+├── Attack_Blended.py
+├── attack.py
+├── Defense_ShrinkPad.py
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── datasets/
+├── ArtFlow/
+│   ├── glow_adain.py
+│   ├── glow.pth
+│   └── style.jpg
+├── encoder4editing/
+├── criteria/
+├── mapper/
+└── pretrained_models/
+    ├── e4e_ffhq_encode.pt
+    ├── hairclip.pt
+    ├── model_ir_se50.pth
+    ├── parsenet.pth
+    ├── shape_predictor_68_face_landmarks.dat
+    └── stylegan2-ffhq-config-f.pt
+```
+
 """
 
 import os
