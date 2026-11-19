@@ -1,8 +1,7 @@
 # BackdoorBox: An Open-sourced Python Toolbox for Backdoor Attacks and Defenses
-![Python 3.8](https://img.shields.io/badge/python-3.8-DodgerBlue.svg?style=plastic)
-![Pytorch 1.8.0](https://img.shields.io/badge/pytorch-1.8.0-DodgerBlue.svg?style=plastic)
-![torchvision 0.9.0](https://img.shields.io/badge/torchvision-0.9.0-DodgerBlue.svg?style=plastic)
-![CUDA 11.1](https://img.shields.io/badge/cuda-11.1-DodgerBlue.svg?style=plastic)
+![Python 3.11](https://img.shields.io/badge/python-3.11-DodgerBlue.svg?style=plastic)
+![PyTorch 2.13.0](https://img.shields.io/badge/pytorch-2.13.0-DodgerBlue.svg?style=plastic)
+![torchvision 0.28.0](https://img.shields.io/badge/torchvision-0.28.0-DodgerBlue.svg?style=plastic)
 ![License GPL](https://img.shields.io/badge/license-GPL-DodgerBlue.svg?style=plastic)
 
 Backdoor attacks are emerging yet critical threats in the training process of deep neural networks (DNNs), where the adversary intends to embed specific hidden backdoor into the models. The attacked DNNs will behave normally in predicting benign samples, whereas the predictions will be maliciously changed whenever the adversary-specified trigger patterns appear. Currently, there were many existing backdoor attacks and defenses. Although most of them were open-sourced, there is still no toolbox that can easily and flexibly implement and compare them simultaneously.
@@ -118,15 +117,19 @@ If our toolbox is useful for your research, please cite our paper(s) as follows:
 
 ## Environment configuration
 
-You can run the following script to configure the necessary environment. 
+Use a project-specific Python 3.11 environment. On platforms without wheels for all dependencies, install a C/C++ compiler and build tools (CMake and Ninja or Make) first.
 
+From the repository root, use the following commands for a CPU environment:
+
+```sh
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.13.0 torchvision==0.28.0
+python -m pip install -r requirements.txt
+python -m pip check
 ```
-git clone https://github.com/THUYimingLi/BackdoorBox.git
-cd BackdoorBox
-conda create -n backdoorbox python=3.8
-conda activate backdoorbox
-pip install -r requirements.txt
-```
+
+The previous Python 3.8 / CUDA 11.1 environment is no longer supported by these dependency pins. The CPU setup does not validate GPU/CUDA compatibility.
 
 ## Quick Start
 

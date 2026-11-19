@@ -23,3 +23,6 @@ mytest/
 
 # macOS
 .DS_Store
+
+# Local Python environment
+.venv/
